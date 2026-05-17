@@ -44,8 +44,8 @@ Phase Experimental — paralel, terisolasi
 
 | Phase | Status | Exit Signal | Tujuan |
 |---|---|---|---|
-| **Phase 0 — Foundations** | active | Hello-world render + CI hijau + pre-commit block dummy secret | Repo skeleton, tooling, security baseline |
-| **Phase MVP — Private Learning Dashboard** | locked | Owner pakai produk untuk daily review 5 hari berturut-turut | Watchlist + indicator + journal + AI brief + risk |
+| **Phase 0 — Foundations** | done ✓ | Hello-world render + CI hijau + pre-commit block dummy secret | Repo skeleton, tooling, security baseline |
+| **Phase MVP — Private Learning Dashboard** | active | Owner pakai produk untuk daily review 5 hari berturut-turut | Watchlist + indicator + journal + AI brief + risk |
 | **Phase V1 — Better Decision Support** | locked | Screener + alert dipakai mingguan; false-positive rate tracked | Fundamental + screener + alerts + earnings summary |
 | **Phase V2 — Personal Trading System Builder** | locked | Backtest + playbook tunjukkan setup mana yang performa | Playbook + backtest + analytics + paper trading + PWA |
 
@@ -66,29 +66,45 @@ Gagal di salah satu → phase belum exit. Tidak ada "menyusul nanti".
 
 ### 2.3 Active Phase
 
-**Phase:** Phase 0 — Foundations (Sprint 0).
-**Fokus:** Repo skeleton, tooling, security baseline, hello-world Next.js + DuckDB.
-**Next:** Sprint 1 — Data ingestion (yfinance → DuckDB) + watchlist CRUD.
+**Phase:** Phase MVP — Private Learning Dashboard.
+**Sprint aktif:** **S1 — Data ingestion + DuckDB + watchlist CRUD**.
+
+**Sprint deliverable:**
+- `packages/core/data_sources/yfinance/` adapter dengan canonical ticker normalize + rate-limit + 429 backoff.
+- `scripts/ingest_prices.py` (yfinance → DuckDB `price_history`, `--json` output).
+- `packages/core/watchlist/` module (`add`/`remove`/`list`/`get`) + Pydantic schema.
+- `scripts/watchlist.py` CLI (subcommands: `add`, `remove`, `list`, `seed`).
+- Seed 10 ticker IDX: BBCA, BBRI, BBNI, BMRI, TLKM, ASII, UNVR, ANTM, ICBP, GGRM.
+- Next.js `/watchlist` route — render watchlist + freshness badge per ticker.
+- Tests: yfinance adapter (mocked HTTP), watchlist CRUD (in-memory DuckDB), ingest_prices smoke.
+
+**Next:** S2 — Indicator engine (MA 5/10/15/50/200, volume avg, RSI 14, MACD), test-first coverage ≥ 90%.
 
 ### 2.4 Exit Criteria
 
-Phase 0 exit (semua wajib):
+Phase MVP exit (semua wajib — sumber [`.docs/EXECUTION_BLUEPRINT.md §4.2`](.docs/EXECUTION_BLUEPRINT.md)):
 
-- [ ] Repo structure sesuai [`.docs/ENGINEERING_STANDARDS.md §2`](.docs/ENGINEERING_STANDARDS.md).
-- [ ] `.gitignore`, `.env.example`, pre-commit hooks, gitleaks aktif.
-- [ ] CI workflow hijau (lint + test + secret scan).
-- [ ] DuckDB skeleton + migration pertama.
-- [ ] `pnpm dev` render hello page; `pytest` & `vitest` pass tanpa error.
-- [ ] Pre-commit block dummy secret (verified manual).
-- [ ] `DISCLAIMER.md`, `README.md`, `.docs/` populated; `CLAUDE.md` di root.
+Produk:
+- [ ] Owner bisa review watchlist dalam 15–30 menit.
+- [ ] Owner bisa buat trade plan lengkap (semua field PRD §8.2).
+- [ ] AI output selalu cite data + tampilkan caveat.
 
-Sumber: [`.docs/EXECUTION_BLUEPRINT.md §3`](.docs/EXECUTION_BLUEPRINT.md).
+Teknis:
+- [ ] Tidak ada private data ter-commit (verified pre-commit + CI `no_private_leak`).
+- [ ] Core indicator calc test coverage ≥ 90%.
+- [ ] Position size calculator: ≥ 5 unit test + property-based.
+- [ ] Banned-phrase filter aktif di AI pipeline.
+- [ ] Schema validation reject malformed AI output.
+
+Safety:
+- [ ] Disclaimer di README, UI footer, AI panel, export.
+- [ ] Tidak ada bahasa command buy/sell di copy.
 
 ### 2.5 Phase Log
 
 | Phase | Exit date | Lessons | Carried forward |
 |---|---|---|---|
-| Phase 0 | _pending_ | — | — |
+| Phase 0 | 2026-05-18 | (a) pnpm 11 inject `allowBuilds` placeholder → harus diisi nilai konkret sebelum install lanjut. (b) Owner Windows tidak punya gitleaks global → pakai `detect-secrets` di pre-commit + `gitleaks-action` di CI sebagai defense-in-depth. (c) ruff `UP` rule auto-rewrite `datetime.timezone.utc` → `datetime.UTC` (Py 3.11+). (d) `next lint` deprecated di Next 16. | Migrasi `next lint` → ESLint CLI sebelum upgrade Next.js 16. |
 
 ---
 

@@ -84,14 +84,16 @@ Cloud boundary (opsional):
 
 | Module | Tugas | Tidak Boleh |
 |---|---|---|
-| `packages/core/data_sources` | Fetch & normalize public data | Interpret trade |
+| `packages/core/data_sources` | Fetch & normalize public data; expose `PriceSource` Protocol | Interpret trade |
 | `packages/core/indicators` | Hitung formula | Generate advice |
 | `packages/core/news` | Dedup + summarize via LLM wrapper | Klaim kausalitas pasti |
 | `packages/core/ai` | LLM wrapper + prompt templates + RAG | Decide buy/sell (→ [AI_BOUNDARIES.md](AI_BOUNDARIES.md)) |
 | `packages/core/journal` | Persist trade plan & review | Auto-edit history |
 | `packages/core/risk` | Position size + checklist | Override decision user |
-| `apps/web` | Render state | Sembunyikan freshness; ekspos heavy compute ke browser |
-| `scripts/*` | Cron-executable Python entrypoint | Mengandung business logic (cuma orchestration) |
+| `packages/core/watchlist` | CRUD watchlist entries (candidate pool) | Menyimpan trade record (itu `journal`) |
+| `packages/core/schemas` | Pydantic models + SQL migrations + `repository.py` shared connection/upsert helpers | Mengandung domain logic |
+| `apps/web` | Render state; spawn Python CLI untuk read/write data ([ADR-0008](adr/ADR-0008-python-core-via-cli.md)) | Sembunyikan freshness; ekspos heavy compute ke browser |
+| `scripts/*` | Cron-executable Python entrypoint; output `--json` ke stdout | Mengandung business logic (cuma orchestration) |
 
 Inter-module rule: dependency satu arah (`apps/web → packages/core/*`). Tidak ada module di `packages/core/*` boleh import dari `apps/web`.
 

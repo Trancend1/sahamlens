@@ -1,5 +1,12 @@
-# SAMPLE — NOT REAL TRADING DATA
+# SAMPLE — NOT REAL TRADING DATA. Seed 10 ticker IDX likuid untuk Sprint 1.
 symbol,tag,note,added_at
 BBCA.JK,bank-core,Bank besar likuid untuk benchmark,2026-05-01T08:00:00+07:00
+BBRI.JK,bank-core,Bank retail terbesar,2026-05-01T08:01:00+07:00
+BBNI.JK,bank-core,Bank BUMN,2026-05-01T08:02:00+07:00
+BMRI.JK,bank-core,Bank BUMN terbesar aset,2026-05-01T08:03:00+07:00
 TLKM.JK,telco,Dividend yield reference,2026-05-01T08:05:00+07:00
-ANTM.JK,commodity,Test eksposur komoditas,2026-05-02T08:00:00+07:00
+ASII.JK,conglomerate,Astra grup luas eksposur,2026-05-01T08:06:00+07:00
+UNVR.JK,consumer-staples,Defensive consumer goods,2026-05-01T08:07:00+07:00
+ANTM.JK,commodity,Aneka Tambang test eksposur komoditas,2026-05-02T08:00:00+07:00
+ICBP.JK,consumer-staples,Indofood CBP defensive,2026-05-02T08:01:00+07:00
+GGRM.JK,consumer-cyclical,Gudang Garam test rokok,2026-05-02T08:02:00+07:00

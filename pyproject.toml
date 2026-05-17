@@ -11,6 +11,7 @@ dependencies = [
     "duckdb>=1.1.0",
     "pydantic>=2.9.0",
     "python-dotenv>=1.0.1",
+    "yfinance>=0.2.50",
 ]
 
 [project.optional-dependencies]
@@ -45,12 +46,11 @@ quote-style = "double"
 python_version = "3.11"
 strict = true
 files = ["packages/core", "scripts", "tests"]
-mypy_path = "packages"
 namespace_packages = true
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["duckdb.*"]
+module = ["duckdb.*", "pandas.*", "yfinance.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
