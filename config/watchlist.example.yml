@@ -1,0 +1,6 @@
+# SahamLens — example watchlist. Real watchlist disimpan di `watchlist.yml` (gitignored).
+tickers:
+  - symbol: BBCA.JK
+    tag: bank-core
+  - symbol: TLKM.JK
+    tag: telco

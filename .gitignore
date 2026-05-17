@@ -1,0 +1,40 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# private data
+data/private/**
+!data/private/.gitkeep
+
+# private config
+config/*.yml
+!config/*.example.yml
+
+# build / cache
+node_modules/
+.next/
+.turbo/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+logs/

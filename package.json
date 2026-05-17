@@ -1,0 +1,20 @@
+{
+  "name": "sahamlens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SahamLens — personal trading companion. Local-first, single-user, IDX.",
+  "packageManager": "pnpm@11.1.2",
+  "workspaces": ["apps/*", "packages/ui"],
+  "scripts": {
+    "dev": "pnpm --filter @sahamlens/web dev",
+    "build": "pnpm --filter @sahamlens/web build",
+    "start": "pnpm --filter @sahamlens/web start",
+    "lint": "pnpm --filter @sahamlens/web lint",
+    "test": "pnpm --filter @sahamlens/web test",
+    "typecheck": "pnpm --filter @sahamlens/web typecheck"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

@@ -1,0 +1,5 @@
+# SAMPLE — NOT REAL TRADING DATA
+symbol,tag,note,added_at
+BBCA.JK,bank-core,Bank besar likuid untuk benchmark,2026-05-01T08:00:00+07:00
+TLKM.JK,telco,Dividend yield reference,2026-05-01T08:05:00+07:00
+ANTM.JK,commodity,Test eksposur komoditas,2026-05-02T08:00:00+07:00

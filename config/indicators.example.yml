@@ -1,0 +1,21 @@
+# SahamLens — example indicator config. Copy ke `indicators.yml` & sesuaikan.
+moving_averages:
+  - 5
+  - 10
+  - 15
+  - 50
+  - 200
+
+rsi:
+  period: 14
+  overbought: 70
+  oversold: 30
+
+macd:
+  fast: 12
+  slow: 26
+  signal: 9
+
+volume:
+  average_period: 20
+  spike_multiplier: 3.0

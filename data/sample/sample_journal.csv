@@ -1,0 +1,4 @@
+# SAMPLE — NOT REAL TRADING DATA. Fake journal entries for UI smoke tests.
+id,symbol,setup_type,thesis,entry_plan,stop_level,invalidation,target,position_size_rupiah,max_loss_rupiah,emotion,status,result_rupiah,lesson,created_at,reviewed_at
+1,BBCA.JK,pullback-to-ma,Sample thesis (not real),Beli pada retest MA10,9950,Close di bawah MA20 harian,10500,5000000,100000,calm,planned,,Sample lesson placeholder,2026-05-12T07:30:00+07:00,
+2,TLKM.JK,breakout-confirmation,Sample thesis (not real),Beli setelah close di atas resistance,3470,Close balik di bawah resistance,3700,3000000,75000,calm,closed,150000,Sample lesson placeholder,2026-05-08T07:30:00+07:00,2026-05-13T16:00:00+07:00
