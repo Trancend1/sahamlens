@@ -67,18 +67,33 @@ Gagal di salah satu → phase belum exit. Tidak ada "menyusul nanti".
 ### 2.3 Active Phase
 
 **Phase:** Phase MVP — Private Learning Dashboard.
-**Sprint aktif:** **S1 — Data ingestion + DuckDB + watchlist CRUD**.
+**Sprint aktif:** **S4 — News ingest + AI brief**.
 
-**Sprint deliverable:**
-- `packages/core/data_sources/yfinance/` adapter dengan canonical ticker normalize + rate-limit + 429 backoff.
-- `scripts/ingest_prices.py` (yfinance → DuckDB `price_history`, `--json` output).
-- `packages/core/watchlist/` module (`add`/`remove`/`list`/`get`) + Pydantic schema.
-- `scripts/watchlist.py` CLI (subcommands: `add`, `remove`, `list`, `seed`).
-- Seed 10 ticker IDX: BBCA, BBRI, BBNI, BMRI, TLKM, ASII, UNVR, ANTM, ICBP, GGRM.
-- Next.js `/watchlist` route — render watchlist + freshness badge per ticker.
-- Tests: yfinance adapter (mocked HTTP), watchlist CRUD (in-memory DuckDB), ingest_prices smoke.
+**S2 deliverable (done ✓):**
+- `packages/core/indicators/formulas.py` — pure `sma`, `ema`, `rsi_wilder` (Wilder smoothing, SMA seed), `macd` (12/26/9). Pandas-only, no extra dep.
+- `packages/core/indicators/engine.py` — `compute_all(symbol, prices_df) → list[IndicatorPoint]` (10 keys: MA 5/10/15/50/200, vol_avg_20, rsi_14, macd_line/signal/hist).
+- `packages/core/indicators/repo.py` — `upsert_indicator_points`, `load_price_series`, `latest_for`.
+- `packages/core/schemas/models.py` — `IndicatorPoint` Pydantic model.
+- `scripts/calculate_indicators.py` CLI (mirror `ingest_prices.py`; full history recompute, idempotent).
+- Tests: golden (Wilder 1978 RSI sample) + Hypothesis property tests + engine + repo + CLI smoke (37 tests, indicator coverage 98%).
+- CI gate: `--cov-fail-under=90` untuk `packages/core/indicators`.
 
-**Next:** S2 — Indicator engine (MA 5/10/15/50/200, volume avg, RSI 14, MACD), test-first coverage ≥ 90%.
+**S3 deliverable (done ✓):**
+- `packages/core/schemas/repository.py` — `load_ohlcv(conn, symbol, limit=N)` returns OHLCVRow list (sorted ASC).
+- `scripts/dump_stock_detail.py` — single-call CLI: `{ohlcv, indicators_series, indicators_latest, first_date, last_date}` JSON; exit 0/2/3.
+- `apps/web/src/lib/indicatorMeta.ts` — 10-entry typed dictionary: label / category / whatItMeasures / falseSignal / horizonNote / interpret(value, ctx) / formatValue. Threshold-aware interpretation untuk RSI/MACD; harga-vs-MA delta-percent untuk MA.
+- `apps/web/src/components/IndicatorCard.tsx` — 5-block presentational (PRD §9.2): label+badge, formatted value (`tabular-nums`), interpretasi, false signal, time horizon.
+- `apps/web/src/components/StockChart.tsx` — 3-pane `lightweight-charts` v5: candle + MA 5/10/15/50/200 overlay, RSI 14 + 30/70 reference lines, MACD line/signal/histogram. Pane time-scales synced via `subscribeVisibleLogicalRangeChange`.
+- `apps/web/src/lib/stockDetail.ts` — typed `runPython("scripts.dump_stock_detail", …)` wrapper (timeout 30s).
+- `apps/web/src/app/stocks/[symbol]/page.tsx` — server component (`dynamic = "force-dynamic"`), header / chart / 10 IndicatorCards grid / disclaimer footer.
+- `apps/web/src/app/watchlist/page.tsx` — ticker rows now linked to `/stocks/<short>`.
+- Tests: 5 IndicatorCard + 10 indicatorMeta + 4 dump_stock_detail CLI + 5 load_ohlcv repository → 80 Python + 23 TS tests pass.
+
+**Sprint deliverable (S4):**
+- News ingest dari RSS sumber IDX → dedup → DuckDB `news`.
+- AI brief per ticker (LLM summarize 5 indicator + headline + caveat) dengan banned-phrase filter + schema validation per AI_BOUNDARIES.md.
+
+**Next:** S5 — Trade plan + risk (position size calculator + journal CRUD).
 
 ### 2.4 Exit Criteria
 
