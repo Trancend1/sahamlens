@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { fetchWatchlist, type WatchlistEntry } from "@/lib/watchlist";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +43,12 @@ export default async function WatchlistPage() {
           {entries.map((e) => (
             <li key={e.symbol} className="flex items-baseline justify-between gap-4 px-5 py-3">
               <div className="flex items-baseline gap-3">
-                <span className="font-mono text-base">{e.symbol}</span>
+                <Link
+                  href={`/stocks/${shortSymbol(e.symbol)}`}
+                  className="font-mono text-base text-fg hover:text-accent hover:underline"
+                >
+                  {e.symbol}
+                </Link>
                 {e.tag ? (
                   <span className="rounded border border-accent/40 px-2 py-0.5 text-xs text-accent">
                     {e.tag}
@@ -68,4 +74,8 @@ function formatDate(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+function shortSymbol(symbol: string): string {
+  return symbol.replace(/\.JK$/i, "");
 }
