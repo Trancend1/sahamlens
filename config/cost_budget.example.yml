@@ -1,0 +1,11 @@
+# SahamLens — daily LLM cost guardrail. Copy ke `cost_budget.yml` & sesuaikan.
+# Circuit breaker reads daily ai_log row count × per-call USD estimate.
+daily_usd_cap: 0.50
+per_model_caps:
+  claude-haiku-4-5-20251001: 0.20
+  claude-sonnet-4-6: 0.30
+# Estimated USD per call by model (rough, used by breaker).
+# Update when Anthropic pricing changes.
+per_call_usd:
+  claude-haiku-4-5-20251001: 0.0015
+  claude-sonnet-4-6: 0.012

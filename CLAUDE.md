@@ -67,7 +67,7 @@ Gagal di salah satu → phase belum exit. Tidak ada "menyusul nanti".
 ### 2.3 Active Phase
 
 **Phase:** Phase MVP — Private Learning Dashboard.
-**Sprint aktif:** **S4 — News ingest + AI brief**.
+**Sprint aktif:** **S5 — Trade plan + risk** (position size calculator + journal CRUD).
 
 **S2 deliverable (done ✓):**
 - `packages/core/indicators/formulas.py` — pure `sma`, `ema`, `rsi_wilder` (Wilder smoothing, SMA seed), `macd` (12/26/9). Pandas-only, no extra dep.
@@ -89,11 +89,22 @@ Gagal di salah satu → phase belum exit. Tidak ada "menyusul nanti".
 - `apps/web/src/app/watchlist/page.tsx` — ticker rows now linked to `/stocks/<short>`.
 - Tests: 5 IndicatorCard + 10 indicatorMeta + 4 dump_stock_detail CLI + 5 load_ohlcv repository → 80 Python + 23 TS tests pass.
 
-**Sprint deliverable (S4):**
-- News ingest dari RSS sumber IDX → dedup → DuckDB `news`.
-- AI brief per ticker (LLM summarize 5 indicator + headline + caveat) dengan banned-phrase filter + schema validation per AI_BOUNDARIES.md.
+**S4 deliverable (done ✓):**
+- `packages/core/news/` — `NewsArticle` / `NewsSummary` / `FetchNewsResult` Pydantic models, canonical URL + sha1-derived `article_id` dedup, `RSSNewsSource` adapter (stdlib `urllib` + `feedparser`, exponential backoff on 429, never raises), `repo` with idempotent upsert + ticker-filtered recent loader + `ai_log` audit writer, `pipeline.ingest_news` / `pipeline.summarize_pending`.
+- `packages/core/ai/` — `LLMProvider` Protocol + `AnthropicProvider` (stdlib `urllib`, no third-party SDK, `tool_use` structured output, retries on 429/5xx), `ModelRouter` (Haiku for news, Sonnet for brief), `CircuitBreaker` (per-day cap from `ai_log` × cost table), versioned `PromptTemplate` loader, `validator` (banned-phrase regex + Pydantic + ≤3-kalimat invariant), `summarize_news` orchestrator (LLM∩regex ticker intersection, confidence downweight, 3× banned-phrase retry, never raises).
+- Migration `0002_news_summary_fields.sql` adds `source_quality`, `confidence`, `caveats` (JSON), `prompt_template_id`, `model`, `summarized_at` + indexes ke tabel `news`.
+- CLI: `scripts/ingest_news.py`, `scripts/summarize_news.py` (`--dry-run`, `--from-watchlist`), `scripts/dump_stock_detail.py` extended with `news_recent`.
+- Web: `apps/web/src/lib/dateTime.ts` (Intl.RelativeTimeFormat id-ID + freshness tier), `FreshnessBadge`, `NewsCard` (sentiment badge, low-confidence banner <0.6, caveats, source quality, outbound link), `NewsSection` (server component, empty state, grid) inserted antara `<StockChart>` dan indicator grid.
+- Config: `config/rss_feeds.example.yml` + `config/cost_budget.example.yml` (real files gitignored). Prompt `prompts/system/news_summary.v1.md` (Bahasa Indonesia, ≤3 kalimat, banned-phrase reinforcement, `not_financial_advice: true`).
+- Tests: 30 news + 33 ai (Python) + 13 web (vitest). Coverage news 95%, ai 94% (gate ≥70%).
+- Deps: `feedparser>=6.0.11`, `pyyaml>=6.0.2`. No `anthropic` SDK — stdlib `urllib` per scope decision.
 
-**Next:** S5 — Trade plan + risk (position size calculator + journal CRUD).
+**Sprint deliverable (S5):**
+- Position size calculator (risk % per trade × stop distance) — pure function, ≥ 5 unit test + property-based.
+- Journal CRUD (Pydantic schema PRD §8.2 + DuckDB repo + web form).
+- AI critic untuk pre-trade plan (`journal_critique` schema per AI_BOUNDARIES §3.2).
+
+**Next:** S6 — Daily brief (`analysis_output` schema combining indicators + news + journal context).
 
 ### 2.4 Exit Criteria
 
@@ -108,8 +119,8 @@ Teknis:
 - [ ] Tidak ada private data ter-commit (verified pre-commit + CI `no_private_leak`).
 - [ ] Core indicator calc test coverage ≥ 90%.
 - [ ] Position size calculator: ≥ 5 unit test + property-based.
-- [ ] Banned-phrase filter aktif di AI pipeline.
-- [ ] Schema validation reject malformed AI output.
+- [x] Banned-phrase filter aktif di AI pipeline.
+- [x] Schema validation reject malformed AI output.
 
 Safety:
 - [ ] Disclaimer di README, UI footer, AI panel, export.

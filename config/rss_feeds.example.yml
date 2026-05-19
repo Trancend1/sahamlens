@@ -1,0 +1,6 @@
+# SahamLens — RSS news feed sources. Copy ke `rss_feeds.yml` jika perlu override.
+# Owner verifies endpoint accuracy + ToS per source before first ingest.
+sources:
+  detik: https://finance.detik.com/rss
+  cnbc: https://www.cnbcindonesia.com/market/rss
+  kontan: https://investasi.kontan.co.id/rss

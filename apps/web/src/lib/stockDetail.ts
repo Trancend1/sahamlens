@@ -15,6 +15,21 @@ export interface IndicatorSeriesPoint {
   value: number;
 }
 
+export type SentimentLabel = "bullish" | "neutral" | "bearish" | "mixed";
+export type SourceQuality = "official" | "reputable_media" | "blog" | "unknown";
+
+export interface NewsRecent {
+  news_id: number;
+  url: string;
+  summary: string;
+  affected_tickers: string[];
+  sentiment_label: SentimentLabel;
+  caveats: string[];
+  source_quality: SourceQuality;
+  confidence: number;
+  summarized_at: string;
+}
+
 export interface StockDetail {
   symbol: string;
   ohlcv: OhlcvRow[];
@@ -22,6 +37,7 @@ export interface StockDetail {
   indicators_latest: Partial<Record<IndicatorKey, number>>;
   first_date: string | null;
   last_date: string | null;
+  news_recent: NewsRecent[];
 }
 
 export async function fetchStockDetail(symbol: string, days = 365): Promise<StockDetail> {

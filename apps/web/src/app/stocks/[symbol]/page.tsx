@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { IndicatorCard } from "@/components/IndicatorCard";
+import { NewsSection } from "@/components/NewsSection";
 import { StockChart } from "@/components/StockChart";
 import { INDICATOR_KEYS, type IndicatorKey } from "@/lib/indicatorMeta";
 import { fetchStockDetail, type StockDetail } from "@/lib/stockDetail";
@@ -85,6 +86,8 @@ export default async function StockDetailPage({ params }: PageProps) {
           macdHist={detail.indicators_series.macd_hist}
         />
       </section>
+
+      <NewsSection items={detail.news_recent ?? []} symbol={detail.symbol} />
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {INDICATOR_KEYS.map((key) => (
