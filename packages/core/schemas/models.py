@@ -57,3 +57,15 @@ class FetchResult(BaseModel):
     @classmethod
     def _canon(cls, v: str) -> str:
         return normalize_ticker(v)
+
+
+class IndicatorPoint(BaseModel):
+    symbol: str
+    date: date
+    indicator: str
+    value: float
+
+    @field_validator("symbol")
+    @classmethod
+    def _canon(cls, v: str) -> str:
+        return normalize_ticker(v)

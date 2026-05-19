@@ -24,12 +24,18 @@ __pycache__/
 dist/
 build/
 coverage/
+.coverage
 .nyc_output/
 
 # IDE
 .vscode/
 .idea/
+.claude/
 *.swp
+
+# Playwright MCP scratch + manual smoke screenshots
+.playwright-mcp/
+s3-*.png
 
 # OS
 .DS_Store

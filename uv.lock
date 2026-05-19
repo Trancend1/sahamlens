@@ -1078,6 +1078,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "duckdb" },
+    { name = "pandas" },
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "yfinance" },
@@ -1097,6 +1098,7 @@ requires-dist = [
     { name = "duckdb", specifier = ">=1.1.0" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.112.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.11.0" },
+    { name = "pandas", specifier = ">=2.2.0" },
     { name = "pydantic", specifier = ">=2.9.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0.0" },

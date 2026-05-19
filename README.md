@@ -90,8 +90,6 @@ Detail per modul: [`.docs/ARCHITECTURE.md`](.docs/ARCHITECTURE.md).
 
 Repo publik untuk sharing teknologi. Kontribusi welcome **tapi** tidak boleh menggeser arah ke SaaS / multi-user / auto-trade. Aturan + scope: [`.docs/CONTRIBUTING.md`](.docs/CONTRIBUTING.md).
 
-**Aturan kontribusi AI-assisted:** AI = ghostwriter, owner = author. Tidak ada `Co-Authored-By: Claude` / `Generated with Claude Code` di commit/PR. Detail: [CLAUDE.md §4.6](CLAUDE.md).
-
 ---
 
 ## License
