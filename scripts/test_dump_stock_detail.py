@@ -59,6 +59,8 @@ def test_main_json_shape(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> 
     for key in INDICATOR_KEYS:
         assert isinstance(payload["indicators_series"][key], list)
     assert "ma_5" in payload["indicators_latest"]
+    # S4: payload carries news_recent (empty when no summaries seeded).
+    assert payload["news_recent"] == []
 
 
 def test_main_days_limit_trims_recent(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

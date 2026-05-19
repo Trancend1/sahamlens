@@ -18,7 +18,10 @@ Output JSON shape:
     },
     "indicators_latest": {"ma_5": 1.0, ...},
     "first_date": "YYYY-MM-DD",
-    "last_date":  "YYYY-MM-DD"
+    "last_date":  "YYYY-MM-DD",
+    "news_recent": [{"news_id":..,"url":..,"summary":..,"affected_tickers":[..],
+                     "sentiment_label":..,"caveats":[..],"source_quality":..,
+                     "confidence":..,"summarized_at":..}, ...]
   }
 
 Exit code: 0 ok, 2 empty (no price rows for symbol), 3 error.
@@ -35,6 +38,7 @@ from typing import TypedDict
 import duckdb
 from packages.core.data_sources.normalize import normalize_ticker
 from packages.core.indicators import INDICATOR_KEYS, latest_for
+from packages.core.news.repo import load_recent_news_for_ticker
 from packages.core.schemas.repository import OHLCVRow, load_ohlcv, open_connection
 
 EXIT_OK = 0
@@ -47,6 +51,18 @@ class IndicatorSeriesPoint(TypedDict):
     value: float
 
 
+class NewsRecent(TypedDict):
+    news_id: int
+    url: str
+    summary: str
+    affected_tickers: list[str]
+    sentiment_label: str
+    caveats: list[str]
+    source_quality: str
+    confidence: float
+    summarized_at: str
+
+
 class StockDetailPayload(TypedDict):
     symbol: str
     ohlcv: list[OHLCVRow]
@@ -54,6 +70,25 @@ class StockDetailPayload(TypedDict):
     indicators_latest: dict[str, float]
     first_date: str | None
     last_date: str | None
+    news_recent: list[NewsRecent]
+
+
+def load_news_recent(conn: duckdb.DuckDBPyConnection, symbol: str) -> list[NewsRecent]:
+    summaries = load_recent_news_for_ticker(conn, symbol, limit=5)
+    return [
+        NewsRecent(
+            news_id=s.news_id,
+            url=s.url,
+            summary=s.summary,
+            affected_tickers=list(s.affected_tickers),
+            sentiment_label=s.sentiment_label,
+            caveats=list(s.caveats),
+            source_quality=s.source_quality,
+            confidence=s.confidence,
+            summarized_at=s.summarized_at.isoformat(),
+        )
+        for s in summaries
+    ]
 
 
 def load_indicator_series(
@@ -87,6 +122,7 @@ def build_payload(
     last = ohlcv[-1]["date"] if ohlcv else None
     series = load_indicator_series(conn, canonical, first_date=first)
     latest = latest_for(conn, canonical)
+    news_recent = load_news_recent(conn, canonical)
     return {
         "symbol": canonical,
         "ohlcv": ohlcv,
@@ -94,6 +130,7 @@ def build_payload(
         "indicators_latest": latest,
         "first_date": first,
         "last_date": last,
+        "news_recent": news_recent,
     }
 
 
