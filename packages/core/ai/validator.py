@@ -16,6 +16,8 @@ ReasonCode = Literal[
     "banned_phrase",
     "schema",
     "empty_caveats",
+    "empty_evidence",
+    "empty_uncertainty",
     "not_financial_advice",
     "summary_too_long",
 ]
@@ -49,6 +51,66 @@ def scan_banned(text: str) -> str | None:
 def count_sentences(text: str) -> int:
     parts = re.split(r"[.!?]+\s*", text.strip())
     return sum(1 for p in parts if p.strip())
+
+
+def validate_stock_brief(payload: dict[str, object], schema: type[BaseModel]) -> BaseModel:
+    """Parse StockBrief + run invariants. Raises ValidationError on violation."""
+    try:
+        parsed = schema.model_validate(payload)
+    except PydanticValidationError as exc:
+        raise ValidationError("schema", str(exc)) from exc
+
+    if getattr(parsed, "not_financial_advice", None) is not True:
+        raise ValidationError("not_financial_advice", "field must be literal True")
+
+    evidence = list(getattr(parsed, "evidence", []) or [])
+    if not evidence:
+        raise ValidationError("empty_evidence", "evidence list is empty")
+
+    uncertainty = str(getattr(parsed, "uncertainty", "")).strip()
+    if not uncertainty:
+        raise ValidationError("empty_uncertainty", "uncertainty field is empty")
+
+    caveats = list(getattr(parsed, "caveats", []) or [])
+    if not caveats:
+        raise ValidationError("empty_caveats", "caveats list is empty")
+
+    scan_fields = [
+        str(getattr(parsed, "bullish_view", "")),
+        str(getattr(parsed, "bearish_view", "")),
+        str(getattr(parsed, "uncertainty", "")),
+        str(getattr(parsed, "beginner_explanation", "")),
+        *(str(c) for c in caveats),
+    ]
+    for text in scan_fields:
+        hit = scan_banned(text)
+        if hit:
+            raise ValidationError("banned_phrase", f"matched {hit!r}")
+
+    return parsed
+
+
+def validate_chat_response(payload: dict[str, object], schema: type[BaseModel]) -> BaseModel:
+    """Parse ChatResponse + run invariants. Raises ValidationError on violation."""
+    try:
+        parsed = schema.model_validate(payload)
+    except PydanticValidationError as exc:
+        raise ValidationError("schema", str(exc)) from exc
+
+    if getattr(parsed, "not_financial_advice", None) is not True:
+        raise ValidationError("not_financial_advice", "field must be literal True")
+
+    caveats = list(getattr(parsed, "caveats", []) or [])
+    if not caveats:
+        raise ValidationError("empty_caveats", "caveats list is empty")
+
+    answer = str(getattr(parsed, "answer", ""))
+    for text in [answer, *(str(c) for c in caveats)]:
+        hit = scan_banned(text)
+        if hit:
+            raise ValidationError("banned_phrase", f"matched {hit!r}")
+
+    return parsed
 
 
 def validate_news_summary(payload: dict[str, object], schema: type[BaseModel]) -> BaseModel:

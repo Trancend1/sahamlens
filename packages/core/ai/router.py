@@ -15,7 +15,7 @@ import yaml
 from packages.core.news.repo import daily_ai_spend
 from pydantic import BaseModel, Field
 
-Task = Literal["news_summary", "daily_brief", "earnings"]
+Task = Literal["news_summary", "daily_brief", "earnings", "journal_critique", "stock_chat"]
 
 DEFAULT_BUDGET_PATH = Path("config/cost_budget.yml")
 EXAMPLE_BUDGET_PATH = Path("config/cost_budget.example.yml")
@@ -24,6 +24,8 @@ DEFAULT_TASK_MODEL: dict[Task, str] = {
     "news_summary": "claude-haiku-4-5-20251001",
     "daily_brief": "claude-sonnet-4-6",
     "earnings": "claude-opus-4-7",
+    "journal_critique": "claude-sonnet-4-6",
+    "stock_chat": "claude-sonnet-4-6",
 }
 
 

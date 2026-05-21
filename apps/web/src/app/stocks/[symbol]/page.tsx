@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { ChatPanel } from "@/components/ChatPanel";
 import { IndicatorCard } from "@/components/IndicatorCard";
 import { NewsSection } from "@/components/NewsSection";
+import { StockBriefPanel } from "@/components/StockBriefPanel";
 import { StockChart } from "@/components/StockChart";
 import { INDICATOR_KEYS, type IndicatorKey } from "@/lib/indicatorMeta";
 import { fetchStockDetail, type StockDetail } from "@/lib/stockDetail";
@@ -99,6 +101,12 @@ export default async function StockDetailPage({ params }: PageProps) {
           />
         ))}
       </section>
+
+      <hr className="border-muted/20" />
+
+      <StockBriefPanel symbol={detail.symbol} />
+
+      <ChatPanel symbol={detail.symbol} />
 
       <Footer />
     </main>
