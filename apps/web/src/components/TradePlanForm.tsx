@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react";
 import CritiquePanel from "./CritiquePanel";
-import { calcPositionSize } from "@/lib/journal";
-import type { TradePlan, JournalCritique, SetupType, EmotionLevel } from "@/lib/journal";
+import { calcPositionSize } from "@/lib/journal-client";
+import type { TradePlan, JournalCritique, SetupType, EmotionLevel } from "@/lib/journal-client";
 
 const SETUP_TYPES: { value: SetupType; label: string }[] = [
   { value: "breakout", label: "Breakout" },
