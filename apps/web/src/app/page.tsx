@@ -1,20 +1,30 @@
+import Link from "next/link";
+
+const NAV = [
+  { href: "/watchlist", label: "Watchlist", desc: "Ticker yang diikuti" },
+  { href: "/journal", label: "Trade Journal", desc: "Plan, review, AI kritik" },
+];
+
 export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-6 px-6">
       <header>
         <p className="text-sm uppercase tracking-widest text-muted">SahamLens</p>
-        <h1 className="mt-1 text-3xl font-semibold">Phase 0 — Foundations</h1>
+        <h1 className="mt-1 text-3xl font-semibold">Dashboard</h1>
       </header>
 
-      <section className="rounded-md border border-muted/30 bg-white/[0.02] p-5 text-sm leading-relaxed">
-        <p>
-          Repo skeleton hidup. Belum ada fitur — sprint berikutnya: ingestion harga (yfinance →
-          DuckDB) + watchlist CRUD.
-        </p>
-        <p className="mt-3 text-muted">
-          Personal learning & analysis tool. Bukan investment advice. Lihat <code>DISCLAIMER.md</code>.
-        </p>
-      </section>
+      <nav className="grid grid-cols-2 gap-4">
+        {NAV.map((n) => (
+          <Link
+            key={n.href}
+            href={n.href}
+            className="rounded-md border border-muted/30 bg-white/[0.02] p-4 hover:border-accent/40 hover:bg-accent/5"
+          >
+            <p className="text-sm font-medium text-fg">{n.label}</p>
+            <p className="mt-1 text-xs text-muted">{n.desc}</p>
+          </Link>
+        ))}
+      </nav>
 
       <footer className="text-xs text-muted">
         AI explains, user decides. No buy/sell signal, no auto-execute, no broker credential.

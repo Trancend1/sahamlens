@@ -67,7 +67,7 @@ Gagal di salah satu → phase belum exit. Tidak ada "menyusul nanti".
 ### 2.3 Active Phase
 
 **Phase:** Phase MVP — Private Learning Dashboard.
-**Sprint aktif:** **S5 — Trade plan + risk** (position size calculator + journal CRUD).
+**Sprint aktif:** **S7 — Freshness UX + polish + portfolio import**.
 
 **S2 deliverable (done ✓):**
 - `packages/core/indicators/formulas.py` — pure `sma`, `ema`, `rsi_wilder` (Wilder smoothing, SMA seed), `macd` (12/26/9). Pandas-only, no extra dep.
@@ -99,12 +99,29 @@ Gagal di salah satu → phase belum exit. Tidak ada "menyusul nanti".
 - Tests: 30 news + 33 ai (Python) + 13 web (vitest). Coverage news 95%, ai 94% (gate ≥70%).
 - Deps: `feedparser>=6.0.11`, `pyyaml>=6.0.2`. No `anthropic` SDK — stdlib `urllib` per scope decision.
 
-**Sprint deliverable (S5):**
-- Position size calculator (risk % per trade × stop distance) — pure function, ≥ 5 unit test + property-based.
-- Journal CRUD (Pydantic schema PRD §8.2 + DuckDB repo + web form).
-- AI critic untuk pre-trade plan (`journal_critique` schema per AI_BOUNDARIES §3.2).
+**S5 deliverable (done ✓):**
+- `packages/core/risk/calculator.py` — `position_size()` pure function (IDX formula: risk_rupiah / risk_per_lot, 1 lot = 100 shares). `PositionSizeResult` frozen dataclass.
+- `packages/core/journal/models.py` — `TradePlan`, `JournalCritique`, `CritiqueCheck` Pydantic models (PRD §8.2). Schema tidak punya `approval` field by design.
+- `packages/core/journal/repo.py` — `create_plan`, `load_plan`, `list_plans`, `update_status`. ID: microsecond epoch.
+- `packages/core/ai/critique_plan.py` — `critique_trade_plan` orchestrator: budget check → render → complete_json → validate → log.
+- `scripts/journal.py` — CLI: `plan add/list/get/update/critique`.
+- Web: `TradePlanForm.tsx` (live position size calc via pure TS), `CritiquePanel.tsx`, `/journal` list page, `/journal/new` form page, API routes `/api/journal/plan` + `/api/journal/critique/[id]`.
+- Prompt: `prompts/system/journal_critique.v1.md`.
+- Tests: 222 Python pass. Risk coverage 100% (gate ≥90% ✓). Journal coverage 99% (gate ≥70% ✓).
 
-**Next:** S6 — Daily brief (`analysis_output` schema combining indicators + news + journal context).
+**S6 deliverable (done ✓):**
+- `packages/core/ai/models.py` — `EvidenceItem`, `StockBrief` (analysis_output schema AI_BOUNDARIES §3.1), `ChatResponse`.
+- `packages/core/ai/context_builder.py` — `build_stock_context`: assembles price + indicators + news + journal dari DuckDB sebelum LLM call (RAG-first per AI_BOUNDARIES §4.1).
+- `packages/core/ai/generate_brief.py` — `generate_stock_brief`: context build → prompt render → complete_json (max 1500 tokens) → validate → log. 3× retry on banned-phrase.
+- `packages/core/ai/stock_chat.py` — `answer_stock_question`: single-turn RAG Q&A scoped ke satu saham.
+- `packages/core/ai/validator.py` — tambah `validate_stock_brief` + `validate_chat_response`.
+- `packages/core/ai/router.py` — tambah `stock_chat` task → Sonnet 4.6.
+- `scripts/generate_brief.py` — CLI: `brief --symbol` + `chat --symbol --question`.
+- Web: `StockBriefPanel.tsx` (lazy generate, bullish/bearish/uncertainty display), `ChatPanel.tsx` (client-side history, expandable evidence), API routes `/api/stocks/[symbol]/brief` + `/api/stocks/[symbol]/chat`. Stock detail page diperbarui.
+- Prompts: `prompts/system/stock_brief.v1.md` + `stock_chat.v1.md`.
+- Tests: 222 Python pass. AI coverage 95% (gate ≥70% ✓). tsc + eslint + mypy + ruff clean.
+
+**Next:** S7 — Freshness UX + polish + portfolio import.
 
 ### 2.4 Exit Criteria
 
@@ -117,8 +134,8 @@ Produk:
 
 Teknis:
 - [ ] Tidak ada private data ter-commit (verified pre-commit + CI `no_private_leak`).
-- [ ] Core indicator calc test coverage ≥ 90%.
-- [ ] Position size calculator: ≥ 5 unit test + property-based.
+- [x] Core indicator calc test coverage ≥ 90%.
+- [x] Position size calculator: ≥ 5 unit test + property-based.
 - [x] Banned-phrase filter aktif di AI pipeline.
 - [x] Schema validation reject malformed AI output.
 
