@@ -21,6 +21,7 @@ class WatchlistEntry(BaseModel):
     tag: str | None = None
     note: str | None = None
     added_at: datetime
+    fetched_at: datetime | None = None  # latest price fetch per symbol, from price_history JOIN
 
     @field_validator("symbol")
     @classmethod

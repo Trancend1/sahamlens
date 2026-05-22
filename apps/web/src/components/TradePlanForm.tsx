@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useMemo } from "react";
+import { CoolingOffBanner } from "./CoolingOffBanner";
 import CritiquePanel from "./CritiquePanel";
 import { calcPositionSize } from "@/lib/journal-client";
 import type { TradePlan, JournalCritique, SetupType, EmotionLevel } from "@/lib/journal-client";
@@ -197,20 +199,33 @@ export default function TradePlanForm() {
         {critiqueState === "error" && (
           <p className="text-sm text-red-400">{critiqueError}</p>
         )}
-        {critiqueState === "done" && critique && <CritiquePanel critique={critique} />}
+        {critiqueState === "done" && critique && (
+          <>
+            <CritiquePanel critique={critique} />
+            <CoolingOffBanner
+              emotion={form.emotion || null}
+              riskFlag={critique.overall_risk_flag}
+            />
+          </>
+        )}
 
-        <button
-          onClick={() => {
-            setForm(INITIAL);
-            setSubmitState("idle");
-            setSavedPlan(null);
-            setCritiqueState("idle");
-            setCritique(null);
-          }}
-          className="mt-2 text-xs text-muted underline hover:text-fg"
-        >
-          Buat plan baru
-        </button>
+        <div className="mt-2 flex items-center gap-4">
+          <Link href="/journal" className="text-xs text-accent hover:underline">
+            Lihat di Journal →
+          </Link>
+          <button
+            onClick={() => {
+              setForm(INITIAL);
+              setSubmitState("idle");
+              setSavedPlan(null);
+              setCritiqueState("idle");
+              setCritique(null);
+            }}
+            className="text-xs text-muted underline hover:text-fg"
+          >
+            Buat plan baru
+          </button>
+        </div>
       </div>
     );
   }

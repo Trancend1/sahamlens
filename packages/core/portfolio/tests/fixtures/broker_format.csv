@@ -1,0 +1,4 @@
+ticker,lots,avg,market_price,unrealized_pnl,account
+BBCA.JK,10,9200,9400,200000,ACC001
+BBRI.JK,5,4500,4600,50000,ACC001
+TLKM.JK,20,3100,3050,-100000,ACC001

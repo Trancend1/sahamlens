@@ -6,6 +6,7 @@
  * Presentational only; no fetching. Caller passes value + optional current price.
  */
 
+import { FreshnessBadge } from "./FreshnessBadge";
 import {
   INDICATOR_META,
   type IndicatorKey,
@@ -22,12 +23,14 @@ interface IndicatorCardProps {
   indicator: IndicatorKey;
   value: number | null;
   currentPrice?: number | null;
+  computedAt?: string | null;
 }
 
 export function IndicatorCard({
   indicator,
   value,
   currentPrice = null,
+  computedAt,
 }: IndicatorCardProps): React.ReactElement {
   const meta = INDICATOR_META[indicator];
   const ctx: InterpretContext = { price: currentPrice };
@@ -37,15 +40,18 @@ export function IndicatorCard({
       className="rounded-md border border-muted/30 bg-white/[0.02] p-4 text-sm leading-relaxed"
       data-indicator={indicator}
     >
-      <header className="mb-3 flex items-baseline justify-between gap-3">
+      <header className="mb-3 flex items-start justify-between gap-3">
         <h3 className="font-semibold tracking-tight">{meta.label}</h3>
-        <span
-          className={`rounded border px-2 py-0.5 text-[10px] uppercase tracking-widest ${
-            CATEGORY_BADGE[meta.category] ?? "border-muted/40 text-muted"
-          }`}
-        >
-          {meta.category}
-        </span>
+        <div className="flex flex-wrap justify-end gap-1">
+          <span
+            className={`rounded border px-2 py-0.5 text-[10px] uppercase tracking-widest ${
+              CATEGORY_BADGE[meta.category] ?? "border-muted/40 text-muted"
+            }`}
+          >
+            {meta.category}
+          </span>
+          {computedAt ? <FreshnessBadge iso={computedAt} /> : null}
+        </div>
       </header>
 
       <p className="font-mono text-2xl font-semibold tabular-nums">

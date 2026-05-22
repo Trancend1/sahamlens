@@ -3,6 +3,7 @@ import Link from "next/link";
 const NAV = [
   { href: "/watchlist", label: "Watchlist", desc: "Ticker yang diikuti" },
   { href: "/journal", label: "Trade Journal", desc: "Plan, review, AI kritik" },
+  { href: "/portfolio", label: "Portfolio", desc: "Posisi & P&L aktual" },
 ];
 
 export default function HomePage() {
@@ -26,9 +27,6 @@ export default function HomePage() {
         ))}
       </nav>
 
-      <footer className="text-xs text-muted">
-        AI explains, user decides. No buy/sell signal, no auto-execute, no broker credential.
-      </footer>
     </main>
   );
 }
