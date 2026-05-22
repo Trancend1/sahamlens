@@ -56,16 +56,24 @@ def get_entry(conn: duckdb.DuckDBPyConnection, symbol: str) -> WatchlistEntry | 
 
 def list_entries(conn: duckdb.DuckDBPyConnection) -> list[WatchlistEntry]:
     rows = conn.execute(
-        "SELECT symbol, tag, note, added_at FROM watchlist ORDER BY added_at, symbol"
+        """
+        SELECT w.symbol, w.tag, w.note, w.added_at, MAX(ph.fetched_at) AS fetched_at
+        FROM watchlist w
+        LEFT JOIN price_history ph ON ph.symbol = w.symbol
+        GROUP BY w.symbol, w.tag, w.note, w.added_at
+        ORDER BY w.added_at, w.symbol
+        """
     ).fetchall()
     return [_row_to_entry(r) for r in rows]
 
 
 def _row_to_entry(row: tuple) -> WatchlistEntry:  # type: ignore[type-arg]
-    symbol, tag, note, added_at = row
+    symbol, tag, note, added_at, *rest = row
+    fetched_at_raw = rest[0] if rest else None
     return WatchlistEntry(
         symbol=symbol,
         tag=tag,
         note=note,
         added_at=datetime.fromisoformat(added_at),
+        fetched_at=datetime.fromisoformat(fetched_at_raw) if fetched_at_raw else None,
     )

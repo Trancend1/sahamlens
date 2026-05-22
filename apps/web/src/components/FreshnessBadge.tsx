@@ -15,8 +15,9 @@ interface FreshnessBadgeProps {
 }
 
 export function FreshnessBadge({ iso }: FreshnessBadgeProps): React.ReactElement {
-  const tier = freshnessTier(iso);
-  const label = formatRelativeTime(iso);
+  const valid = !Number.isNaN(new Date(iso).getTime());
+  const tier = valid ? freshnessTier(iso) : "old";
+  const label = valid ? formatRelativeTime(iso) : "—";
   return (
     <span
       className={`rounded border px-2 py-0.5 text-[10px] uppercase tracking-widest ${

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FreshnessBadge } from "@/components/FreshnessBadge";
 import { fetchWatchlist, type WatchlistEntry } from "@/lib/watchlist";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,9 @@ export default async function WatchlistPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 px-6 py-10">
       <header>
-        <p className="text-sm uppercase tracking-widest text-muted">SahamLens · S1</p>
+        <p className="text-sm uppercase tracking-widest text-muted">
+          <Link href="/" className="hover:text-fg">SahamLens</Link> · S1
+        </p>
         <h1 className="mt-1 text-3xl font-semibold">Watchlist</h1>
         <p className="mt-2 text-sm text-muted">
           {entries.length} ticker · read-only (mutasi via CLI: `uv run python -m scripts.watchlist`).
@@ -55,15 +58,15 @@ export default async function WatchlistPage() {
                   </span>
                 ) : null}
               </div>
-              <span className="text-xs text-muted">added {formatDate(e.added_at)}</span>
+              <div className="flex items-center gap-2">
+                {e.fetched_at ? <FreshnessBadge iso={e.fetched_at} /> : null}
+                <span className="text-xs text-muted">added {formatDate(e.added_at)}</span>
+              </div>
             </li>
           ))}
         </ul>
       )}
 
-      <footer className="text-xs text-muted">
-        Personal learning & analysis tool. Bukan investment advice. AI explains, user decides.
-      </footer>
     </main>
   );
 }

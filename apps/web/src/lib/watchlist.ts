@@ -5,6 +5,7 @@ export interface WatchlistEntry {
   tag: string | null;
   note: string | null;
   added_at: string;
+  fetched_at: string | null;
 }
 
 export async function fetchWatchlist(): Promise<WatchlistEntry[]> {

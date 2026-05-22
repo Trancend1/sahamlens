@@ -44,7 +44,9 @@ export default async function JournalPage() {
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 px-6 py-10">
       <header className="flex items-end justify-between">
         <div>
-          <p className="text-sm uppercase tracking-widest text-muted">SahamLens · S5</p>
+          <p className="text-sm uppercase tracking-widest text-muted">
+            <Link href="/" className="hover:text-fg">SahamLens</Link> · S5
+          </p>
           <h1 className="mt-1 text-3xl font-semibold">Trade Journal</h1>
           <p className="mt-2 text-sm text-muted">{plans.length} plan tersimpan</p>
         </div>
@@ -95,9 +97,6 @@ export default async function JournalPage() {
         </ul>
       )}
 
-      <footer className="text-xs text-muted">
-        Personal learning & analysis tool. Bukan investment advice. AI explains, user decides.
-      </footer>
     </main>
   );
 }

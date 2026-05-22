@@ -67,7 +67,7 @@ Gagal di salah satu → phase belum exit. Tidak ada "menyusul nanti".
 ### 2.3 Active Phase
 
 **Phase:** Phase MVP — Private Learning Dashboard.
-**Sprint aktif:** **S7 — Freshness UX + polish + portfolio import**.
+**Sprint aktif:** **S8 — Dogfooding 5 hari berturut-turut**.
 
 **S2 deliverable (done ✓):**
 - `packages/core/indicators/formulas.py` — pure `sma`, `ema`, `rsi_wilder` (Wilder smoothing, SMA seed), `macd` (12/26/9). Pandas-only, no extra dep.
@@ -121,7 +121,18 @@ Gagal di salah satu → phase belum exit. Tidak ada "menyusul nanti".
 - Prompts: `prompts/system/stock_brief.v1.md` + `stock_chat.v1.md`.
 - Tests: 222 Python pass. AI coverage 95% (gate ≥70% ✓). tsc + eslint + mypy + ruff clean.
 
-**Next:** S7 — Freshness UX + polish + portfolio import.
+**S7 deliverable (done ✓):**
+- `packages/core/portfolio/` — `PortfolioPosition` Pydantic model, `replace_positions` (atomic delete+insert), `list_positions`, `parse_csv` auto-detect (aliases: symbol/kode/ticker, lots/lot/lembar, avg_price/avg/harga) + explicit field_map fallback. `ImportResult(positions, warnings, field_map, detected_columns)`.
+- `scripts/portfolio.py` — CLI: `list`, `parse --csv-content --field-map`, `save --positions`.
+- `packages/core/schemas/models.py` — `fetched_at: datetime | None` added to `WatchlistEntry`.
+- `packages/core/watchlist/repo.py` — `list_entries()` LEFT JOIN `price_history` → returns `fetched_at` per symbol.
+- Web new: `StockFreshnessBar.tsx`, `CoolingOffBanner.tsx`, `lib/portfolio.ts`, `/portfolio` page (PnL table), `/portfolio/import` page (3-phase: upload → preview/field-mapper → save), `/api/portfolio` GET+POST, `/api/portfolio/import` POST.
+- Web modified: `layout.tsx` global `<footer>` disclaimer + Portfolio nav; `FreshnessBadge.tsx` invalid-ISO guard; `IndicatorCard.tsx` `computedAt?` prop; `watchlist/page.tsx` FreshnessBadge per row; `stocks/[symbol]/page.tsx` StockFreshnessBar + computedAt to IndicatorCards; `TradePlanForm.tsx` CoolingOffBanner wired inside; `lib/watchlist.ts` `fetched_at` field.
+- Tests: 248 Python pass, 55 vitest pass. Portfolio coverage ≥70% ✓. ruff + mypy + tsc + eslint clean.
+- S8 hardening: `dateTime.test.ts` 3 new tests (IDX Friday→Monday weekend gap, date-only string, UTC+7 offset); CoolingOffBanner 10 tests; StockFreshnessBar 4 tests; CSV fixture contract tests (valid/bad_headers/broker_format).
+- Navigation audit + polish: `← Journal` back link di `/journal/new`; `Lihat di Journal →` di TradePlanForm success state; `← Portfolio` di `/portfolio/import` header + done state; `SahamLens` prefix jadi Link → `/` di watchlist/journal/portfolio pages. 248 Python + 55 TS pass.
+
+**Next:** S8 — Dogfooding 5 hari berturut-turut (demo to self). Catat friction di PR description.
 
 ### 2.4 Exit Criteria
 

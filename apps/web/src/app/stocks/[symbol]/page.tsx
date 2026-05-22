@@ -4,6 +4,7 @@ import { IndicatorCard } from "@/components/IndicatorCard";
 import { NewsSection } from "@/components/NewsSection";
 import { StockBriefPanel } from "@/components/StockBriefPanel";
 import { StockChart } from "@/components/StockChart";
+import { StockFreshnessBar } from "@/components/StockFreshnessBar";
 import { INDICATOR_KEYS, type IndicatorKey } from "@/lib/indicatorMeta";
 import { fetchStockDetail, type StockDetail } from "@/lib/stockDetail";
 
@@ -39,7 +40,6 @@ export default async function StockDetailPage({ params }: PageProps) {
           </pre>
           <pre className="mt-3 whitespace-pre-wrap text-xs text-red-200">{error}</pre>
         </section>
-        <Footer />
       </main>
     );
   }
@@ -55,7 +55,6 @@ export default async function StockDetailPage({ params }: PageProps) {
             {"\n"}uv run python -m scripts.calculate_indicators --symbols {symbol.toUpperCase()}
           </pre>
         </section>
-        <Footer />
       </main>
     );
   }
@@ -78,6 +77,8 @@ export default async function StockDetailPage({ params }: PageProps) {
         lastDate={detail.last_date}
       />
 
+      <StockFreshnessBar lastDate={detail.last_date} />
+
       <section>
         <StockChart
           ohlcv={detail.ohlcv}
@@ -98,6 +99,7 @@ export default async function StockDetailPage({ params }: PageProps) {
             indicator={key}
             value={detail.indicators_latest[key] ?? null}
             currentPrice={currentClose}
+            computedAt={detail.last_date}
           />
         ))}
       </section>
@@ -108,7 +110,6 @@ export default async function StockDetailPage({ params }: PageProps) {
 
       <ChatPanel symbol={detail.symbol} />
 
-      <Footer />
     </main>
   );
 }
@@ -143,14 +144,6 @@ function Header({ symbol, currentClose, firstDate, lastDate }: HeaderProps) {
         </p>
       ) : null}
     </header>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="text-xs text-muted">
-      Personal learning & analysis tool. Bukan investment advice. AI explains, user decides.
-    </footer>
   );
 }
 
