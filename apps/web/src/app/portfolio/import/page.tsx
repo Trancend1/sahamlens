@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import type { ImportResult, PortfolioPosition } from "@/lib/portfolio";
 
 type ImportPhase = "upload" | "preview" | "mapping" | "saving" | "done" | "error";
 
 export default function PortfolioImportPage() {
-  const router = useRouter();
   const [phase, setPhase] = useState<ImportPhase>("upload");
   const [csvContent, setCsvContent] = useState("");
   const [result, setResult] = useState<ImportResult | null>(null);
