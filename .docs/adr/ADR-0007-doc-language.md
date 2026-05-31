@@ -1,44 +1,35 @@
-# ADR-0007 — Bahasa Indonesia Primary untuk Dokumentasi
+# ADR-0007: Documentation Language and Style
 
-- **Status:** accepted
-- **Date:** 2026-05-16
-- **Deciders:** owner
+Status: Accepted
+Date: 2026-05-31
 
 ## Context
 
-PRD legacy ditulis campuran Indonesia–English. Repo publik dengan potential international contributor menimbulkan pertanyaan bahasa apa yang menjadi primary.
+The project mixes Indonesian product context with English technical naming. Documentation must stay easy for the owner and future agents to use.
 
 ## Decision
 
-**Bahasa Indonesia sebagai primary untuk dokumentasi naratif** (`.docs/**`, `README.md`, `CONTRIBUTING.md`, ADR body). Technical terms tetap English (RSI, MACD, watchlist, indicator, journal, etc) karena standar industry.
+Use clear English for canonical technical docs, while preserving Indonesian user/product terms when they are the natural domain language.
 
-Kode, identifier, commit message, log = **English**.
+Rules:
+
+- Prefer short sections and source-of-truth mapping.
+- Avoid duplicating the same decision across files.
+- Keep historical planning out of active docs.
+- Use ASCII punctuation to avoid encoding issues.
 
 ## Consequences
 
-**Positive:**
-- Konsisten dengan audience utama (owner Indonesia, trader IDX).
-- Mempercepat menulis (owner berpikir bilingual untuk topik trading).
-- Tidak memaksa translasi yang menambah maintenance.
+Positive:
 
-**Negative:**
-- Public contributor non-Indonesia harus pakai translation tool.
-- Sebagian search engine query lebih sulit (mix bahasa).
+- Future implementation agents can scan docs quickly.
+- Technical names stay consistent with code.
+- Indonesian product intent is not lost.
 
-**Mitigasi:**
-- Section heading boleh bilingual (Indonesia + English in parens) untuk discoverability di doc penting.
-- Technical jargon tetap English supaya kode + doc seragam.
-- Tabel & struktur data lebih mudah translate auto.
+Trade-offs:
 
-**Trigger untuk re-evaluate:**
-- Kontribusi internasional regular (> 5 contributors aktif).
-- Project pivot ke audience global (tidak akan, lihat scope).
+- Some user-facing phrasing may still need Indonesian localization in the app.
 
-## Alternatives Considered
+## Follow-Up
 
-1. **English only** — di-reject: owner berpikir lebih cepat dalam Indonesia untuk konteks trading IDX; menambah friction tanpa benefit jelas.
-2. **Bilingual full** (setiap doc punya `*.en.md`) — di-reject: maintenance overhead tinggi, divergen pasti terjadi.
-
-## References
-
-- [.docs/README.md](../README.md)
+If docs become noisy again, rewrite the canonical file instead of appending another planning artifact.
