@@ -94,3 +94,12 @@ def test_overview_counts_provider_states_and_coverage() -> None:
     assert overview.failed_provider_count == 1
     assert overview.restricted_provider_count == 2
     assert overview.total_coverage_count == 5
+
+
+def test_properties_expose_ui_ready_fields() -> None:
+    overview = DataQualityOverview(providers=[_snapshot("failed", coverage_count=None)])
+
+    assert overview.provider_count == 1
+    assert overview.failed_provider_count == 1
+    assert overview.providers[0].supports_dependent_flows is False
+    assert overview.providers[0].requires_caveat is True
