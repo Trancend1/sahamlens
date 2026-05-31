@@ -41,6 +41,16 @@ Data Quality -> Coverage/Fundamentals -> Screener -> Alerts
 
 Start implementation from [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRINT.md). Do not reopen product scope during implementation unless a real blocker appears.
 
+## Sprint Log
+
+| Sprint | Status | Branch / commit | Detail kecil | Kesulitan / catatan | Pending berikutnya |
+|---|---|---|---|---|---|
+| V1-S0 Docs Readiness | Done | `main` / `05a1a08`, `8ab8ee0` | Canonicalized `.docs`, added `AGENTS.md`, kept `CLAUDE.md` as pointer, locked ADR-0009 to ADR-0013. | Pre-commit line-ending hook tried to touch many files during all-files run; restored noise and committed only docs/alignment. | None for sprint start; main is ahead of origin until pushed. |
+| V1-S1 Provider Health Foundation | In progress | `v1/s1-provider-health-foundation` / `96939a5` | Added `packages/core/data_quality` with `ProviderHealthSnapshot`, `DataQualityOverview`, freshness states, trust tiers, source types, and focused tests. | Direct path pytest on `packages/core/data_quality/test_models.py` hit import-root quirk; full repo pytest passed and is the CI-like check. | Add provider health schema/migration, repository persistence, refresh CLI, then Data Quality Dashboard shell. |
+| V1-S1 Schema / Migration | Pending | Not started | Add DuckDB schema for provider health and freshness metadata. | Must keep migration small and covered by schema/repository tests. | Start after current model slice is reviewed or accepted. |
+| V1-S1 Provider Health CLI | Pending | Not started | Add refresh script using provider adapters and storing health snapshot. | Must not introduce realtime promises or extra providers. | Depends on schema/repository persistence. |
+| V1-S1 Data Quality UI Shell | Pending | Not started | Add dashboard shell and empty/fresh/stale/failed/partial/unknown states. | Must avoid duplicating business rules in React. | Depends on stable model/API shape. |
+
 ## Scope Guardrails
 
 Allowed V1 work:
