@@ -61,9 +61,9 @@ The first implementation PR must not start until these decisions are written or 
 
 1. Provider Health as prerequisite: [ADR-0009](adr/ADR-0009-provider-health-prerequisite.md).
 2. OHLCV freshness contract: [ADR-0010](adr/ADR-0010-ohlcv-freshness-contract.md).
-3. Ticker lifecycle and coverage model.
-4. Fundamental completeness and confidence.
-5. Alert lifecycle and false-positive tracking.
+3. Ticker lifecycle and coverage model: [ADR-0011](adr/ADR-0011-ticker-lifecycle-coverage-model.md).
+4. Fundamental completeness and confidence: [ADR-0012](adr/ADR-0012-fundamental-completeness-confidence.md).
+5. Alert lifecycle and false-positive tracking: [ADR-0013](adr/ADR-0013-alert-lifecycle-false-positive-tracking.md).
 
 Can be written during the related sprint:
 
