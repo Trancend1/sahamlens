@@ -1,133 +1,48 @@
-# TRADING_DISCLAIMER — SahamLens
+# Trading Disclaimer
 
-**Source of truth for:** Legal positioning, disclaimer text canonical, financial-risk boundary, ethical & psychological boundary, mandatory display locations.
-**Tidak di sini:** AI rules (→ [AI_BOUNDARIES.md](AI_BOUNDARIES.md)), data ToS (→ [DATA_SOURCES.md](DATA_SOURCES.md)), product scope (→ [PRD_clean.md](PRD_clean.md)).
+## Canonical Disclaimer
 
-**Versi:** 1.0
-**Status:** Active — **legally binding text. Edit hanya via PR + ADR.**
+SahamLens is a personal decision-support tool. It does not provide financial advice, investment recommendations, broker services, or automated trading. All trading decisions and risks remain the user's responsibility.
 
----
+## Short UI Copy
 
-## 1. Legal Positioning (Indonesia)
+Use this in compact UI surfaces:
 
-- OJK mengatur **Wakil Manajer Investasi (WMI)** dan **Wakil Perantara Pedagang Efek (WPEE)**.
-- **Personal analytical tool untuk diri sendiri** → tidak butuh izin.
-- **Memberi rekomendasi ke orang lain** → butuh izin WMI.
-- **Mengelola dana orang lain** → butuh izin Manajer Investasi.
+> Decision support only. Not financial advice. Verify data before trading.
 
-**Implikasi:** SahamLens adalah personal-use system → tidak butuh izin OJK. **Jika di masa depan terpikir komersialisasi atau memberi rekomendasi publik**, konsultasi legal counsel dulu.
+## Detailed UI Copy
 
-Lihat juga [PRD_clean.md §1](PRD_clean.md) untuk positioning produk.
+Use this in AI, trade-plan, screener, and alert surfaces:
 
----
+> SahamLens explains available evidence and caveats from local/public data. It does not recommend buying or selling, predict guaranteed outcomes, or execute trades. Data may be delayed, stale, incomplete, or wrong. You are responsible for every trading decision.
 
-## 2. Canonical Disclaimer Text
+## Required Placement
 
-Versi ini adalah master. Semua tempat lain (README, footer UI, AI output, export report) **wajib** reference text ini, bukan menulis ulang.
+Show disclaimer or short copy in:
 
-### 2.1 Full version (untuk README, `DISCLAIMER.md`, export report header)
+- AI brief and chat output.
+- Trade-plan critique.
+- Screener results.
+- Alert detail view.
+- Earnings summary.
+- Exported summaries, if any.
 
-```text
-DISCLAIMER
+## Forbidden Claims
 
-SahamLens adalah personal learning & analysis tool, bukan investment advice.
+Do not claim:
 
-- Bukan rekomendasi investasi resmi.
-- Bukan trading execution platform.
-- Bukan layanan manajemen investasi.
-- Bukan layanan perantara efek.
-- Keputusan trading sepenuhnya tanggung jawab pengguna.
-- Past performance tidak menjamin hasil masa depan.
-- Data sumber bisa delayed, incomplete, atau tidak akurat.
-- Terms of service platform sumber data harus dihormati.
-- Konsultasikan financial advisor berlisensi untuk keputusan material.
+- Guaranteed profit.
+- Safe trade.
+- Strong buy/sell.
+- Model prediction certainty.
+- Professional financial advice.
+- Broker execution support.
 
-Penggunaan tool ini berarti pengguna menerima bahwa risiko finansial dari
-keputusan trading adalah tanggung jawab pengguna sepenuhnya, dan tool ini
-tidak memberi jaminan apa pun terkait akurasi, kelengkapan, atau hasil.
-```
+## Language Rule
 
-### 2.2 Short version (untuk UI footer, AI output footer)
+Use neutral decision-support language:
 
-```text
-AI-generated • not financial advice • verify source & freshness
-```
-
-### 2.3 Mid version (untuk AI output panel header)
-
-```text
-Output AI ini adalah summary edukasi, bukan investment advice.
-Verifikasi data source & freshness sebelum mengambil keputusan trading.
-Lihat DISCLAIMER untuk detail.
-```
-
----
-
-## 3. Mandatory Display Locations
-
-| Lokasi | Versi | Catatan |
-|---|---|---|
-| `DISCLAIMER.md` (root repo) | Full | Single file kanonik, link dari README |
-| `README.md` | Full | Section "Disclaimer" |
-| UI dashboard footer | Short | Always visible (sticky atau footer) |
-| Stock detail page (AI panel header) | Mid | Sebelum AI output |
-| AI output (auto-attached field `not_financial_advice: true`) | Schema-level | Lihat [AI_BOUNDARIES.md §3](AI_BOUNDARIES.md) |
-| Export report (CSV / PDF) | Full | Header file |
-| Notification (Telegram) | Short (1 baris) | Sufficient |
-
-Tidak menambah disclaimer ke setiap chat message (visual noise). Owner sudah tahu konteks via panel header.
-
----
-
-## 4. Financial-Risk Boundary
-
-- Sistem **bisa** memperbaiki kualitas proses (disiplin, dokumentasi, evidence-checking).
-- Sistem **tidak bisa** menjamin hasil trading.
-- Analisis yang lebih baik **tidak menghilangkan** risiko pasar (volatilitas, likuiditas, event risk, behavioral risk).
-- Owner wajib menerima ini sebelum trade.
-
-UI tidak menampilkan estimasi "win rate" atau "expected return" sebagai angka tunggal — selalu dengan range + caveat metodologi.
-
----
-
-## 5. Ethical Boundary
-
-Tool ini tidak boleh:
-- Mendorong overtrading.
-- Gamifikasi P&L dengan cara yang meningkatkan risk-taking (streak counter, leaderboard, confetti).
-- Menyembunyikan ketidakpastian.
-- Melatih user untuk patuh ke AI (lihat [AI_BOUNDARIES.md](AI_BOUNDARIES.md)).
-- Membuat klaim publik berdasarkan data privat / incomplete.
-
-Operationalisasi di [DESIGN_SYSTEM.md §1, §3, §6](DESIGN_SYSTEM.md).
-
----
-
-## 6. Psychological Boundary
-
-- Sistem **tidak** mengirim notifikasi "saham X naik X%!" yang mendorong FOMO. Hanya notifikasi untuk user-defined rules.
-- Daily brief **selalu** mencantumkan reminder: *"Rule violation lebih merusak dari missed opportunity."*
-- Setelah loss trade ditandai di journal:
-  - **Cooling-off prompt** wajib (minimal isi journal entry dengan field emotion + lesson).
-  - Pre-trade checklist berikutnya di-gate sampai cooling-off selesai.
-  - Default cooling-off: sampai journal entry submitted. Owner dapat extend ke timer (e.g. 1 hari) via config.
-
----
-
-## 7. Edit Process
-
-1. Buka PR.
-2. Tulis ADR singkat di `adr/` (`ADR-NNNN-disclaimer-update.md`) — jelaskan kenapa text berubah, apa yang berubah, apakah konsultasi legal sudah dilakukan.
-3. Update semua mandatory display location.
-4. Bump versi dokumen di header.
-
-Tidak ada edit silent. Disclaimer = governance.
-
----
-
-## 8. References
-
-- [PRD_clean.md](PRD_clean.md) — positioning produk.
-- [AI_BOUNDARIES.md](AI_BOUNDARIES.md) — auto-attached disclaimer di output AI.
-- [SECURITY.md §5](SECURITY.md) — public repo rules (apa boleh & tidak di-publish).
-- OJK Regulations: https://www.ojk.go.id/
+- Prefer "matches this rule" over "buy signal".
+- Prefer "risk to verify" over "safe".
+- Prefer "data is stale" over hiding caveats.
+- Prefer "not enough data" over guessing.

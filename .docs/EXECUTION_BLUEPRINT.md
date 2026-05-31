@@ -1,214 +1,211 @@
-# EXECUTION_BLUEPRINT — SahamLens
+# SahamLens Execution Blueprint
 
-**Source of truth for:** Implementation phases, sprint breakdown, MVP exit criteria, feature rollout sequence, practical execution checklist.
-**Tidak di sini:** Product scope (→ [PRD_clean.md](PRD_clean.md)), tech stack (→ [ARCHITECTURE.md](ARCHITECTURE.md)), code style (→ [ENGINEERING_STANDARDS.md](ENGINEERING_STANDARDS.md)).
+## Status
 
-**Versi:** 1.0
-**Status:** Active — **update tiap sprint review**
+V1 planning is frozen and ready for implementation.
 
----
+Current phase: Phase V1 - Better Decision Support.
+Current sprint: V1-S1 - Provider Health + Data Quality Foundation.
 
-## 1. Execution Philosophy
+Implementation must follow the critical path:
 
-1. **Vertical slice over horizontal layer.** Tiap milestone deliverable end-to-end (data → calc → UI → AI), bukan "selesaikan semua data layer dulu".
-2. **MVP = small + sharp.** Kalau feature tidak bantu owner mengambil keputusan lebih jernih → tunda.
-3. **Test-first untuk financial calc.** Semua formula keuangan ditulis test dulu (→ [ENGINEERING_STANDARDS.md §5](ENGINEERING_STANDARDS.md)).
-4. **Demo to self.** Setiap akhir sprint, owner pakai produk untuk daily review nyata. Kalau tidak dipakai → revisit prioritas.
+Data Quality -> Coverage/Fundamentals -> Screener -> Alerts
 
----
+## Planning Freeze
 
-## 2. Phase Map
+V1 planning is closed. This file keeps only execution-critical scope, roadmap, backlog index, gates, and first PR order. Historical planning notes are intentionally removed from active docs.
 
-```
-Phase 0  →  Phase MVP  →  Phase V1  →  Phase V2  ─┐
-                                                   │
-Phase Experimental (paralel, terisolasi) ─────────┘
-```
+## V1 Scope Lock
 
-| Phase | Target durasi | Tujuan |
-|---|---|---|
-| **Phase 0 — Foundations** | 1–2 minggu | Repo skeleton, tooling, security baseline |
-| **Phase MVP — Private Learning Dashboard** | 6–10 minggu | Watchlist + indicator + journal + AI brief + risk |
-| **Phase V1 — Better Decision Support** | +6–8 minggu | Fundamental + screener + alerts + earnings summary |
-| **Phase V2 — Personal Trading System Builder** | open-ended | Playbook + backtest + analytics + paper trading + PWA |
-| **Phase Experimental** | paralel | Forecasting lab, sentiment lab, pattern recog — isolated |
+Core:
 
----
+- Data Quality Dashboard.
+- Provider Health.
+- Ticker lifecycle and coverage model.
+- Fundamental Snapshot with completeness/confidence.
+- Screener.
+- Local alert rules/events with false-positive feedback.
+- Weekly Journal Review.
+- Simple Strategy Rules.
+- Earnings Summary manual-first.
 
-## 3. Phase 0 — Foundations (Sprint 0)
+Optional:
 
-### Deliverable
-- Repo structure (lihat [ENGINEERING_STANDARDS.md §2](ENGINEERING_STANDARDS.md)).
-- `.gitignore`, `.env.example`, pre-commit hooks, gitleaks.
-- CI workflow (lint + test + secret scan).
-- DuckDB skeleton + first migration.
-- `DISCLAIMER.md`, `README.md`, `.docs/` populated.
-- `CLAUDE.md` di root.
-- Next.js 15 app shell (single page hello world) + Tailwind + shadcn/ui init.
-- Python data core scaffold + first dummy script.
-- Sample data committed (fake portfolio, fake journal).
+- Telegram notifications.
+- Market-hours delayed/indicative refresh.
+- Extra validated RSS feeds.
+- Provider-ready LLM internals.
+- RSS-backed earnings event discovery.
 
-### Exit
-- `pnpm dev` jalan, render hello.
-- `pytest` & `vitest` jalan tanpa error.
-- Pre-commit hook block dummy secret commit (verified manual).
-- CI hijau di PR test.
+Deferred or experimental:
 
----
+- Intraday snapshot.
+- Backtesting-lite.
+- Performance analytics beyond weekly review.
+- Automated IDX filing/parser pipeline.
+- Social sentiment streams.
 
-## 4. Phase MVP — Private Learning Dashboard
+Rejected:
 
-Target: **6–10 minggu santai, solo, semi-vibe**.
+- Realtime/tick-data promise.
+- Predictive or AI buy/sell alerts.
+- Broker integration.
+- Automated IDX crawling for V1.
+- Public recommendations, SaaS, or multi-user scope.
+- Strategy DSL.
+- Full news article storage/republication.
 
-### 4.1 Sprint breakdown (indikatif)
+## Mandatory ADRs Before Coding
 
-| Sprint | Fokus | Deliverable utama |
-|---|---|---|
-| **S1** | Data ingestion + DuckDB | `ingest_prices.py` (yfinance → DuckDB), watchlist CRUD, sample 10 ticker |
-| **S2** | Indicator engine | MA 5/10/15/50/200, volume avg, RSI 14, MACD — semua test ≥90% coverage |
-| **S3** | Stock detail page + chart | Next.js page render OHLCV + indicator overlay (lightweight-charts) + `IndicatorCard` 5-block |
-| **S4** | News ingestion + AI summarizer | RSS adapter, LLM wrapper, news summary di stock detail |
-| **S5** | Trade journal + risk checklist | Form, validation, position size calc (test + property-based) |
-| **S6** | Daily brief + AI chat assistant | `generate_brief.py`, AI chat panel dengan RAG context |
-| **S7** | Freshness UX + polish + portfolio import | `<FreshnessBadge />`, CSV import, footer disclaimer, cooling-off prompt |
-| **S8** (buffer) | Hardening + demo to self | Bug fix, owner pakai untuk daily review nyata 5 hari berturut-turut |
+The first implementation PR must not start until these decisions are written or confirmed as existing ADRs:
 
-### 4.2 Exit criteria (semua wajib)
+1. Provider Health as prerequisite: [ADR-0009](adr/ADR-0009-provider-health-prerequisite.md).
+2. OHLCV freshness contract: [ADR-0010](adr/ADR-0010-ohlcv-freshness-contract.md).
+3. Ticker lifecycle and coverage model.
+4. Fundamental completeness and confidence.
+5. Alert lifecycle and false-positive tracking.
 
-Produk:
-- [ ] Owner bisa review watchlist dalam 15–30 menit.
-- [ ] Owner bisa buat trade plan lengkap (semua field §6.2 PRD).
-- [ ] AI output **selalu** cite data + tampilkan caveat (→ [AI_BOUNDARIES.md §3](AI_BOUNDARIES.md)).
+Can be written during the related sprint:
 
-Teknis:
-- [ ] Tidak ada private data ter-commit (verified by pre-commit + CI `no_private_leak`).
-- [ ] Core indicator calculation test coverage ≥ 90%.
-- [ ] Position size calculator: ≥ 5 unit test + property-based.
-- [ ] Banned-phrase filter aktif di AI pipeline.
-- [ ] Schema validation reject malformed AI output.
+- Screener semantics.
+- Earnings manual-first hierarchy.
+- News metadata-only boundary.
+- Simple strategy rules and no DSL.
+- Provider-ready LLM direction.
 
-Safety:
-- [ ] Disclaimer di README, UI footer, AI panel, export.
-- [ ] Tidak ada bahasa command buy/sell di copy.
+## Sprint Roadmap
 
----
-
-## 5. Phase V1 — Better Decision Support
-
-### Scope
-
-- Fundamental snapshot (PER, PBV, ROE, DER, EPS, dividend yield).
-- Custom watchlist tag & multi-list.
-- Simple screener (rule kombinasi indikator + fundamental).
-- Alert rule + Telegram notification.
-- Earnings / financial report summarizer.
-- Weekly journal review.
-- CSV import Stockbit lebih lengkap.
-- Data quality dashboard (freshness + fetch error rate per source).
-
-### Exit
-- Bisa filter kandidat by basic technical + fundamental criteria.
-- Bisa review behavior mingguan & rule violation.
-- Alert berguna; false-positive rate dilacak & < 30%.
-
----
-
-## 6. Phase V2 — Personal Trading System Builder
-
-### Scope
-
-- Strategy playbook (encode setup pribadi).
-- Backtesting-lite untuk rule sederhana.
-- Performance analytics by setup type.
-- Paper trading simulator.
-- Local semantic search atas journal & note (vector DB boleh masuk di sini — jangan sebelumnya).
-- PWA / mobile-friendly dashboard.
-- (Opsional) migrasi PostgreSQL kalau data growth justified.
-
-### Exit
-- Owner bisa mengukur setup mana yang berkinerja.
-- Backtest disertai caveat realistis (no overfitting claim).
-- Journal history searchable.
-
----
-
-## 7. Phase Experimental (Paralel)
-
-Dijalankan kalau ada momentum belajar, **tidak** memblokir roadmap utama.
-
-| Lab | Deliverable |
-|---|---|
-| Forecasting research lab | Notebook Prophet / simple LSTM dengan naive baseline comparison |
-| Social sentiment lab | Noisy dataset analysis, **no** integrasi ke decision support |
-| Chart pattern recognition lab | Educational only, label experimental |
-| LLM-assisted strategy critique | Manual review per output, caveats eksplisit |
-| Local model experimentation | Self-hosted small model untuk privacy-sensitive task |
-
-Output experimental **wajib terpisah visual** dari decision support. Tidak pernah jadi instruksi trade.
-
----
-
-## 8. Sprint Cadence
-
-- **Sprint length:** 1 minggu (solo). Bisa di-extend ke 2 minggu kalau life happens — tidak ada SLA.
-- **Sprint review (self):** 30 menit. Pakai produk untuk daily review nyata. Catat friction.
-- **Refactor sprint:** setiap sprint ke-3 dialokasikan untuk konsolidasi tech debt (lihat [ENGINEERING_STANDARDS.md §10](ENGINEERING_STANDARDS.md)).
-
----
-
-## 9. Definition of Done (per task)
-
-Sebuah task selesai kalau:
-- [ ] Test ditulis & passing (untuk financial calc: coverage ≥90%).
-- [ ] Lint + type check clean.
-- [ ] Tidak melanggar boundary (AI, security, data).
-- [ ] Dokumentasi update kalau ada perubahan di public API atau schema.
-- [ ] ADR ditulis kalau ada keputusan teknis baru.
-- [ ] Pre-commit hooks pass.
-- [ ] Manual smoke test di UI (kalau menyentuh UI).
-- [ ] Commit message Conventional Commits.
-
----
-
-## 10. Kill Switches (referenced)
-
-Lihat [PRD_clean.md §10](PRD_clean.md). Operational triggers:
-- Sprint ke-3 berturut-turut tidak ship deliverable apa pun → review apakah masih relevan.
-- Owner skip daily review > 2 minggu → freeze dev, audit fit.
-- Cost LLM bulan berjalan > Rp 500rb → matikan AI panel non-essential.
-
----
-
-## 11. Risk Register
-
-| Risk | Likelihood | Impact | Mitigasi |
+| Sprint | Theme | Goal | Usable after sprint |
 |---|---|---|---|
-| Source data break / change | High | Medium | Adapter layer + multi-source fallback ([DATA_SOURCES.md §6](DATA_SOURCES.md)) |
-| LLM cost overrun | Medium | Medium | Model routing, monthly cap, circuit breaker |
-| Owner over-rely ke AI → loss | Medium | High | UX dorong critical thinking + cooling-off |
-| Tech debt menumpuk | High | Medium | Refactor sprint per 3 sprint |
-| Privacy leak ke repo publik | Medium | High | `.gitignore` + pre-commit + CI scan |
-| Bug pada position size calc | Low | High | Coverage ≥ 90% + property-based test |
-| Scope creep balik ke "SaaS" | Medium | Medium | PRD_clean + governance docs sebagai constitution |
-| Owner berhenti trading | Medium | — | Valid kill criteria, bukan risk |
-| ToS violation source | Medium | Medium | Source resmi, dokumentasi, hindari aggressive scrape |
-| Burnout owner | Medium | High | Kill criteria eksplisit; tidak ada kewajiban user lain |
+| V1-S1 | Provider Health + Data Quality Foundation | Make data trust visible before building dependent features. | User can inspect provider health, freshness, coverage, stale counts, and failed fetches. |
+| V1-S2 | Ticker Lifecycle + Fundamental Snapshot | Add coverage tiers and lightweight fundamentals with confidence. | User can review supported tickers and fundamental snapshots with caveats. |
+| V1-S3 | Screener | Run transparent filters using freshness and confidence gates. | User can screen candidates without signal language or hidden assumptions. |
+| V1-S4 | Weekly Journal Review + Strategy Rules | Convert journal history into behavior review and simple rule checks. | User can review weekly behavior and rule violations. |
+| V1-S5 | Alerts + Telegram Optional + Earnings Summary | Add local alert lifecycle and manual-first earnings workflow. | User can receive/review local alerts, track false positives, and summarize earnings events. |
 
----
+## Dependency Matrix
 
-## 12. Output Documents Status
+| Sprint | Blocked by | Enables | Parallelizable |
+|---|---|---|---|
+| V1-S1 | None | V1-S2, V1-S3, V1-S5 | UI shell, provider registry, docs cleanup |
+| V1-S2 | V1-S1 | V1-S3, V1-S5 | Fundamental UI and lifecycle schema can be split |
+| V1-S3 | V1-S1, V1-S2 | V1-S5 | Screener UI and rule fixtures |
+| V1-S4 | Existing journal baseline | V1-S5 context | Can run parallel after V1-S1 |
+| V1-S5 | V1-S1, V1-S2, V1-S3 | V1 exit | Telegram optional and earnings manual path can be split |
 
-| Document | Status | Owner |
-|---|---|---|
-| [PRD_clean.md](PRD_clean.md) | ✅ done | self |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | ✅ done | self |
-| [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) | ✅ done | self |
-| [ENGINEERING_STANDARDS.md](ENGINEERING_STANDARDS.md) | ✅ done | self |
-| [DATA_SOURCES.md](DATA_SOURCES.md) | ✅ done | self |
-| [AI_BOUNDARIES.md](AI_BOUNDARIES.md) | ✅ done | self |
-| [SECURITY.md](SECURITY.md) | ✅ done | self |
-| [TRADING_DISCLAIMER.md](TRADING_DISCLAIMER.md) | ✅ done | self |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | ✅ done | self |
-| [adr/](adr/) | seeded (8 ADRs) | self |
-| Sprint plan detail | pending — di-generate per sprint | self |
-| `CLAUDE.md` (root) | ✅ done | self |
+## Sprint Backlog Index
+
+Backlog is intentionally ticket-sized and implementation-ready. Ticket details should live in the issue tracker or PR descriptions when execution starts.
+
+### V1-S1
+
+- ADR-S1-01: Provider Health prerequisite ADR.
+- ADR-S1-02: OHLCV freshness contract ADR.
+- SCHEMA-S1-01: Provider health and freshness models.
+- CORE-S1-01: Provider health collector.
+- CORE-S1-02: Data quality aggregation.
+- CLI-S1-01: Refresh provider health.
+- UI-S1-01: Data Quality Dashboard shell.
+- TEST-S1-01: Provider health and freshness tests.
+- DOGFOOD-S1: Daily data-quality review.
+
+### V1-S2
+
+- ADR-S2-01: Ticker lifecycle and coverage ADR.
+- ADR-S2-02: Fundamental completeness/confidence ADR.
+- SCHEMA-S2-01: Ticker lifecycle and source coverage models.
+- SCHEMA-S2-02: Fundamental snapshot model.
+- CORE-S2-01: Coverage classifier.
+- CORE-S2-02: Fundamental snapshot ingestion.
+- CLI-S2-01: Refresh ticker coverage.
+- CLI-S2-02: Ingest fundamentals.
+- UI-S2-01: Fundamental Snapshot card.
+- TEST-S2-01: Coverage and confidence tests.
+- DOGFOOD-S2: Watchlist fundamental review.
+
+### V1-S3
+
+- ADR-S3-01: Screener semantics ADR.
+- SCHEMA-S3-01: Screener rules and results.
+- CORE-S3-01: Screener evaluator.
+- CLI-S3-01: Run screener.
+- UI-S3-01: Screener page.
+- TEST-S3-01: Screener eligibility and stale behavior tests.
+- DOGFOOD-S3: Candidate filter review.
+
+### V1-S4
+
+- ADR-S4-01: Simple strategy rules/no DSL ADR.
+- SCHEMA-S4-01: Weekly review and strategy-rule models.
+- CORE-S4-01: Weekly journal review generator.
+- CORE-S4-02: Simple strategy-rule checker.
+- CLI-S4-01: Generate weekly journal review.
+- UI-S4-01: Weekly Journal Review page.
+- UI-S4-02: Strategy Rules page.
+- TEST-S4-01: Journal and rule tests.
+- DOGFOOD-S4: Weekly behavior review.
+
+### V1-S5
+
+- ADR-S5-01: Alert lifecycle and false-positive tracking ADR.
+- ADR-S5-02: Earnings manual-first hierarchy ADR or RFC-only confirmation.
+- SCHEMA-S5-01: Alert rules, events, feedback.
+- SCHEMA-S5-02: Earnings event metadata.
+- CORE-S5-01: Alert evaluator.
+- CORE-S5-02: Alert feedback and quality tracking.
+- CORE-S5-03: Earnings summary manual workflow.
+- CLI-S5-01: Evaluate alerts.
+- CLI-S5-02: Record alert feedback.
+- CLI-S5-03: Create earnings summary.
+- UI-S5-01: Alerts page.
+- UI-S5-02: Earnings Summary section.
+- OPTIONAL-S5-01: Telegram notification sender.
+- TEST-S5-01: Alert lifecycle and false-positive tests.
+- DOGFOOD-S5: Alert and earnings review.
+
+## First Safe PR Order
+
+1. Provider health ADR and freshness terminology.
+2. Provider health schema/model.
+3. Data Quality Dashboard shell with static empty states.
+4. Provider health refresh CLI smoke path.
+5. Freshness status rendering and stale/fail UI states.
+6. Coverage model ADR and enums.
+7. Fundamental snapshot schema and completeness labels.
+8. Screener semantics ADR.
+9. Alert lifecycle ADR.
+10. Alert feedback model.
+
+## Sprint Gates
+
+Each sprint is done only when:
+
+- Tests for touched modules pass.
+- UI states for fresh, stale, failed, partial, and unknown are represented where relevant.
+- Dogfooding ticket is completed with notes.
+- Docs are updated only in canonical files.
+- No private data is committed.
+- No anti-scope feature is introduced.
+
+## Risk Burn-Down Order
+
+1. Data trust.
+2. Data coverage.
+3. Fundamental quality.
+4. Screener quality.
+5. Alert quality.
+6. Earnings workflow.
+7. UX polish.
+
+## Execution Rules
+
+- Start with V1-S1.
+- Keep PRs small and vertical.
+- Do not implement optional Telegram before alert lifecycle works locally.
+- Do not implement screener before Data Quality and coverage gates exist.
+- Do not use AI output as a trading signal.
+- Do not add new providers without source visibility and caveats.
+
+## Starting Point
+
+Recommended next step: write or confirm the five mandatory ADRs, then open the first V1-S1 PR for provider health and freshness terminology.

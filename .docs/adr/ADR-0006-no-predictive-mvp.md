@@ -1,50 +1,45 @@
-# ADR-0006 — Tidak Ada Predictive AI di MVP
+# ADR-0006: No Predictive AI or Buy/Sell Signals
 
-- **Status:** accepted (governance)
-- **Date:** 2026-05-16
-- **Deciders:** owner
+Status: Accepted
+Date: 2026-05-31
 
 ## Context
 
-Predictive AI (Prophet, LSTM, transformer) untuk forecasting harga sering jadi feature "wow" di tool trading. Tapi:
-- IDX noisy, illiquid (di luar top 50), event-driven.
-- Pola historis sering pecah karena news / kebijakan / earnings.
-- Pemula cenderung over-trust output chart yang kelihatan scientific.
-- Output gampang overfit tanpa edge nyata.
-
-Pertanyaan: apakah build di MVP?
+SahamLens is a decision-support tool. Predictive claims and buy/sell instructions create false confidence and move the product toward signal selling.
 
 ## Decision
 
-**Tidak.** Predictive AI **dilarang** di MVP. Boleh masuk Phase V2+ **sebagai experimental**, terisolasi dari decision support core (lihat [PRD_clean.md §5.3](../PRD_clean.md)).
+AI and alert features must not produce predictive trading signals.
+
+Rejected:
+
+- AI buy/sell/hold recommendations.
+- Forecasting alerts.
+- Exact future price targets as fact.
+- "Guaranteed", "safe", or "strong buy" language.
+- Public recommendation or signal-selling output.
+
+Allowed:
+
+- Evidence summaries.
+- Caveats.
+- Rule-match explanations.
+- User-plan critique.
+- Journal reflection.
 
 ## Consequences
 
-**Positive:**
-- Owner tidak terjebak false confidence dari "AI forecast".
-- Effort difokuskan ke fondasi: indicator literacy, journal discipline, risk management.
-- Tidak menumpuk maintenance untuk model yang belum proven.
-- Mencegah tool jadi "crystal ball" yang melawan philosophy (lihat [TRADING_DISCLAIMER.md](../TRADING_DISCLAIMER.md)).
+Positive:
 
-**Negative:**
-- Tidak ada "predicted price" badge yang user request.
-- Beberapa learning opportunity tertunda (memahami time-series ML).
+- Stronger user trust.
+- Clearer legal and safety boundary.
+- Less temptation to overfit or overclaim.
 
-**Trigger untuk re-evaluate (paling cepat V2):**
-- Journal discipline established (≥ 3 bulan konsisten review).
-- Backtest framework sudah ada untuk validasi hipotesis fair.
-- Owner paham overfitting, walk-forward validation, naive baseline.
-- Visualisasi probability band dengan caveat siap.
+Trade-offs:
 
-Bahkan saat re-evaluate: predictive AI **hanya** boleh sebagai visualisasi riset, **bukan** signal. Target price absolut & entry/exit instruction tetap terlarang permanen.
+- Some "assistant" requests must be refused or reframed.
+- Copy and validation need continuous care.
 
-## Alternatives Considered
+## Follow-Up
 
-1. **Build dengan caveat besar di-UI** — di-reject: caveat tidak menetralisir bias kognitif. Output yang ada di-screen akan dianggap signal terlepas dari label.
-2. **Build sebagai notebook only (`notebooks/experiments/`)** — accepted untuk research, **tidak** terintegrasi ke dashboard.
-
-## Related
-
-- [PRD_clean.md §5.3, §10](../PRD_clean.md)
-- [AI_BOUNDARIES.md §2.3](../AI_BOUNDARIES.md)
-- [TRADING_DISCLAIMER.md](../TRADING_DISCLAIMER.md)
+Any predictive analytics feature belongs outside V1 and requires separate ADR and PRD review.

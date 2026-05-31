@@ -1,47 +1,35 @@
-# ADR-0001 — Local-First Architecture
+# ADR-0001: Local-First Architecture
 
-- **Status:** accepted
-- **Date:** 2026-05-16
-- **Deciders:** owner
-- **Supersedes:** —
-- **Superseded by:** —
+Status: Accepted
+Date: 2026-05-31
 
 ## Context
 
-SahamLens adalah single-user personal trading companion (lihat [PRD_clean.md](../PRD_clean.md)). PRD legacy v1 mengusulkan stack cloud-native (Postgres + Redis + TimescaleDB + Kubernetes) untuk skenario SaaS. Ini menambahkan beban operasional besar tanpa nilai untuk personal use.
-
-Pertanyaan: di mana data hidup, di mana komputasi terjadi?
+SahamLens is a personal trading companion for one retail IDX trader. It handles local watchlists, journal entries, portfolio imports, and decision-support context that can be private.
 
 ## Decision
 
-**Default local-first.** Data (portfolio, journal, OHLCV, news) disimpan di mesin owner. Komputasi (ingestion, indicator, AI orchestration) di mesin owner. Cloud opsional, opt-in per fitur (LLM API, optional hosted dashboard mirror).
+SahamLens will remain local-first and single-user.
+
+- Private data lives under local ignored paths such as `data/private/`.
+- The primary database is local DuckDB.
+- Public docs and sample data must be safe to commit.
+- No SaaS, auth, billing, team, or multi-tenant architecture is part of V1.
 
 ## Consequences
 
-**Positive:**
-- Privacy by default — data sensitif tidak meninggalkan mesin.
-- Zero hosting cost MVP.
-- Tidak ada outage external (kecuali source data & LLM API).
-- Tidak butuh DB administration overhead.
-- Repo publik aman secara structural (data privat physically separate).
+Positive:
 
-**Negative:**
-- Akses dari device lain butuh effort manual (file sync atau tunnel).
-- Backup tanggung jawab owner.
-- Tidak ada inherent multi-machine sync.
+- Lower privacy risk.
+- Simpler deployment and maintenance.
+- Faster personal dogfooding.
 
-**Trigger untuk re-evaluate:**
-- Owner butuh akses dashboard dari device kedua secara reguler.
-- Data growth > 10GB.
-- Concurrent write conflict muncul (saat ini tidak mungkin — single writer).
+Trade-offs:
 
-## Alternatives Considered
+- No cross-device sync by default.
+- No collaboration features.
+- Manual backup remains the user's responsibility.
 
-1. **Cloud-native dari hari 1** (Postgres + Redis di VPS) — di-reject: cost, complexity, privacy risk, tidak proportional dengan single-user scope.
-2. **Hybrid wajib** (DB cloud, compute lokal) — di-reject: tetap mengirim data privat ke pihak ketiga tanpa nilai tambahan.
+## Follow-Up
 
-## References
-
-- [ARCHITECTURE.md](../ARCHITECTURE.md)
-- [SECURITY.md](../SECURITY.md)
-- [PRD_clean.md §1, §4.4](../PRD_clean.md)
+Any move toward cloud sync, accounts, or multi-user access requires a new ADR and PRD change.

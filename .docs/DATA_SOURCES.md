@@ -1,173 +1,160 @@
-# DATA_SOURCES — SahamLens
+# SahamLens Data Sources
 
-**Source of truth for:** Daftar source data, reliability, rate limits, fallback strategy, freshness policy, canonical ticker format, forbidden data practices (operational level).
-**Tidak di sini:** Schema penyimpanan (→ [ARCHITECTURE.md §6](ARCHITECTURE.md)), aturan repo public soal data (→ [SECURITY.md](SECURITY.md)), AI-side handling source (→ [AI_BOUNDARIES.md](AI_BOUNDARIES.md)).
+## Data Strategy
 
-**Versi:** 1.0
-**Status:** Active
+V1 uses public, low-maintenance sources with visible freshness and caveats. yfinance remains the baseline for EOD OHLCV. Fundamentals are lightweight snapshots. News is metadata-only through validated RSS feeds.
 
----
+Every user-facing data point that affects decisions must show source and freshness.
 
-## 1. Source Catalog
+## Provider Trust Tiers
 
-### 1.1 MVP
+| Tier | Description | Usage |
+|---|---|---|
+| Tier 1 | Official sources | Highest trust, preferred for formal filings and exchange facts. |
+| Tier 2 | Reputable public providers | Accepted for V1 when source and freshness are visible. |
+| Tier 3 | Unofficial providers | Allowed only with caveats and fallback behavior. |
+| Tier 4 | Experimental providers | Not used for core V1 decisions. |
 
-| Data Type | Source | Endpoint / Library | Tier | Notes |
+Current mapping:
+
+- IDX official pages/filings: Tier 1, manual/reference use in V1.
+- yfinance: Tier 3, accepted baseline for EOD OHLCV with caveats.
+- Detik Finance RSS: Tier 2, accepted metadata-only news.
+- CNBC Indonesia RSS: Tier 2, accepted metadata-only news.
+- Kontan RSS: Tier 2, accepted metadata-only news.
+- Telegram Bot API: delivery channel only, not market data.
+- Stockbit, Twitter/X, broker apps, scraped authenticated pages: rejected for V1 core.
+
+## OHLCV Policy
+
+Accepted:
+
+- EOD OHLCV is the V1 baseline.
+- yfinance may be used for local decision-support with visible caveats.
+- Last successful fetch timestamp must be stored.
+
+Accepted with caveat:
+
+- Market-hours refresh may be delayed/indicative and must be labeled as such.
+
+Deferred:
+
+- Intraday snapshot.
+
+Rejected:
+
+- Realtime/tick-data promise.
+- Licensed realtime market data unless a later phase adds explicit legal/contract support.
+
+## Fundamental Policy
+
+Accepted:
+
+- V1 fundamentals are lightweight snapshots.
+- Store source, fetched/imported timestamp, available fields, missing fields, completeness, and confidence.
+- Incomplete data must be visible in UI and AI summaries.
+
+Accepted with caveat:
+
+- Public-provider fundamentals may be stale or sparse.
+- Manual verification is acceptable for important decisions.
+
+Rejected:
+
+- Full financial terminal scope.
+- Automated IDX filing/parser pipeline for V1.
+
+## News Policy
+
+Accepted:
+
+- Use validated RSS feeds for headline, link, source, published timestamp, and summary metadata.
+- Deduplicate and show source.
+
+Accepted with caveat:
+
+- Additional RSS feeds can be added only after validation.
+
+Rejected:
+
+- Full article storage.
+- Article republication.
+- Paywall bypass.
+- Social stream ingestion for V1.
+
+## Ticker Universe Policy
+
+Ticker lifecycle statuses:
+
+- Active.
+- Suspended.
+- Delisted.
+- Renamed.
+- Unknown.
+
+Rules:
+
+- Delisted tickers remain historical but are not screener-eligible.
+- Suspended tickers show warnings and are alert-limited.
+- Renamed tickers require alias mapping before being treated as fully supported.
+- Unknown tickers are minimal support until coverage is verified.
+
+## Coverage Tiers
+
+| Tier | Meaning | Screener | Alerts | AI explanation |
 |---|---|---|---|---|
-| OHLCV harian | yfinance | `yfinance` Python lib, ticker `<KODE>.JK` | Free | Tidak sempurna; cukup untuk EOD belajar |
-| Fundamental dasar | yfinance (`Ticker.info`) | sama | Free | Availability per ticker bervariasi — validasi sebelum trust |
-| Fundamental fallback | IDX public files | https://www.idx.co.id/ (manual / scheduled download) | Free | Untuk emiten yang yfinance kosong |
-| News | RSS publik | Detik Finance, CNBC Indonesia, Kontan | Free | Simpan url + title + timestamp + source. Tidak scrape full content kecuali ToS izinkan |
-| Portfolio | Manual entry / CSV export Stockbit | UI form / file upload | Local | **Tidak ada broker login** ([ADR-0004](adr/ADR-0004-no-broker-credential.md)) |
-| Journal | Local DB | DuckDB `journal` table | Local | Privat ([SECURITY.md](SECURITY.md)) |
-| Strategy rule | Local YAML | `config/*.yml` (gitignored selain `.example`) | Local | Template versioned, nilai privat di-ignore |
+| Tier A | OHLCV available, lifecycle known, fundamentals at least partial, source health visible | Eligible | Eligible | Eligible with caveats |
+| Tier B | OHLCV available but fundamentals sparse or lifecycle uncertain | Limited | Price/freshness alerts only | Allowed with strong caveats |
+| Tier C | Minimal or unreliable data | Not eligible | Freshness/provider alerts only | Explain missing data only |
 
-### 1.2 V1+ (planned)
+UI behavior:
 
-| Data Type | Source | Catatan |
-|---|---|---|
-| IDX corporate actions | IDX announcements page | Manual / scheduled fetch |
-| Sector / industry mapping | IDX + manual mapping table | One-time seed, update kuartal |
-| Intraday delayed | TBD (yfinance limited, mungkin paid) | Evaluate kalau swing trading butuh |
-| Earnings reports | IDX filings PDF | Manual upload + AI summarizer |
+- Never hide missing data.
+- Disable or mark read-only actions when required data is stale, failed, or missing.
+- Show why a ticker is excluded from screener/alert eligibility.
 
-### 1.3 Experimental (terisolasi, V2+)
+## Fundamental Completeness
 
-Social sentiment (Twitter/X, Stockbit stream) — **noisy + ToS risk**. Kalau dibangun: opt-in, terpisah dari decision support, label experimental. Lihat [PRD_clean.md §5.3](PRD_clean.md).
+| Status | Meaning | Confidence | Screener behavior | AI behavior |
+|---|---|---|---|---|
+| Complete | Required fields present and fresh enough | High | Eligible | Explain normally with caveats |
+| Partial | Important fields present but some missing | Medium | Eligible only for rules not requiring missing fields | Mention missing fields |
+| Sparse | Few fields available | Low | Usually excluded from fundamental rules | Explain limitations first |
+| Missing | No usable fundamental snapshot | None | Not eligible | Do not infer fundamentals |
 
----
+## Provider Health Metrics
 
-## 2. Canonical Ticker Format
+Minimum V1 metrics:
 
-- Format internal: `<KODE>.JK` (uppercase + suffix `.JK`).
-- Adapter wajib normalize sebelum query DB.
-- Validasi: 4 huruf alfanumerik + `.JK`. Reject input yang tidak match.
+- Last successful fetch.
+- Last failed fetch.
+- Error count.
+- Failure reason.
+- Freshness state.
+- Provider trust tier.
+- Ticker/source coverage count.
 
-```python
-# packages/core/data_sources/normalize.py
-import re
-TICKER_RE = re.compile(r"^[A-Z0-9]{4}\.JK$")
+Provider failure behavior:
 
-def normalize_ticker(raw: str) -> str:
-    cleaned = raw.strip().upper()
-    if not cleaned.endswith(".JK"):
-        cleaned += ".JK"
-    if not TICKER_RE.match(cleaned):
-        raise ValueError(f"Invalid IDX ticker: {raw}")
-    return cleaned
-```
+- Show failure in Data Quality Dashboard.
+- Keep last successful data visible with timestamp.
+- Restrict dependent screener/alert flows when freshness is stale or failed.
 
----
+## Freshness UX Contract
 
-## 3. Reliability Requirements (Per Record)
+| State | Dashboard | Screener | Alerts | AI summaries |
+|---|---|---|---|---|
+| Fresh | Normal | Enabled | Enabled | Normal caveats |
+| Delayed | Labeled | Enabled with caveat | Enabled if rule allows | Mention delay |
+| Stale | Warning | Restricted | No new price/fundamental triggers | Explain stale state |
+| Failed | Error | Disabled for affected source | Provider/freshness alerts only | Explain failure |
+| Partial | Warning | Rule-specific eligibility | Rule-specific eligibility | Mention missing data |
+| Unknown | Warning | Disabled | Disabled except provider checks | Do not infer |
 
-Setiap record yang ter-persist **wajib** track:
+## Rejected Data Practices
 
-| Field | Wajib | Catatan |
-|---|---|---|
-| `source` | ✅ | Identifier source (e.g. `yfinance`, `idx_public`, `manual`) |
-| `fetched_at` | ✅ | ISO 8601 UTC, waktu fetch sukses |
-| `market_date` | ✅ untuk OHLCV/fundamental | Tanggal pasar (bukan fetch) |
-| `symbol` | ✅ | Canonical format |
-| `derivation` | ✅ untuk indicator/AI | `raw` / `calculated` / `ai_derived` |
-| `fetch_status` | ✅ untuk attempted fetch | `ok` / `partial` / `failed` |
-| `error_message` | kalau failed | Untuk debugging, tidak ditampilkan ke user |
-
-Akibat: tidak ada query yang mengembalikan data tanpa metadata freshness. UI selalu bisa render `<FreshnessBadge />`.
-
----
-
-## 4. Rate Limits & Politeness
-
-| Source | Rate Limit (defensif) | Strategy |
-|---|---|---|
-| yfinance | 1 request / 0.5 detik per ticker | Sequential dengan delay; backoff exponential 1→2→4→8s saat 429 |
-| RSS news | 1 fetch / source / 10 menit | Cron-driven; cache ETag/Last-Modified |
-| IDX public | 1 request / 2 detik | Manual + scheduled, jangan paralel besar |
-
-**Global rules:**
-- Tidak ada concurrent request > 4 ke satu host.
-- User-Agent header eksplisit: `SahamLens/1.0 (personal use; +contact-email-if-needed)`.
-- Hormati `robots.txt` & ToS. Kalau ragu, dokumentasikan keputusan di `.docs/notes/sources/<source>.md`.
-
----
-
-## 5. Caching Strategy
-
-| Layer | TTL | Storage |
-|---|---|---|
-| OHLCV harian (EOD) | Sampai market close berikutnya | DuckDB `price_history` |
-| Fundamental | 7 hari (data perubahan jarang) | DuckDB `stocks` + fundamental column |
-| Indicator hasil calc | Recompute on price update | DuckDB `indicator_cache` |
-| News RSS | 10 menit | DuckDB `news` (dedup by URL UNIQUE) |
-| LLM summary news | Permanent (per news_id) | `news.summary` column |
-| LLM brief / chat | Tidak di-cache (context dinamis) | `ai_log` untuk audit only |
-
-Invalidation: cron job `scripts/refresh_cache.py` (V1) — flush expired rows; sampai sebelumnya, freshness check di read time.
-
----
-
-## 6. Fallback Strategy
-
-```
-[fetch price BBCA.JK]
-  primary: yfinance
-  on failure (429 / 5xx / parse error):
-    log error → fetch_status='failed'
-    try secondary: IDX public file (kalau tersedia)
-    on still-failed:
-      mark stale, do NOT silently substitute
-      UI FreshnessBadge → red, CTA trade-plan disabled
-```
-
-**Anti-pattern:** silent substitution dari source berbeda tanpa user tahu. Selalu surface kegagalan.
-
-Multi-source adapter di `packages/core/data_sources/<source>/`. Interface seragam:
-```python
-class PriceSource(Protocol):
-    name: str
-    def fetch_ohlcv(self, symbol: str, start: date, end: date) -> FetchResult: ...
-```
-
----
-
-## 7. Schema Drift Handling
-
-Source eksternal bisa ubah field tanpa notice. Mitigasi:
-1. **Schema validation** di adapter (Pydantic) — reject unexpected shape, log to `data/private/logs/schema_drift.log`.
-2. **Snapshot test** mingguan: fetch 1 ticker reference, compare shape vs golden file. Kalau berubah → manual review.
-3. **No silent coercion** — kalau field tipe berubah, surface error daripada force-cast.
-
----
-
-## 8. Cost Tracking (LLM-Affected)
-
-Sumber data yang trigger LLM call (news summarization, brief generation) di-track per call. Lihat [ARCHITECTURE.md §11](ARCHITECTURE.md). Cap harian dari `config/cost_budget.yml`. Saat cap tercapai: skip LLM step, simpan raw data + flag `pending_summary=true`.
-
----
-
-## 9. Forbidden Data Practices
-
-Diulang dari [SECURITY.md](SECURITY.md) untuk konteks operasional:
-
-- ❌ Commit data portofolio ke GitHub.
-- ❌ Simpan password / cookie broker.
-- ❌ Bypass platform protection (CAPTCHA, anti-bot).
-- ❌ Representasikan data scraped sebagai resmi.
-- ❌ Buat keputusan trading saat freshness data tidak diketahui.
-- ❌ Aggressive scraping (>1 req/detik ke satu host, ignore robots.txt).
-- ❌ Re-publish full content news yang berhak cipta (cuma link + ringkasan singkat AI).
-
----
-
-## 10. Adding a New Source — Checklist
-
-1. Buat ADR singkat kalau source punya implikasi besar (cost, ToS, dep).
-2. Implement adapter di `packages/core/data_sources/<source>/`.
-3. Schema validation (Pydantic).
-4. Update tabel §1.
-5. Update rate limit §4.
-6. Tambah test fixture + golden file.
-7. Update `.env.example` kalau butuh API key baru.
-8. Update `config/*.example.yml` kalau ada knob baru.
-9. Dokumentasi singkat di `.docs/notes/sources/<source>.md` (ToS link, reliability anecdote).
+- Broker login, cookies, sessions, or scraping authenticated pages.
+- Automated IDX crawling in V1.
+- Realtime/tick-data claims.
+- Full article archival.
+- Selling or publishing recommendations derived from public data.

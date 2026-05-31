@@ -1,63 +1,36 @@
-# ADR-0008 — Python Core Diekspos via CLI, Bukan Separate HTTP Service
+# ADR-0008: Python Core Accessed Through CLI/API Boundaries
 
-- **Status:** accepted
-- **Date:** 2026-05-16
-- **Deciders:** owner
+Status: Accepted
+Date: 2026-05-31
 
 ## Context
 
-Stack pakai dua bahasa: Python (data core, financial calc, AI orchestration) dan TypeScript (Next.js UI). Ada dua cara menghubungkan:
-
-1. **Separate HTTP service** — Python FastAPI listening di port lokal, Next.js fetch via HTTP.
-2. **CLI invocation** — Next.js spawn Python process via child_process untuk heavy ops; light reads via DuckDB direct query.
-
-Pertanyaan: pilih yang mana?
+SahamLens uses Python for data ingestion, calculations, indicators, data quality, fundamentals, screener logic, alerts, journal analysis, and AI orchestration. The web app should not duplicate these rules.
 
 ## Decision
 
-**CLI invocation untuk heavy ops + DuckDB direct read untuk light query**, **tidak ada** separate HTTP server di MVP.
+Keep domain logic in `packages/core` and expose workflows through scripts or API boundaries.
 
-Konkret:
-- **Read OHLCV, watchlist, journal:** Next.js (Server Component / API route) langsung query DuckDB lokal via `duckdb` Node binding atau via `node-duckdb`.
-- **Heavy ops (indicator batch recalc, AI generation, news ingestion):** Next.js API route spawn Python script (`scripts/*.py`). Output structured JSON via stdout, error via exit code + stderr.
-- **Cron-driven ingestion:** OS cron langsung memanggil `scripts/*.py`. Tidak butuh Next.js sama sekali.
+Rules:
+
+- `packages/core` owns business logic.
+- `scripts` orchestrate jobs and call core modules.
+- `apps/web` renders results and triggers local/API workflows.
+- Core modules must not import from `apps/web` or `scripts`.
 
 ## Consequences
 
-**Positive:**
-- Satu boundary lebih sedikit (tidak ada server Python yang harus jalan).
-- Tidak ada port conflict / health check loop.
-- Cold start acceptable untuk personal use (1–3 detik).
-- Cron lokal natural — `python scripts/foo.py`, tanpa HTTP.
-- Deploy lebih sederhana (kalau pun hosted).
+Positive:
 
-**Negative:**
-- Tidak cocok kalau request rate tinggi (acceptable: single user).
-- Spawn overhead per call (~200ms warm cache).
-- Lebih sulit streaming response (kalau butuh streaming AI chat, lihat re-evaluate).
+- Domain logic remains testable.
+- CLI jobs are easy to dogfood locally.
+- UI stays thinner.
 
-**Trigger untuk re-evaluate (= switch ke FastAPI):**
-- Request latency dari spawn jadi UX problem.
-- Butuh streaming response (Server-Sent Events untuk AI chat).
-- Hosted dashboard multi-tenant (tidak akan, lihat scope).
+Trade-offs:
 
-Note: streaming chat AI bisa di-handle dengan Next.js API route langsung memanggil Anthropic SDK (TypeScript), bypass Python untuk path tersebut. Provider wrapper di-implement dual (TS + Python) untuk shared LLM call kalau diperlukan. Lihat [ADR-0005](ADR-0005-llm-wrapper.md).
+- Boundaries need discipline when adding quick UI features.
+- Some integration tests may need fixture data or local DB setup.
 
-## Alternatives Considered
+## Follow-Up
 
-1. **FastAPI dari awal** — di-reject MVP: dua server untuk single user adalah operational theater. Re-evaluate di V1 kalau butuh streaming.
-2. **Rewrite data core di TypeScript** — di-reject: ekosistem data science (pandas, pandas-ta) jauh lebih kuat di Python.
-3. **WebAssembly Python (Pyodide)** — di-reject: bundle size besar, ekosistem terbatas, tidak fit untuk cron-driven ingestion.
-
-## Implementation Notes
-
-- `scripts/*.py` harus accept `--json` flag dan output JSON ke stdout.
-- Exit code 0 = success, non-zero = failure.
-- Next.js wrapper `apps/web/src/lib/pythonRunner.ts` standardize call: timeout, env passing, error parsing.
-- Tests untuk wrapper: mock spawn dengan fixed stdout/stderr/exitcode.
-
-## References
-
-- [ARCHITECTURE.md §2, §4](../ARCHITECTURE.md)
-- [ADR-0003](ADR-0003-ui-framework.md)
-- [ADR-0005](ADR-0005-llm-wrapper.md)
+If a future architecture embeds Python directly into the web runtime or splits services, create a new ADR.
