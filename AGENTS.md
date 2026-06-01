@@ -33,7 +33,7 @@ Rules:
 
 Phase: V1 - Better Decision Support.
 Planning status: frozen.
-Current sprint: V1-S1 - Provider Health + Data Quality Foundation.
+Current sprint: V1-S2 - Ticker Lifecycle + Fundamental Snapshot.
 
 Critical path:
 
@@ -51,6 +51,14 @@ Start implementation from [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRI
 | V1-S1 Provider Health CLI | Done | `v1/s1-provider-health-foundation` / current slice | Added `scripts.provider_health` with `list` and `refresh-yfinance`, JSON output, yfinance snapshot mapping, and CLI tests. | Kept UI reads separate from refresh so dashboard render does not hit yfinance/network. | Richer provider history deferred until dogfooding shows it is needed. |
 | V1-S1 Data Quality UI Shell | Done | `v1/s1-provider-health-foundation` / current slice | Added `/data-quality`, `fetchDataQualityOverview`, dashboard summary cards, provider cards, empty/error state, and all six freshness states. | Existing `FreshnessBadge` still uses legacy `fresh/stale/old`; V1 data-quality UI uses new explicit states separately. | None for S1; watch legacy freshness naming during S2 integration. |
 | V1-S1 Dogfood + Local Refresh | Done | `v1/s1-provider-health-foundation` / local DB | Ran migration, confirmed empty overview, refreshed yfinance for `BBCA.JK` and `TLKM.JK`, and persisted a fresh snapshot with coverage `2`. | Requires network availability; yfinance remains Tier 3 and must keep caveat visibility. Local DB is ignored at `data/private/sahamlens.duckdb`. | V1-S1 ready for review/PR; next implementation should begin V1-S2 after merge. |
+| V1-S2 Sprint Prep | In progress | `v1/s2-ticker-fundamental-snapshot` / prep slice | Prepare vertical slice for ticker lifecycle, coverage tiers, and lightweight fundamental snapshot with confidence. | Must reuse V1-S1 Data Quality as prerequisite and avoid reopening frozen product scope. | Confirm ADR readiness, then implement schema/migration with tests. |
+| V1-S2 ADR Readiness | Pending | Not started | Confirm ADR coverage for ticker lifecycle/coverage and fundamental completeness/confidence before schema work. | ADR names must map cleanly to implementation terms so schema does not invent parallel vocabulary. | Check ADR-0011, ADR-0012, `.docs/DATA_SOURCES.md`, and `.docs/EXECUTION_BLUEPRINT.md`. |
+| V1-S2 Schema / Migration | Pending | Not started | Add DuckDB schema for ticker lifecycle status, source coverage, fundamental snapshots, missing fields, completeness, confidence, source, and fetched/imported timestamps. | Keep migration narrow; no financial terminal scope, no automated IDX parser, and no predictive scoring. | Write failing schema tests first, then migration and minimal repository/model support. |
+| V1-S2 Coverage Core | Pending | Not started | Implement coverage classifier for Tier A/B/C and lifecycle states: active, suspended, delisted, renamed, unknown. | Screener/alert eligibility must stay conservative when data is stale, failed, partial, or unknown. | Depends on schema/migration and provider health visibility. |
+| V1-S2 Fundamental Snapshot Core | Pending | Not started | Implement lightweight fundamental snapshot ingestion plus completeness/confidence calculation. | Public-provider fundamentals may be stale/sparse; UI and AI must not infer missing fundamentals. | Store available fields, missing fields, completeness, confidence, source, and timestamp. |
+| V1-S2 CLI | Pending | Not started | Add commands to refresh ticker coverage and ingest/list fundamental snapshots for watchlist symbols. | CLI should orchestrate only; business rules stay in `packages/core`. | Reuse repository and provider health gates; no network refresh during UI render. |
+| V1-S2 UI | Pending | Not started | Add Fundamental Snapshot card and coverage/lifecycle badges with clear caveats and disabled/read-only states when incomplete. | Avoid duplicating classifier logic in React; UI should render core-provided states. | Add tests for complete, partial, sparse, missing, stale, failed, and unknown states. |
+| V1-S2 Dogfood | Pending | Not started | Review watchlist tickers with coverage tier, lifecycle status, fundamental completeness, and confidence visible. | Success means honest visibility of missing/stale/sparse data, not signal quality. | Dogfood with `BBCA.JK` and `TLKM.JK` first, then expand only if needed. |
 
 ## Scope Guardrails
 
