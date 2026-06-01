@@ -34,6 +34,7 @@ Rules:
 Phase: V1 - Better Decision Support.
 Planning status: frozen.
 Current sprint: V1-S2 - Ticker Lifecycle + Fundamental Snapshot.
+Next sprint: V1-S3 - Screener, planned after V1-S2 review/merge.
 
 Critical path:
 
@@ -60,6 +61,14 @@ Start implementation from [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRI
 | V1-S2 UI | Done | `v1/s2-ticker-fundamental-snapshot` / UI slice | Added Fundamental Snapshot card, coverage/lifecycle badges, completeness/confidence badges, caveats, empty state, and read-only state when incomplete. | UI renders core-provided states via `scripts.fundamentals snapshot`; no classifier logic or network refresh runs during render. | Next: dogfood watchlist tickers and verify full S2 sprint. |
 | V1-S2 Dogfood | Done | `v1/s2-ticker-fundamental-snapshot` / local DB | Reviewed watchlist coverage and fundamental snapshots after local ingest/refresh. `BBCA.JK` resolved Tier A with partial/medium fundamentals; `TLKM.JK` stayed Tier C with sparse/low fundamentals because OHLCV coverage is missing locally. | DuckDB local file can lock when multiple CLI commands read/write in parallel; run dogfood refresh/read commands sequentially. | V1-S2 implemented and verified; next sprint can begin after review/PR merge. |
 | V1-S2 Verification | Done | `v1/s2-ticker-fundamental-snapshot` / verification slice | Full S2 verification passed: Python tests/type/lint/format, web tests/type/lint/build, migration idempotency, CLI ingest/list/snapshot/coverage dogfood. | Existing non-blocking warnings remain: Vite CJS API deprecation, `next lint` deprecation, and Next `experimental.typedRoutes` warning. | Prepare PR summary and move to V1-S3 only after merge. |
+| V1-S3 Sprint Prep | Planned | `v1/s3-screener` / not started | Prepare transparent screener vertical slice that consumes V1-S1 Data Quality and V1-S2 Coverage/Fundamental confidence gates. | Must not introduce signal language, recommendations, prediction, or hidden scoring. | Start after V1-S2 PR merge; first step is Screener semantics ADR/readiness check. |
+| V1-S3 ADR Readiness | Pending | Not started | Write or confirm Screener semantics ADR before schema/evaluator work. | Screener language must remain filter/explain/exclude, never buy/sell/hold or candidate recommendation. | Lock rule vocabulary, missing-data behavior, stale-data behavior, and result explanation requirements. |
+| V1-S3 Schema / Migration | Pending | Not started | Add DuckDB schema for screener rules, rule conditions, results, exclusions, required fields, freshness/confidence gates, and run metadata. | Keep rules transparent and local; no strategy DSL and no predictive scoring. | Write migration/schema tests first. |
+| V1-S3 Screener Core | Pending | Not started | Implement evaluator that applies explicit rules to local ticker coverage, fundamentals, price/indicator data, freshness states, and confidence gates. | Rule failures must explain missing fields, stale data, Tier C exclusion, or unsupported lifecycle status. | Keep business logic in `packages/core/screener`. |
+| V1-S3 CLI | Pending | Not started | Add command to run saved or built-in screener rules and emit explainable JSON results. | CLI should orchestrate only and must not call AI or external network during screener evaluation. | Include no-signal wording in result labels. |
+| V1-S3 UI | Pending | Not started | Add Screener page with rule summary, result table, exclusion reasons, freshness/confidence badges, and empty/error states. | UI must not hide excluded tickers or missing-data reasons. | Render core-provided explanations instead of duplicating evaluator logic in React. |
+| V1-S3 Tests | Pending | Not started | Add tests for eligibility gates, stale behavior, missing fields, Tier C exclusions, lifecycle exclusions, and no-signal copy. | Tests should catch accidental recommendation language. | Include Python core/CLI tests and web component tests. |
+| V1-S3 Dogfood | Pending | Not started | Run screener against local watchlist and review included/excluded tickers with reasons. | Success means transparent filtering and caveats, not profitable signals. | Dogfood after migration, core, CLI, and UI are verified. |
 
 ## Scope Guardrails
 
