@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ChatPanel } from "@/components/ChatPanel";
+import { FundamentalSnapshotCard } from "@/components/FundamentalSnapshotCard";
 import { IndicatorCard } from "@/components/IndicatorCard";
 import { NewsSection } from "@/components/NewsSection";
 import { StockBriefPanel } from "@/components/StockBriefPanel";
 import { StockChart } from "@/components/StockChart";
 import { StockFreshnessBar } from "@/components/StockFreshnessBar";
+import { fetchFundamentalSnapshot, type FundamentalSnapshotOverview } from "@/lib/fundamentals";
 import { INDICATOR_KEYS, type IndicatorKey } from "@/lib/indicatorMeta";
 import { fetchStockDetail, type StockDetail } from "@/lib/stockDetail";
 
@@ -17,12 +19,22 @@ interface PageProps {
 export default async function StockDetailPage({ params }: PageProps) {
   const { symbol } = await params;
   let detail: StockDetail | null = null;
+  let fundamental: FundamentalSnapshotOverview | null = null;
+  let fundamentalError: string | null = null;
   let error: string | null = null;
 
   try {
     detail = await fetchStockDetail(symbol, 365);
   } catch (err) {
     error = err instanceof Error ? err.message : String(err);
+  }
+
+  if (!error) {
+    try {
+      fundamental = await fetchFundamentalSnapshot(symbol);
+    } catch (err) {
+      fundamentalError = err instanceof Error ? err.message : String(err);
+    }
   }
 
   if (error) {
@@ -55,6 +67,7 @@ export default async function StockDetailPage({ params }: PageProps) {
             {"\n"}uv run python -m scripts.calculate_indicators --symbols {symbol.toUpperCase()}
           </pre>
         </section>
+        <FundamentalSnapshotCard overview={fundamental} error={fundamentalError} />
       </main>
     );
   }
@@ -78,6 +91,8 @@ export default async function StockDetailPage({ params }: PageProps) {
       />
 
       <StockFreshnessBar lastDate={detail.last_date} />
+
+      <FundamentalSnapshotCard overview={fundamental} error={fundamentalError} />
 
       <section>
         <StockChart
