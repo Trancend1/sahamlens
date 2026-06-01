@@ -127,14 +127,23 @@ def list_ticker_lifecycle_snapshots(
 
 def list_source_coverage_snapshots(
     conn: duckdb.DuckDBPyConnection,
+    *,
+    symbol: str | None = None,
 ) -> list[SourceCoverageSnapshot]:
+    where = ""
+    params: list[object] = []
+    if symbol is not None:
+        where = "WHERE symbol = ?"
+        params.append(normalize_ticker(symbol))
     rows = conn.execute(
-        """
+        f"""
         SELECT symbol, provider_name, source_type, provider_trust_tier, availability_state,
                freshness_state, last_success_at, last_checked_at, missing_reason, coverage_count
         FROM source_coverage
+        {where}
         ORDER BY symbol, provider_name, source_type
-        """
+        """,
+        params,
     ).fetchall()
     return [_row_to_source_coverage(row) for row in rows]
 
