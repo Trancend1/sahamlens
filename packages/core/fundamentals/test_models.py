@@ -57,6 +57,17 @@ def test_calculate_confidence_uses_coverage_freshness_trust_and_completeness() -
     assert low.level == "low"
 
 
+def test_sparse_completeness_caps_confidence_at_low() -> None:
+    confidence = calculate_confidence(
+        coverage_tier="tier_b",
+        freshness_state="delayed",
+        provider_trust_tier="tier_2",
+        completeness_state="sparse",
+    )
+
+    assert confidence.level == "low"
+
+
 def test_build_fundamental_snapshot_normalizes_fields_and_caveats() -> None:
     snapshot = build_fundamental_snapshot(
         symbol="bbca",

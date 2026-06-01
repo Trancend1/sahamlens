@@ -99,6 +99,10 @@ def calculate_confidence(
     rounded = round(score, 3)
     if completeness_state == "missing" or rounded <= 0:
         return ConfidenceResult(level="none", score=0)
+    if completeness_state == "sparse":
+        return ConfidenceResult(level="low", score=rounded)
+    if completeness_state == "partial":
+        return ConfidenceResult(level="medium" if rounded >= 0.5 else "low", score=rounded)
     if rounded >= 0.75:
         return ConfidenceResult(level="high", score=rounded)
     if rounded >= 0.5:
