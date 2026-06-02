@@ -3,6 +3,7 @@ import Link from "next/link";
 const NAV = [
   { href: "/data-quality", label: "Data Quality", desc: "Provider health & freshness" },
   { href: "/screener", label: "Screener", desc: "Transparent filters" },
+  { href: "/journal/weekly-review", label: "Weekly Review", desc: "Journal behavior review" },
   { href: "/watchlist", label: "Watchlist", desc: "Ticker yang diikuti" },
   { href: "/journal", label: "Trade Journal", desc: "Plan, review, AI kritik" },
   { href: "/portfolio", label: "Portfolio", desc: "Posisi & P&L aktual" },
