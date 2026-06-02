@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from packages.core.data_sources.normalize import normalize_ticker
 from pydantic import BaseModel, field_validator
@@ -14,6 +14,16 @@ EmotionLevel = Literal["calm", "excited", "fearful", "greedy", "uncertain"]
 RiskFlag = Literal["green", "amber", "red", "incomplete"]
 CritiqueCategory = Literal["thesis", "invalidation", "risk", "catalyst", "emotion", "liquidity"]
 CritiqueStatus = Literal["ok", "weak", "missing"]
+WeeklyReviewStatus = Literal["completed", "partial", "failed"]
+WeeklyFindingType = Literal[
+    "behavior_pattern",
+    "rule_violation",
+    "missing_data",
+    "risk_discipline",
+    "follow_up",
+    "caveat",
+]
+WeeklyFindingSeverity = Literal["info", "warning", "critical"]
 
 
 class TradePlan(BaseModel):
@@ -53,3 +63,33 @@ class JournalCritique(BaseModel):
     overall_risk_flag: RiskFlag
     caveats: list[str]
     not_financial_advice: bool = True
+
+
+class WeeklyReviewFinding(BaseModel):
+    finding_id: str
+    review_id: str
+    finding_type: WeeklyFindingType
+    title: str
+    detail: str
+    severity: WeeklyFindingSeverity
+    evidence: list[str]
+    caveats: list[str]
+    created_at: datetime
+
+
+class WeeklyReviewRun(BaseModel):
+    review_id: str
+    period_start: datetime
+    period_end: datetime
+    generated_at: datetime
+    status: WeeklyReviewStatus = "completed"
+    journal_entry_count: int = 0
+    reviewed_plan_count: int = 0
+    rule_evaluation_count: int = 0
+    violation_count: int = 0
+    needs_data_count: int = 0
+    summary: str
+    evidence: list[str]
+    caveats: list[str]
+    findings: list[WeeklyReviewFinding]
+    rule_evaluations: list[Any]
