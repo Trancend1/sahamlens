@@ -10,6 +10,13 @@ from packages.core.strategy.models import (
     StrategyRuleViolation,
     forbidden_strategy_signal_terms,
 )
+from packages.core.strategy.repo import (
+    list_strategy_rule_evaluations,
+    list_strategy_rules,
+    upsert_strategy_rule,
+    upsert_strategy_rule_evaluations,
+    upsert_strategy_rules,
+)
 
 __all__ = [
     "NeedsDataBehavior",
@@ -21,4 +28,9 @@ __all__ = [
     "default_strategy_rules",
     "evaluate_strategy_rules",
     "forbidden_strategy_signal_terms",
+    "list_strategy_rule_evaluations",
+    "list_strategy_rules",
+    "upsert_strategy_rule",
+    "upsert_strategy_rule_evaluations",
+    "upsert_strategy_rules",
 ]
