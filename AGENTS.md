@@ -33,8 +33,8 @@ Rules:
 
 Phase: V1 - Better Decision Support.
 Planning status: frozen.
-Current sprint: V1-S2 - Ticker Lifecycle + Fundamental Snapshot.
-Next sprint: V1-S3 - Screener, planned after V1-S2 review/merge.
+Current sprint: V1-S3 - Screener, verification/PR wrap-up.
+Next sprint: V1-S4 - Weekly Journal Review + Strategy Rules, planned after V1-S3 review/merge.
 
 Critical path:
 
@@ -69,6 +69,16 @@ Start implementation from [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRI
 | V1-S3 UI | Pending | Not started | Add Screener page with rule summary, result table, exclusion reasons, freshness/confidence badges, and empty/error states. | UI must not hide excluded tickers or missing-data reasons. | Render core-provided explanations instead of duplicating evaluator logic in React. |
 | V1-S3 Tests | Pending | Not started | Add tests for eligibility gates, stale behavior, missing fields, Tier C exclusions, lifecycle exclusions, and no-signal copy. | Tests should catch accidental recommendation language. | Include Python core/CLI tests and web component tests. |
 | V1-S3 Dogfood | Pending | Not started | Run screener against local watchlist and review included/excluded tickers with reasons. | Success means transparent filtering and caveats, not profitable signals. | Dogfood after migration, core, CLI, and UI are verified. |
+| V1-S4 Sprint Prep | Planned | `v1/s4-journal-strategy` / not started | Prepare behavior-review vertical slice for weekly journal review and simple named strategy-rule checks. | Must use existing journal data as input and avoid turning strategy rules into a custom DSL or trade signal engine. | Start after V1-S3 PR review/merge; confirm current journal schema and existing UI/API surfaces first. |
+| V1-S4 ADR Readiness | Pending | Not started | Confirm or write Simple Strategy Rules / no DSL ADR before schema and rule-checker work. | Rules must be named, explicit, explainable checks; no predictive scoring, no buy/sell/hold language, and no configurable mini-language. | Lock vocabulary for rule definitions, violations, evidence, caveats, and weekly review output. |
+| V1-S4 Schema / Migration | Pending | Not started | Add DuckDB schema for weekly review runs, review findings, strategy rule definitions, rule evaluations, violations, evidence, caveats, and timestamps. | Keep schema narrow and local-first; avoid performance-analytics expansion beyond weekly review. | Write migration idempotency and repository tests before wiring CLI/UI. |
+| V1-S4 Weekly Journal Review Core | Pending | Not started | Implement weekly review generator that summarizes journal behavior, plan adherence, repeated mistakes, risk discipline, and unresolved follow-ups. | Review is reflective decision-support only; it must not judge profitability as skill or produce trade recommendations. | Keep logic in `packages/core/journal` and return evidence-backed findings. |
+| V1-S4 Strategy Rules Core | Pending | Not started | Implement simple strategy-rule checker for named rules such as planned entry, stop-loss present, risk limit present, thesis present, invalidation present, and emotion logged. | No strategy DSL, no hidden scoring, no optimization/backtesting semantics. Rule failures must be explicit and auditable. | Keep rule models and evaluator in `packages/core/strategy`. |
+| V1-S4 CLI | Pending | Not started | Add commands to generate/list weekly journal reviews and evaluate/list simple strategy-rule results for a date range. | CLI should orchestrate only and must not call external providers during review generation. | JSON output must be stable enough for web UI and dogfood logs. |
+| V1-S4 Weekly Review UI | Pending | Not started | Add Weekly Journal Review page with date range, summary cards, behavior findings, evidence snippets, caveats, and empty/error states. | UI should help reflection, not shame the user or imply prediction. | Render core-provided review output without duplicating review logic in React. |
+| V1-S4 Strategy Rules UI | Pending | Not started | Add Strategy Rules page with named rules, pass/fail/needs-data status, violation reasons, evidence, and clear no-DSL copy. | Must not expose custom scripting, optimization knobs, or signal language. | Keep interactions read-only or simple toggles unless schema explicitly supports edits. |
+| V1-S4 Tests | Pending | Not started | Add tests for weekly review generation, rule evaluation, missing journal fields, empty weeks, evidence/caveat output, no-signal copy, CLI JSON, and UI states. | Tests should catch accidental performance-analytics expansion and forbidden recommendation language. | Include Python core/repository/CLI tests plus web component tests. |
+| V1-S4 Dogfood | Pending | Not started | Generate a weekly review from local journal entries and inspect strategy-rule violations for the owner's recent plans. | Success means clearer behavior feedback and visible rule evidence, not better trade outcomes. | Run after migration, core, CLI, and UI pass verification; record findings without committing private DB data. |
 
 ## Scope Guardrails
 
