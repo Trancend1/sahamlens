@@ -13,8 +13,8 @@ from packages.core.journal.models import (
     WeeklyReviewFinding,
     WeeklyReviewRun,
 )
-from packages.core.strategy import StrategyRule, evaluate_strategy_rules
-from packages.core.strategy.models import StrategyRuleEvaluation
+from packages.core.strategy.evaluator import evaluate_strategy_rules
+from packages.core.strategy.models import StrategyRule, StrategyRuleEvaluation
 
 
 def generate_weekly_journal_review(

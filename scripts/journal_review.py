@@ -11,12 +11,9 @@ from typing import cast
 from uuid import uuid4
 
 import duckdb
-from packages.core.journal import (
-    generate_weekly_journal_review,
-    list_plans,
-    list_weekly_review_runs,
-    upsert_weekly_review_run,
-)
+from packages.core.journal.repo import list_plans
+from packages.core.journal.review_repo import list_weekly_review_runs, upsert_weekly_review_run
+from packages.core.journal.weekly_review import generate_weekly_journal_review
 from packages.core.schemas.repository import open_connection
 from packages.core.strategy import (
     StrategyRule,

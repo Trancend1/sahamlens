@@ -209,7 +209,7 @@ def _row_to_evaluation(
             "evaluation_id": evaluation_id,
             "review_id": _optional_str(row[1]),
             "rule_id": str(row[2]),
-            "journal_id": int(row[3]) if row[3] is not None else None,
+            "journal_id": _optional_int(row[3]),
             "symbol": _optional_str(row[4]),
             "evaluation_status": str(row[5]),
             "evaluated_at": datetime.fromisoformat(str(row[6])),
@@ -228,7 +228,7 @@ def _row_to_violation(row: tuple[object, ...]) -> StrategyRuleViolation:
             "evaluation_id": str(row[1]),
             "review_id": _optional_str(row[2]),
             "rule_id": str(row[3]),
-            "journal_id": int(row[4]) if row[4] is not None else None,
+            "journal_id": _optional_int(row[4]),
             "symbol": _optional_str(row[5]),
             "violation_code": str(row[6]),
             "violation_detail": str(row[7]),
@@ -248,3 +248,7 @@ def _json_list(value: object) -> list[str]:
 
 def _optional_str(value: object) -> str | None:
     return str(value) if value is not None else None
+
+
+def _optional_int(value: object) -> int | None:
+    return int(str(value)) if value is not None else None

@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from packages.core.journal.models import TradePlan
 from packages.core.strategy.models import (
+    StrategyEvaluationStatus,
     StrategyRule,
     StrategyRuleEvaluation,
     StrategyRuleViolation,
@@ -132,7 +133,9 @@ def _evaluate_rule(
 
     unknown_fields = [field for field in rule.required_fields if field not in _KNOWN_FIELDS]
     if unknown_fields:
-        status = "skipped" if rule.needs_data_behavior == "skip" else "needs_data"
+        status: StrategyEvaluationStatus = (
+            "skipped" if rule.needs_data_behavior == "skip" else "needs_data"
+        )
         return StrategyRuleEvaluation(
             evaluation_id=evaluation_id,
             review_id=review_id,

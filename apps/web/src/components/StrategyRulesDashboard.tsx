@@ -1,7 +1,8 @@
 import Link from "next/link";
+import type { StrategyEvaluationStatus } from "@/lib/journalReview";
 import type { StrategyRule, StrategyRuleEvaluation } from "@/lib/strategyRules";
 
-const STATUS_COPY: Record<string, { label: string; className: string }> = {
+const STATUS_COPY: Record<StrategyEvaluationStatus, { label: string; className: string }> = {
   pass: { label: "Pass", className: "border-emerald-500/40 text-emerald-300" },
   fail: { label: "Fail", className: "border-red-500/40 text-red-300" },
   needs_data: { label: "Needs Data", className: "border-amber-500/40 text-amber-300" },

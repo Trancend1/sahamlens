@@ -135,11 +135,11 @@ def _row_to_review(conn: duckdb.DuckDBPyConnection, row: tuple[object, ...]) -> 
             "period_end": datetime.fromisoformat(str(row[2])),
             "generated_at": datetime.fromisoformat(str(row[3])),
             "status": str(row[4]),
-            "journal_entry_count": int(row[5]),
-            "reviewed_plan_count": int(row[6]),
-            "rule_evaluation_count": int(row[7]),
-            "violation_count": int(row[8]),
-            "needs_data_count": int(row[9]),
+            "journal_entry_count": _int_value(row[5]),
+            "reviewed_plan_count": _int_value(row[6]),
+            "rule_evaluation_count": _int_value(row[7]),
+            "violation_count": _int_value(row[8]),
+            "needs_data_count": _int_value(row[9]),
             "summary": str(row[10]),
             "evidence": _json_list(row[11]),
             "caveats": _json_list(row[12]),
@@ -186,3 +186,7 @@ def _json_list(value: object) -> list[str]:
     if not isinstance(parsed, list):
         raise ValueError("expected JSON list")
     return [str(item) for item in parsed]
+
+
+def _int_value(value: object) -> int:
+    return int(str(value))
