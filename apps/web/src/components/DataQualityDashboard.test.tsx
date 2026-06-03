@@ -36,9 +36,12 @@ describe("DataQualityDashboard", () => {
       <DataQualityDashboard
         overview={overview([])}
         error={null}
+        runtimeStatus={null}
+        runtimeError={null}
       />,
     );
-    expect(html).toContain("Belum ada provider health snapshot");
+    expect(html).toContain("Provider health has not been checked yet");
+    expect(html).toContain("Refresh provider health");
   });
 
   it("renders all V1 freshness states", () => {
@@ -46,6 +49,8 @@ describe("DataQualityDashboard", () => {
       <DataQualityDashboard
         overview={overview(["fresh", "delayed", "stale", "failed", "partial", "unknown"])}
         error={null}
+        runtimeStatus={null}
+        runtimeError={null}
       />,
     );
     for (const state of ["fresh", "delayed", "stale", "failed", "partial", "unknown"]) {
@@ -57,10 +62,94 @@ describe("DataQualityDashboard", () => {
     const html = renderToStaticMarkup(
       <DataQualityDashboard
         overview={null}
-        error="boom"
+        error={{
+          code: "command_failed",
+          message: "Runtime command failed.",
+          details: "boom",
+          recommended_command: null,
+        }}
+        runtimeStatus={null}
+        runtimeError={null}
       />,
     );
-    expect(html).toContain("Gagal membaca data quality");
+    expect(html).toContain("Data quality could not be loaded");
     expect(html).toContain("boom");
+  });
+
+  it("renders runtime readiness with migration recovery command", () => {
+    const html = renderToStaticMarkup(
+      <DataQualityDashboard
+        overview={overview([])}
+        error={null}
+        runtimeError={null}
+        runtimeStatus={{
+          ok: false,
+          status: "stale",
+          db_path: "D:/DevSpace/Projects/sahamlens/data/private/sahamlens.duckdb",
+          python_executable: "python",
+          applied_migrations: ["0001", "0002", "0003", "0004", "0005"],
+          pending_migrations: ["0006"],
+          missing_tables: ["weekly_review_runs"],
+          schema_status: "stale",
+          warnings: [
+            {
+              code: "schema_stale",
+              message: "Local schema is not ready for the current V1 runtime.",
+              recommended_command: "uv run python -m scripts.migrate",
+            },
+          ],
+          errors: [
+            {
+              code: "missing_table",
+              message: "Missing required runtime table(s): weekly_review_runs.",
+              recommended_command: "uv run python -m scripts.migrate",
+            },
+          ],
+          recommended_commands: ["uv run python -m scripts.migrate"],
+        }}
+      />,
+    );
+
+    expect(html).toContain("Runtime Readiness");
+    expect(html).toContain("Not Ready");
+    expect(html).toContain("Check runtime status");
+    expect(html).toContain("weekly_review_runs");
+    expect(html).toContain("scripts.migrate");
+    expect(html).not.toContain("Traceback");
+    expect(html).not.toContain("no such table");
+  });
+
+  it("renders runtime unavailable state for missing python executable", () => {
+    const html = renderToStaticMarkup(
+      <DataQualityDashboard
+        overview={null}
+        error={null}
+        runtimeStatus={null}
+        runtimeError={{
+          code: "python_not_found",
+          message: "Python executable was not found.",
+          details: "Set PYTHON_BIN to the project virtualenv Python before starting the web app.",
+          recommended_command: '$env:PYTHON_BIN=(Resolve-Path ".venv/Scripts/python.exe").Path',
+        }}
+      />,
+    );
+
+    expect(html).toContain("Runtime not ready");
+    expect(html).toContain("Python executable was not found.");
+    expect(html).toContain("PYTHON_BIN");
+    expect(html).not.toContain("Traceback");
+  });
+
+  it("does not mention deferred alert workflows in V1-S5 provider copy", () => {
+    const html = renderToStaticMarkup(
+      <DataQualityDashboard
+        overview={overview(["stale", "failed"])}
+        error={null}
+        runtimeStatus={null}
+        runtimeError={null}
+      />,
+    );
+
+    expect(html.toLowerCase()).not.toContain("alerts");
   });
 });

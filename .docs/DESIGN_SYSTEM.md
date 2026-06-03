@@ -14,13 +14,20 @@ SahamLens should feel like a calm personal trading cockpit: dense enough for dai
 
 ## Core Surfaces
 
+Current V1-S5 polish gate:
+
+- Dashboard.
 - Data Quality Dashboard.
 - Watchlist and ticker detail.
 - Fundamental Snapshot card.
 - Screener page.
-- Alerts page.
 - Weekly Journal Review page.
 - Strategy Rules page.
+- Journal and Portfolio support pages.
+
+Deferred to V1-S6:
+
+- Alerts page.
 - Earnings Summary section.
 
 ## Status Vocabulary

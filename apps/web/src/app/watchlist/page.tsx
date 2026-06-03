@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { FreshnessBadge } from "@/components/FreshnessBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
 import { fetchWatchlist, type WatchlistEntry } from "@/lib/watchlist";
 
 export const dynamic = "force-dynamic";
@@ -14,59 +16,60 @@ export default async function WatchlistPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-6 px-6 py-10">
       <header>
         <p className="text-sm uppercase tracking-widest text-muted">
-          <Link href="/" className="hover:text-fg">SahamLens</Link> · S1
+          <Link href="/" className="hover:text-fg">SahamLens</Link> / Watchlist
         </p>
         <h1 className="mt-1 text-3xl font-semibold">Watchlist</h1>
-        <p className="mt-2 text-sm text-muted">
-          {entries.length} ticker · read-only (mutasi via CLI: `uv run python -m scripts.watchlist`).
+        <p className="mt-2 max-w-2xl text-sm text-muted">
+          {entries.length} ticker tracked locally. The watchlist anchors provider refreshes,
+          coverage checks, screener runs, and review workflows.
         </p>
       </header>
 
       {error ? (
-        <section className="rounded-md border border-red-500/40 bg-red-500/[0.05] p-5 text-sm">
-          <p className="font-medium text-red-300">Gagal membaca watchlist.</p>
-          <p className="mt-2 text-muted">
-            Pastikan DuckDB ada dan watchlist sudah di-seed:{" "}
-            <code className="font-mono">uv run python -m scripts.watchlist seed</code>
-          </p>
-          <pre className="mt-3 whitespace-pre-wrap text-xs text-red-200">{error}</pre>
-        </section>
+        <RuntimeErrorState
+          title="Watchlist could not be loaded"
+          message="The local watchlist command could not complete."
+          details={error}
+          recommendedCommand="uv run python -m scripts.runtime status --json"
+        />
       ) : entries.length === 0 ? (
-        <section className="rounded-md border border-muted/30 bg-white/[0.02] p-5 text-sm">
-          <p>Watchlist kosong.</p>
-          <p className="mt-2 text-muted">
-            Seed default: <code className="font-mono">uv run python -m scripts.watchlist seed</code>
-          </p>
-        </section>
+        <EmptyState
+          title="No tickers in your watchlist yet"
+          description="Add your first ticker before refreshing provider health, coverage, fundamentals, or screener runs."
+          actionLabel="Add your first ticker"
+          command="uv run python -m scripts.watchlist seed"
+        />
       ) : (
         <ul className="divide-y divide-muted/20 rounded-md border border-muted/30 bg-white/[0.02]">
-          {entries.map((e) => (
-            <li key={e.symbol} className="flex items-baseline justify-between gap-4 px-5 py-3">
-              <div className="flex items-baseline gap-3">
+          {entries.map((entry) => (
+            <li
+              key={entry.symbol}
+              className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-baseline sm:justify-between"
+            >
+              <div className="flex flex-wrap items-baseline gap-3">
                 <Link
-                  href={`/stocks/${shortSymbol(e.symbol)}`}
+                  href={`/stocks/${shortSymbol(entry.symbol)}`}
                   className="font-mono text-base text-fg hover:text-accent hover:underline"
                 >
-                  {e.symbol}
+                  {entry.symbol}
                 </Link>
-                {e.tag ? (
+                {entry.tag ? (
                   <span className="rounded border border-accent/40 px-2 py-0.5 text-xs text-accent">
-                    {e.tag}
+                    {entry.tag}
                   </span>
                 ) : null}
               </div>
-              <div className="flex items-center gap-2">
-                {e.fetched_at ? <FreshnessBadge iso={e.fetched_at} /> : null}
-                <span className="text-xs text-muted">added {formatDate(e.added_at)}</span>
+              <div className="flex flex-wrap items-center gap-2">
+                {entry.fetched_at ? <FreshnessBadge iso={entry.fetched_at} /> : null}
+                <span className="text-xs text-muted">added {formatDate(entry.added_at)}</span>
               </div>
             </li>
           ))}
         </ul>
       )}
-
     </main>
   );
 }

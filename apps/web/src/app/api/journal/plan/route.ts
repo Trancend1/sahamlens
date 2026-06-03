@@ -19,10 +19,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     if (err instanceof PythonRunnerError) {
       return NextResponse.json(
-        { error: "plan creation failed", detail: err.stderr || err.stdout },
+        { error: "Trade plan could not be saved.", detail: "Check runtime readiness and try again." },
         { status: 422 },
       );
     }
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Trade plan could not be saved." }, { status: 500 });
   }
 }

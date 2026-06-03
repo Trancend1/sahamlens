@@ -35,12 +35,28 @@ uv sync
 pnpm install
 
 uv run python -m scripts.migrate
+uv run python -m scripts.runtime status --json
 pre-commit install
 
 pnpm dev
 ```
 
 The web app runs at `http://localhost:3000`.
+
+If runtime status reports stale schema, run `uv run python -m scripts.migrate`.
+For safe local setup after clone or migration changes, run
+`uv run python -m scripts.runtime bootstrap --json`. `status` is read-only; real
+local DB mutation only happens when `migrate` or `bootstrap` is explicitly run.
+
+On Windows, if the web app cannot find the project Python, start dev with:
+
+```powershell
+$env:PYTHON_BIN=(Resolve-Path ".venv/Scripts/python.exe").Path
+pnpm.cmd --filter @sahamlens/web dev
+```
+
+V1 intentionally stays CLI-backed and local-first. FastAPI/local sidecar,
+background jobs, and service lifecycle management are deferred to V1.5/V2.
 
 ### Verification
 

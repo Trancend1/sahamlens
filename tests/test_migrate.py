@@ -33,6 +33,16 @@ def test_apply_creates_expected_tables(tmp_path: Path) -> None:
         "ticker_lifecycle",
         "source_coverage",
         "fundamental_snapshots",
+        "screener_rules",
+        "screener_rule_conditions",
+        "screener_runs",
+        "screener_results",
+        "screener_result_exclusions",
+        "weekly_review_runs",
+        "weekly_review_findings",
+        "strategy_rules",
+        "strategy_rule_evaluations",
+        "strategy_rule_violations",
         "schema_migrations",
     }
     assert expected.issubset(tables)
@@ -97,6 +107,166 @@ def test_v1_s2_migration_creates_lifecycle_coverage_and_fundamental_schema(
             "caveat",
             "reason",
         }.issubset(fundamental_columns)
+
+
+def test_v1_s3_migration_creates_screener_schema(tmp_path: Path) -> None:
+    db = tmp_path / "test.duckdb"
+    with duckdb.connect(str(db)) as conn:
+        applied_versions(conn)
+        for path in discover_migrations():
+            apply_migration(conn, path)
+
+        rule_columns = _columns(conn, "screener_rules")
+        assert {
+            "rule_id",
+            "name",
+            "description",
+            "required_fields",
+            "required_source_types",
+            "min_coverage_tier",
+            "allowed_freshness_states",
+            "min_fundamental_completeness",
+            "min_confidence_level",
+            "is_active",
+            "created_at",
+            "updated_at",
+        }.issubset(rule_columns)
+
+        condition_columns = _columns(conn, "screener_rule_conditions")
+        assert {
+            "condition_id",
+            "rule_id",
+            "field_name",
+            "operator",
+            "value_json",
+            "required_source_type",
+            "missing_behavior",
+            "description",
+        }.issubset(condition_columns)
+
+        run_columns = _columns(conn, "screener_runs")
+        assert {
+            "run_id",
+            "rule_id",
+            "started_at",
+            "completed_at",
+            "status",
+            "universe_count",
+            "included_count",
+            "excluded_count",
+            "data_quality_snapshot",
+            "notes",
+        }.issubset(run_columns)
+
+        result_columns = _columns(conn, "screener_results")
+        assert {
+            "run_id",
+            "symbol",
+            "result_status",
+            "coverage_tier",
+            "lifecycle_status",
+            "freshness_state",
+            "completeness_state",
+            "confidence_level",
+            "matched_conditions",
+            "failed_conditions",
+            "missing_fields",
+            "exclusion_reasons",
+            "caveats",
+            "explanation",
+            "evaluated_at",
+        }.issubset(result_columns)
+
+        exclusion_columns = _columns(conn, "screener_result_exclusions")
+        assert {
+            "run_id",
+            "symbol",
+            "reason_code",
+            "reason_detail",
+            "source_field",
+        }.issubset(exclusion_columns)
+
+
+def test_v1_s4_migration_creates_weekly_review_and_strategy_schema(tmp_path: Path) -> None:
+    db = tmp_path / "test.duckdb"
+    with duckdb.connect(str(db)) as conn:
+        applied_versions(conn)
+        for path in discover_migrations():
+            apply_migration(conn, path)
+
+        review_run_columns = _columns(conn, "weekly_review_runs")
+        assert {
+            "review_id",
+            "period_start",
+            "period_end",
+            "generated_at",
+            "status",
+            "journal_entry_count",
+            "reviewed_plan_count",
+            "rule_evaluation_count",
+            "violation_count",
+            "needs_data_count",
+            "summary",
+            "evidence",
+            "caveats",
+            "created_at",
+        }.issubset(review_run_columns)
+
+        finding_columns = _columns(conn, "weekly_review_findings")
+        assert {
+            "finding_id",
+            "review_id",
+            "finding_type",
+            "title",
+            "detail",
+            "severity",
+            "evidence",
+            "caveats",
+            "created_at",
+        }.issubset(finding_columns)
+
+        rule_columns = _columns(conn, "strategy_rules")
+        assert {
+            "rule_id",
+            "name",
+            "description",
+            "rule_category",
+            "required_fields",
+            "violation_code",
+            "needs_data_behavior",
+            "is_active",
+            "created_at",
+            "updated_at",
+        }.issubset(rule_columns)
+
+        evaluation_columns = _columns(conn, "strategy_rule_evaluations")
+        assert {
+            "evaluation_id",
+            "review_id",
+            "rule_id",
+            "journal_id",
+            "symbol",
+            "evaluation_status",
+            "evaluated_at",
+            "evidence",
+            "caveats",
+            "reason",
+        }.issubset(evaluation_columns)
+
+        violation_columns = _columns(conn, "strategy_rule_violations")
+        assert {
+            "violation_id",
+            "evaluation_id",
+            "review_id",
+            "rule_id",
+            "journal_id",
+            "symbol",
+            "violation_code",
+            "violation_detail",
+            "evidence",
+            "caveats",
+            "created_at",
+        }.issubset(violation_columns)
 
 
 def test_idempotent_apply(tmp_path: Path) -> None:

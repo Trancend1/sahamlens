@@ -140,15 +140,15 @@ export default function TradePlanForm() {
       });
       if (!res.ok) {
         const body = (await res.json()) as { error?: string; detail?: string };
-        setSubmitError(body.detail ?? body.error ?? "Gagal menyimpan plan");
+        setSubmitError(body.detail ?? body.error ?? "The trade plan could not be saved.");
         setSubmitState("idle");
         return;
       }
       const plan = (await res.json()) as TradePlan;
       setSavedPlan(plan);
       setSubmitState("saved");
-    } catch (err) {
-      setSubmitError(String(err));
+    } catch {
+      setSubmitError("The trade plan could not be saved. Check runtime readiness and try again.");
       setSubmitState("idle");
     }
   }
@@ -161,15 +161,15 @@ export default function TradePlanForm() {
       const res = await fetch(`/api/journal/critique/${savedPlan.id}`, { method: "POST" });
       if (!res.ok) {
         const body = (await res.json()) as { error?: string };
-        setCritiqueError(body.error ?? "Gagal mendapatkan kritik");
+        setCritiqueError(body.error ?? "The AI critique could not be generated.");
         setCritiqueState("error");
         return;
       }
       const data = (await res.json()) as JournalCritique;
       setCritique(data);
       setCritiqueState("done");
-    } catch (err) {
-      setCritiqueError(String(err));
+    } catch {
+      setCritiqueError("The AI critique could not be generated. Check runtime readiness and try again.");
       setCritiqueState("error");
     }
   }

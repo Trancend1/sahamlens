@@ -1,11 +1,5 @@
-/**
- * News + AI summary panel for the stock detail page.
- *
- * Server component. Renders a grid of NewsCard, or a muted empty state when
- * no summarized news for the open ticker exists yet.
- */
-
 import { NewsCard } from "@/components/NewsCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { NewsRecent } from "@/lib/stockDetail";
 
 interface NewsSectionProps {
@@ -16,25 +10,23 @@ interface NewsSectionProps {
 export function NewsSection({ items, symbol }: NewsSectionProps): React.ReactElement {
   if (items.length === 0) {
     return (
-      <section
-        className="rounded-md border border-muted/30 bg-white/[0.02] p-5 text-sm text-muted"
-        data-empty
-      >
-        <p className="font-medium text-fg/80">Belum ada news ter-summarize untuk {symbol}.</p>
-        <pre className="mt-2 whitespace-pre-wrap text-xs">
-          uv run python -m scripts.ingest_news{"\n"}
-          uv run python -m scripts.summarize_news --from-watchlist --limit 10
-        </pre>
-      </section>
+      <div data-empty>
+        <EmptyState
+          title={`No summarized news yet for ${symbol}`}
+          description="Ingest and summarize validated RSS metadata before using news context for this ticker."
+          actionLabel="Refresh news metadata"
+          command="uv run python -m scripts.ingest_news"
+        />
+      </div>
     );
   }
 
   return (
     <section className="flex flex-col gap-3">
-      <header className="flex items-baseline justify-between">
-        <h2 className="text-sm uppercase tracking-widest text-muted">News + AI ringkasan</h2>
+      <header className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 className="text-sm uppercase tracking-widest text-muted">News + AI Summary</h2>
         <span className="text-[10px] text-muted">
-          {items.length} item · model: {hostFromConfidence(items)}
+          {items.length} item / confidence: {hostFromConfidence(items)}
         </span>
       </header>
       <div className="grid gap-3 md:grid-cols-2">
@@ -47,6 +39,6 @@ export function NewsSection({ items, symbol }: NewsSectionProps): React.ReactEle
 }
 
 function hostFromConfidence(items: NewsRecent[]): string {
-  const lo = items.filter((i) => i.confidence < 0.6).length;
-  return lo > 0 ? `${lo} low-confidence` : "all ≥0.6 conf";
+  const lowConfidenceCount = items.filter((item) => item.confidence < 0.6).length;
+  return lowConfidenceCount > 0 ? `${lowConfidenceCount} low-confidence` : "all at least 0.6";
 }
