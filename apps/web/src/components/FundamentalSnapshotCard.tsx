@@ -5,6 +5,7 @@ import type {
   FundamentalSnapshotOverview,
   LifecycleStatus,
 } from "@/lib/fundamentals";
+import { RuntimeErrorState } from "./ui/RuntimeErrorState";
 
 const COVERAGE_COPY: Record<CoverageTier, { label: string; className: string }> = {
   tier_a: { label: "Tier A", className: "border-emerald-500/40 text-emerald-300" },
@@ -66,8 +67,13 @@ export function FundamentalSnapshotCard({ overview, error = null }: Props): Reac
       </div>
 
       {error ? (
-        <div className="mt-4 rounded-md border border-red-500/40 bg-red-500/[0.05] p-3 text-sm text-red-200">
-          Gagal membaca fundamental snapshot: {error}
+        <div className="mt-4">
+          <RuntimeErrorState
+            title="Fundamental snapshot could not be loaded"
+            message="The local fundamental snapshot command could not complete."
+            details={error}
+            recommendedCommand="uv run python -m scripts.runtime status --json"
+          />
         </div>
       ) : null}
 

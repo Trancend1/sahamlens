@@ -5,11 +5,11 @@
 V1 planning is frozen and ready for implementation.
 
 Current phase: Phase V1 - Better Decision Support.
-Current sprint: V1-S1 - Provider Health + Data Quality Foundation.
+Current sprint: V1-S5 - Polish + Runtime Readiness + UX Stabilization.
 
 Implementation must follow the critical path:
 
-Data Quality -> Coverage/Fundamentals -> Screener -> Alerts
+Data Quality -> Coverage/Fundamentals -> Screener -> Journal/Strategy -> Polish Gate -> Alerts
 
 ## Planning Freeze
 
@@ -81,7 +81,8 @@ Can be written during the related sprint:
 | V1-S2 | Ticker Lifecycle + Fundamental Snapshot | Add coverage tiers and lightweight fundamentals with confidence. | User can review supported tickers and fundamental snapshots with caveats. |
 | V1-S3 | Screener | Run transparent filters using freshness and confidence gates. | User can screen candidates without signal language or hidden assumptions. |
 | V1-S4 | Weekly Journal Review + Strategy Rules | Convert journal history into behavior review and simple rule checks. | User can review weekly behavior and rule violations. |
-| V1-S5 | Alerts + Telegram Optional + Earnings Summary | Add local alert lifecycle and manual-first earnings workflow. | User can receive/review local alerts, track false positives, and summarize earnings events. |
+| V1-S5 | Polish + Runtime Readiness + UX Stabilization | Make the existing V1 experience consistent, actionable, and safe for daily local use. | User can navigate core pages with clear empty/error/loading states and runtime recovery guidance. |
+| V1-S6 | Alerts + Telegram Optional + Earnings Summary | Add local alert lifecycle and manual-first earnings workflow after the V1 UX polish gate. | User can receive/review local alerts, track false positives, and summarize earnings events. |
 
 ## Dependency Matrix
 
@@ -90,8 +91,9 @@ Can be written during the related sprint:
 | V1-S1 | None | V1-S2, V1-S3, V1-S5 | UI shell, provider registry, docs cleanup |
 | V1-S2 | V1-S1 | V1-S3, V1-S5 | Fundamental UI and lifecycle schema can be split |
 | V1-S3 | V1-S1, V1-S2 | V1-S5 | Screener UI and rule fixtures |
-| V1-S4 | Existing journal baseline | V1-S5 context | Can run parallel after V1-S1 |
-| V1-S5 | V1-S1, V1-S2, V1-S3 | V1 exit | Telegram optional and earnings manual path can be split |
+| V1-S4 | Existing journal baseline | V1-S5 | Can run parallel after V1-S1 |
+| V1-S5 | V1-S1, V1-S2, V1-S3, V1-S4, runtime contract | V1-S6 | Copy, empty states, responsive polish, and docs can be split |
+| V1-S6 | V1-S5, ADR-0013 | V1 exit | Telegram optional and earnings manual path can be split |
 
 ## Sprint Backlog Index
 
@@ -147,21 +149,32 @@ Backlog is intentionally ticket-sized and implementation-ready. Ticket details s
 
 ### V1-S5
 
-- ADR-S5-01: Alert lifecycle and false-positive tracking ADR.
-- ADR-S5-02: Earnings manual-first hierarchy ADR or RFC-only confirmation.
-- SCHEMA-S5-01: Alert rules, events, feedback.
-- SCHEMA-S5-02: Earnings event metadata.
-- CORE-S5-01: Alert evaluator.
-- CORE-S5-02: Alert feedback and quality tracking.
-- CORE-S5-03: Earnings summary manual workflow.
-- CLI-S5-01: Evaluate alerts.
-- CLI-S5-02: Record alert feedback.
-- CLI-S5-03: Create earnings summary.
-- UI-S5-01: Alerts page.
-- UI-S5-02: Earnings Summary section.
-- OPTIONAL-S5-01: Telegram notification sender.
-- TEST-S5-01: Alert lifecycle and false-positive tests.
-- DOGFOOD-S5: Alert and earnings review.
+- UI-S5-01: Dashboard and navigation polish.
+- UI-S5-02: Shared actionable empty/error/loading states.
+- UI-S5-03: Runtime readiness recovery copy across dependent pages.
+- UI-S5-04: Table overflow and responsive layout wrappers.
+- COPY-S5-01: No-signal, no-profit-promise copy audit.
+- TEST-S5-01: Empty/error/healthy state regression tests.
+- DOC-S5-01: Roadmap update with alerts deferred to V1-S6.
+- DOGFOOD-S5: Daily local use walkthrough across Dashboard, Data Quality, Screener, Journal, Weekly Review, Strategy Rules, Watchlist, and Portfolio.
+
+### V1-S6
+
+- ADR-S6-01: Alert lifecycle and false-positive tracking ADR confirmation.
+- ADR-S6-02: Earnings manual-first hierarchy ADR or RFC-only confirmation.
+- SCHEMA-S6-01: Alert rules, events, feedback.
+- SCHEMA-S6-02: Earnings event metadata.
+- CORE-S6-01: Alert evaluator.
+- CORE-S6-02: Alert feedback and quality tracking.
+- CORE-S6-03: Earnings summary manual workflow.
+- CLI-S6-01: Evaluate alerts.
+- CLI-S6-02: Record alert feedback.
+- CLI-S6-03: Create earnings summary.
+- UI-S6-01: Alerts page.
+- UI-S6-02: Earnings Summary section.
+- OPTIONAL-S6-01: Telegram notification sender.
+- TEST-S6-01: Alert lifecycle and false-positive tests.
+- DOGFOOD-S6: Alert and earnings review.
 
 ## First Safe PR Order
 
@@ -173,8 +186,8 @@ Backlog is intentionally ticket-sized and implementation-ready. Ticket details s
 6. Coverage model ADR and enums.
 7. Fundamental snapshot schema and completeness labels.
 8. Screener semantics ADR.
-9. Alert lifecycle ADR.
-10. Alert feedback model.
+9. Runtime and UX state regression tests.
+10. Alert lifecycle confirmation for V1-S6.
 
 ## Sprint Gates
 
@@ -193,19 +206,19 @@ Each sprint is done only when:
 2. Data coverage.
 3. Fundamental quality.
 4. Screener quality.
-5. Alert quality.
-6. Earnings workflow.
-7. UX polish.
+5. UX polish.
+6. Alert quality.
+7. Earnings workflow.
 
 ## Execution Rules
 
-- Start with V1-S1.
+- Continue from the current V1-S5 polish gate before opening V1-S6 feature work.
 - Keep PRs small and vertical.
-- Do not implement optional Telegram before alert lifecycle works locally.
+- Do not implement optional Telegram before alert lifecycle works locally in V1-S6.
 - Do not implement screener before Data Quality and coverage gates exist.
 - Do not use AI output as a trading signal.
 - Do not add new providers without source visibility and caveats.
 
 ## Starting Point
 
-Recommended next step: write or confirm the five mandatory ADRs, then open the first V1-S1 PR for provider health and freshness terminology.
+Recommended next step: finish V1-S5 polish verification, then review/merge before starting V1-S6 Alerts + Earnings.

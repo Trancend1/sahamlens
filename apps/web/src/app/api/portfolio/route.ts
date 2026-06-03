@@ -11,11 +11,11 @@ export async function GET() {
   } catch (err) {
     if (err instanceof PythonRunnerError) {
       return NextResponse.json(
-        { error: "Gagal membaca posisi", detail: err.stderr || err.stdout },
+        { error: "Portfolio positions could not be loaded.", detail: "Check runtime readiness and try again." },
         { status: 500 },
       );
     }
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Portfolio positions could not be loaded." }, { status: 500 });
   }
 }
 
@@ -35,10 +35,10 @@ export async function POST(req: Request) {
   } catch (err) {
     if (err instanceof PythonRunnerError) {
       return NextResponse.json(
-        { error: "Gagal menyimpan posisi", detail: err.stderr || err.stdout },
+        { error: "Portfolio positions could not be saved.", detail: "Check runtime readiness and try again." },
         { status: 422 },
       );
     }
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Portfolio positions could not be saved." }, { status: 500 });
   }
 }

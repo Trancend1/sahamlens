@@ -41,6 +41,7 @@ Expected core modules for V1:
 - `packages/core/strategy`: simple named strategy rules, no DSL.
 - `packages/core/ai`: prompt wrapper, safety validation, output schemas.
 - `packages/core/schemas`: Pydantic models and migration definitions.
+- `packages/core/runtime`: local runtime readiness, migration status, missing table checks, and bootstrap status models.
 
 Rules:
 
@@ -70,6 +71,8 @@ Schema should store source, fetched/imported timestamp, freshness status, and co
 
 Candidate scripts:
 
+- Inspect local runtime readiness.
+- Bootstrap local runtime safely.
 - Refresh provider health.
 - Refresh ticker universe coverage.
 - Ingest fundamental snapshots.
@@ -80,6 +83,38 @@ Candidate scripts:
 - Generate weekly journal review.
 
 Scripts should be idempotent where practical and safe to run manually.
+
+## Local Runtime Contract
+
+V1 remains CLI-backed and local-first. It does not introduce FastAPI or a long-running
+service.
+
+The runtime contract is:
+
+- `uv run python -m scripts.runtime status --json` reports `ok`, `status`,
+  `db_path`, `python_executable`, `applied_migrations`, `pending_migrations`,
+  `missing_tables`, `schema_status`, `warnings`, `errors`, and
+  `recommended_commands`.
+- `uv run python -m scripts.runtime bootstrap --json` safely applies migrations and then
+  attempts local data bootstrap steps only when their prerequisites exist. Optional data
+  refresh failures are warnings, not fatal errors.
+- `uv run python -m scripts.migrate` remains the immediate recovery command for stale
+  schema or missing migration tables.
+- `status` is read-only. Real local DB mutation must be an explicit developer action via
+  `scripts.migrate` or `scripts.runtime bootstrap`; tests use temporary DuckDB fixtures.
+- Web fetchers must translate Python/DuckDB failures into structured runtime errors:
+  `schema_stale`, `missing_table`, `python_not_found`, `db_locked`, `empty_data`, or
+  `command_failed`.
+- UI surfaces must show recovery states instead of raw tracebacks.
+- FastAPI, background jobs, progress streaming, and port/service lifecycle are deferred
+  to V1.5/V2 unless CLI process overhead becomes a proven blocker.
+
+Windows web dev fallback:
+
+```powershell
+$env:PYTHON_BIN=(Resolve-Path ".venv/Scripts/python.exe").Path
+pnpm.cmd --filter @sahamlens/web dev
+```
 
 ## UI and Route Surfaces
 

@@ -21,14 +21,14 @@ describe("NewsCard", () => {
     expect(html).toContain("BBCA naikkan target kredit");
     expect(html).toContain('data-sentiment="bullish"');
     expect(html).toContain("BBCA.JK");
-    expect(html).toContain("Media kredibel");
+    expect(html).toContain("Reputable media");
   });
 
   it("shows low-confidence banner when confidence < 0.6", () => {
     const html = renderToStaticMarkup(
       <NewsCard news={{ ...base, confidence: 0.45, caveats: ["sumber tunggal"] }} />,
     );
-    expect(html).toContain("Confidence rendah");
+    expect(html).toContain("Low confidence");
     expect(html).toContain("sumber tunggal");
   });
 

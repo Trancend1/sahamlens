@@ -33,12 +33,12 @@ Rules:
 
 Phase: V1 - Better Decision Support.
 Planning status: frozen.
-Current sprint: V1-S4 - Weekly Journal Review + Strategy Rules.
-Next sprint: V1-S5 - Alerts + Telegram optional + Earnings Summary, planned after V1-S4 review/merge.
+Current sprint: V1-S5 - Polish + Runtime Readiness + UX Stabilization.
+Next sprint: V1-S6 - Alerts + Telegram optional + Earnings Summary, planned after V1-S5 review/merge.
 
 Critical path:
 
-Data Quality -> Coverage/Fundamentals -> Screener -> Alerts
+Data Quality -> Coverage/Fundamentals -> Screener -> Journal/Strategy -> Polish Gate -> Alerts
 
 Start implementation from [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRINT.md). Do not reopen product scope during implementation unless a real blocker appears.
 
@@ -78,6 +78,11 @@ Start implementation from [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRI
 | V1-S4 Weekly Review UI | Done | `v1/s4-journal-strategy` / weekly review UI slice | Added Weekly Journal Review page with date range, summary cards, behavior findings, evidence snippets, caveats, and empty/error states. | UI helps reflection without shame, prediction, or trade recommendation language. | Next: add Strategy Rules page for named rule status and violations. |
 | V1-S4 Strategy Rules UI | Done | `v1/s4-journal-strategy` / strategy rules UI slice | Added Strategy Rules page with named rules, pass/fail/needs-data status, violation reasons, evidence, and clear no-DSL copy. | Does not expose custom scripting, optimization knobs, or signal language. | Next: run full S4 test and verification suite. |
 | V1-S4 Tests | Done | `v1/s4-journal-strategy` / verification slice | Added tests for weekly review generation, rule evaluation, missing journal fields, empty weeks, evidence/caveat output, no-signal copy, CLI JSON, and UI states. | Tests catch accidental performance-analytics expansion and forbidden recommendation language. | Next: dogfood local weekly review and strategy-rule outputs. |
+| V1 Runtime Readiness + Bootstrap CLI | Done | `v1/s4-journal-strategy` / runtime slice | Added `packages/core/runtime`, `scripts.runtime status/bootstrap`, structured web runtime errors, Data Quality runtime readiness, and migration-required UI states for Weekly Review/Strategy Rules. | Root cause was stale local DB missing `0006_journal_strategy_review.sql`; fix keeps V1 CLI-backed and avoids FastAPI/service creep. | Use `uv run python -m scripts.runtime status --json` before debugging UI fetch failures; run `uv run python -m scripts.runtime bootstrap --json` for safe local setup. |
+| V1-S4 Runtime Stabilization | Done | `v1/s4-journal-strategy` / runtime lock slice | Locked Local Runtime Contract across core, CLI, web bridge, UI states, tests, README, and Architecture docs. Contract fields: `ok`, `status`, `db_path`, `python_executable`, migrations, missing tables, warnings, errors, and recommended commands. | `status` is read-only; real local DB mutation requires explicit `scripts.migrate` or `scripts.runtime bootstrap`. FastAPI sidecar, background jobs/progress, and port/service lifecycle are deferred to V1.5/V2. Non-blocking warnings remain: Vite CJS API, `next lint` deprecation, and Next `experimental.typedRoutes`. | Next recommended work: V1-S5 polish gate before feature expansion. |
+| V1-S5 Roadmap Update | Done | `v1/s4-journal-strategy` / polish gate slice | Reclassified V1-S5 as Polish + Runtime Readiness + UX Stabilization and deferred Alerts + Telegram optional + Earnings Summary to V1-S6. | This is a polish gate, not a feature sprint. Do not add alerts, Telegram, earnings, FastAPI, background workers, or migrations here. | Continue UI/UX consistency, empty state, copy, responsive, and runtime recovery polish. |
+| V1-S5 UI/UX Consistency Audit | Done | `v1/s4-journal-strategy` / polish UI slice | Polished Dashboard, Watchlist, Screener, Journal, Strategy Rules, Weekly Review, Data Quality, Stock Detail, Portfolio, import, news, indicators, and AI panels with shared actionable empty/error states, calmer copy, responsive wrappers, and no raw traceback exposure. | Main difficulty was keeping copy calm and actionable without changing core business logic, runtime JSON contract, migrations, alerts, Telegram, or earnings scope. Verification passed: Python 311 tests, mypy, ruff check/format, web 98 tests, typecheck, lint, and build. | Dogfood full V1-S5 walkthrough after review; begin V1-S6 Alerts + Earnings only after V1-S5 merge. |
+| V1-S5 Final Closeout Audit | Done | `v1/s4-journal-strategy` / closeout lock slice | Locked V1-S5 as completed: roadmap consistency audited, S6 deferred/next confirmed, signal/profit copy searched, traceback/internal leak paths checked, shared UI components reviewed, and main V1 pages rechecked for distinct empty/error/healthy states. | No FastAPI, alert engine, Telegram integration, earnings workflow, background jobs, scheduler, migration, or dependency was added. Remaining warnings are non-blocking: Vite CJS API deprecation, `next lint` deprecation, and Next `experimental.typedRoutes` config warning. | Next: review/merge V1-S5, then start V1-S6 Alerts + Telegram optional + Earnings Summary as a separate feature sprint. |
 | V1-S4 Dogfood | Pending | Not started | Generate a weekly review from local journal entries and inspect strategy-rule violations for the owner's recent plans. | Success means clearer behavior feedback and visible rule evidence, not better trade outcomes. | Run after migration, core, CLI, and UI pass verification; record findings without committing private DB data. |
 
 ## Scope Guardrails
@@ -180,6 +185,7 @@ packages/core/     Python data core
   earnings         manual-first earnings metadata
   journal          entries and weekly review
   strategy         simple rules, no DSL
+  runtime          readiness, schema status, bootstrap contract
   ai               LLM wrapper and validation
   schemas          Pydantic models and migrations
 scripts/           CLI orchestration

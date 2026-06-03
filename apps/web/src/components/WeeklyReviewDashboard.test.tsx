@@ -48,16 +48,65 @@ describe("WeeklyReviewDashboard", () => {
   it("renders empty state with local CLI path", () => {
     const html = renderToStaticMarkup(<WeeklyReviewDashboard reviews={[]} error={null} />);
 
-    expect(html).toContain("Belum ada weekly review.");
+    expect(html).toContain("No weekly review generated yet");
+    expect(html).toContain("Generate weekly review");
     expect(html).toContain("scripts.journal_review");
   });
 
   it("renders error state", () => {
     const html = renderToStaticMarkup(
-      <WeeklyReviewDashboard reviews={[]} error="missing weekly_review_runs" />,
+      <WeeklyReviewDashboard
+        reviews={[]}
+        error={{
+          code: "missing_table",
+          message: "Missing runtime table: weekly_review_runs.",
+          details: "Run the latest migration before opening Weekly Review.",
+          recommended_command: "uv run python -m scripts.migrate",
+        }}
+      />,
     );
 
-    expect(html).toContain("Gagal membaca weekly review.");
-    expect(html).toContain("missing weekly_review_runs");
+    expect(html).toContain("Migration required");
+    expect(html).toContain("weekly_review_runs");
+    expect(html).toContain("scripts.migrate");
+    expect(html).not.toContain("Traceback");
+    expect(html).not.toContain("no such table");
+    expect(html).not.toContain("D:/DevSpace");
+  });
+
+  it("renders command failure without raw traceback", () => {
+    const html = renderToStaticMarkup(
+      <WeeklyReviewDashboard
+        reviews={[]}
+        error={{
+          code: "command_failed",
+          message: "Runtime command failed.",
+          details: "Weekly review command exited with code 1.",
+          recommended_command: null,
+        }}
+      />,
+    );
+
+    expect(html).toContain("Weekly review could not be loaded");
+    expect(html).toContain("Runtime command failed.");
+    expect(html).not.toContain("Traceback");
+  });
+
+  it("renders a healthy empty state when a review has no major findings", () => {
+    const cleanReview: WeeklyReviewRun = {
+      ...review,
+      violation_count: 0,
+      needs_data_count: 0,
+      findings: [],
+      summary: "Weekly review completed. No major issues found.",
+    };
+
+    const html = renderToStaticMarkup(
+      <WeeklyReviewDashboard reviews={[cleanReview]} error={null} />,
+    );
+
+    expect(html).toContain("No major findings for this period");
+    expect(html).not.toContain("Migration required");
+    expect(html).not.toContain("Weekly review could not be loaded");
   });
 });

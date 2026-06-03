@@ -6,6 +6,8 @@ import { NewsSection } from "@/components/NewsSection";
 import { StockBriefPanel } from "@/components/StockBriefPanel";
 import { StockChart } from "@/components/StockChart";
 import { StockFreshnessBar } from "@/components/StockFreshnessBar";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
 import { fetchFundamentalSnapshot, type FundamentalSnapshotOverview } from "@/lib/fundamentals";
 import { INDICATOR_KEYS, type IndicatorKey } from "@/lib/indicatorMeta";
 import { fetchStockDetail, type StockDetail } from "@/lib/stockDetail";
@@ -41,17 +43,12 @@ export default async function StockDetailPage({ params }: PageProps) {
     return (
       <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-6 py-10">
         <Header symbol={symbol.toUpperCase()} />
-        <section className="rounded-md border border-red-500/40 bg-red-500/[0.05] p-5 text-sm">
-          <p className="font-medium text-red-300">Gagal load data {symbol.toUpperCase()}.</p>
-          <p className="mt-2 text-muted">
-            Pastikan price_history & indicator_cache sudah di-seed:
-          </p>
-          <pre className="mt-2 whitespace-pre-wrap text-xs text-muted">
-            uv run python -m scripts.ingest_prices --symbols {symbol.toUpperCase()} --days 365
-            {"\n"}uv run python -m scripts.calculate_indicators --symbols {symbol.toUpperCase()}
-          </pre>
-          <pre className="mt-3 whitespace-pre-wrap text-xs text-red-200">{error}</pre>
-        </section>
+        <RuntimeErrorState
+          title={`Stock data could not be loaded for ${symbol.toUpperCase()}`}
+          message="The local stock-detail command could not complete."
+          details={error}
+          recommendedCommand={`uv run python -m scripts.ingest_prices --symbols ${symbol.toUpperCase()} --days 365`}
+        />
       </main>
     );
   }
@@ -60,13 +57,12 @@ export default async function StockDetailPage({ params }: PageProps) {
     return (
       <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-6 py-10">
         <Header symbol={symbol.toUpperCase()} />
-        <section className="rounded-md border border-muted/30 bg-white/[0.02] p-5 text-sm">
-          <p>Belum ada data harga untuk {symbol.toUpperCase()}.</p>
-          <pre className="mt-2 whitespace-pre-wrap text-xs text-muted">
-            uv run python -m scripts.ingest_prices --symbols {symbol.toUpperCase()} --days 365
-            {"\n"}uv run python -m scripts.calculate_indicators --symbols {symbol.toUpperCase()}
-          </pre>
-        </section>
+        <EmptyState
+          title={`No local price data for ${symbol.toUpperCase()}`}
+          description="Ingest price history before using charts, indicators, or freshness review for this ticker."
+          actionLabel="Refresh price data"
+          command={`uv run python -m scripts.ingest_prices --symbols ${symbol.toUpperCase()} --days 365`}
+        />
         <FundamentalSnapshotCard overview={fundamental} error={fundamentalError} />
       </main>
     );
@@ -124,7 +120,6 @@ export default async function StockDetailPage({ params }: PageProps) {
       <StockBriefPanel symbol={detail.symbol} />
 
       <ChatPanel symbol={detail.symbol} />
-
     </main>
   );
 }
@@ -138,15 +133,15 @@ interface HeaderProps {
 
 function Header({ symbol, currentClose, firstDate, lastDate }: HeaderProps) {
   return (
-    <header className="flex flex-col gap-1">
-      <div className="flex items-baseline gap-3">
-        <p className="text-sm uppercase tracking-widest text-muted">SahamLens · Stock detail</p>
+    <header className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-baseline gap-3">
+        <p className="text-sm uppercase tracking-widest text-muted">SahamLens / Stock detail</p>
         <Link href="/watchlist" className="text-xs text-accent hover:underline">
-          ← watchlist
+          Back to watchlist
         </Link>
       </div>
-      <div className="flex items-baseline justify-between gap-4">
-        <h1 className="text-3xl font-semibold font-mono">{symbol}</h1>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
+        <h1 className="font-mono text-3xl font-semibold">{symbol}</h1>
         {currentClose != null ? (
           <span className="font-mono text-2xl tabular-nums">
             {new Intl.NumberFormat("id-ID").format(Math.round(currentClose))}
@@ -155,7 +150,7 @@ function Header({ symbol, currentClose, firstDate, lastDate }: HeaderProps) {
       </div>
       {firstDate && lastDate ? (
         <p className="text-xs text-muted">
-          Series: {firstDate} → {lastDate}
+          Series: {firstDate} to {lastDate}
         </p>
       ) : null}
     </header>

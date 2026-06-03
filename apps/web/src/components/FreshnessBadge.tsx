@@ -1,7 +1,3 @@
-/**
- * Pill badge that surfaces a timestamp's age tier + locale-aware relative label.
- */
-
 import { formatRelativeTime, freshnessTier } from "@/lib/dateTime";
 
 const TIER_CLASS: Record<string, string> = {
@@ -17,7 +13,7 @@ interface FreshnessBadgeProps {
 export function FreshnessBadge({ iso }: FreshnessBadgeProps): React.ReactElement {
   const valid = !Number.isNaN(new Date(iso).getTime());
   const tier = valid ? freshnessTier(iso) : "old";
-  const label = valid ? formatRelativeTime(iso) : "—";
+  const label = valid ? formatRelativeTime(iso) : "n/a";
   return (
     <span
       className={`rounded border px-2 py-0.5 text-[10px] uppercase tracking-widest ${

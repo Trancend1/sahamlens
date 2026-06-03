@@ -1,11 +1,3 @@
-/**
- * 5-block indicator card per PRD §9.2.
- * Blocks: (1) what it measures (2) current value (3) interpretation
- *         (4) common false signal (5) time-horizon note.
- *
- * Presentational only; no fetching. Caller passes value + optional current price.
- */
-
 import { FreshnessBadge } from "./FreshnessBadge";
 import {
   INDICATOR_META,
@@ -55,16 +47,16 @@ export function IndicatorCard({
       </header>
 
       <p className="font-mono text-2xl font-semibold tabular-nums">
-        {value == null ? <span className="text-muted">—</span> : meta.formatValue(value)}
+        {value == null ? <span className="text-muted">n/a</span> : meta.formatValue(value)}
       </p>
 
       <dl className="mt-4 space-y-3 text-xs">
-        <Block label="Apa yang diukur" body={meta.whatItMeasures} />
+        <Block label="What it measures" body={meta.whatItMeasures} />
         <Block
-          label="Interpretasi"
-          body={value == null ? "Belum ada nilai (warm-up window)." : meta.interpret(value, ctx)}
+          label="Interpretation"
+          body={value == null ? "No value yet. The indicator may still be in its warm-up window." : meta.interpret(value, ctx)}
         />
-        <Block label="False signal umum" body={meta.falseSignal} />
+        <Block label="Common false read" body={meta.falseSignal} />
         <Block label="Time horizon" body={meta.horizonNote} />
       </dl>
     </article>

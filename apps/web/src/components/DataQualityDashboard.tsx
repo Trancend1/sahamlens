@@ -1,5 +1,10 @@
 import Link from "next/link";
+import { CommandBlock } from "@/components/ui/CommandBlock";
+import { EmptyState as SharedEmptyState } from "@/components/ui/EmptyState";
+import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
 import type { DataQualityOverview, FreshnessState, ProviderHealthSnapshot } from "@/lib/dataQuality";
+import type { RuntimeErrorInfo } from "@/lib/pythonRunner";
+import type { RuntimeStatus } from "@/lib/runtime";
 
 const STATE_COPY: Record<FreshnessState, { label: string; className: string; note: string }> = {
   fresh: {
@@ -15,12 +20,12 @@ const STATE_COPY: Record<FreshnessState, { label: string; className: string; not
   stale: {
     label: "Stale",
     className: "border-amber-500/40 text-amber-300",
-    note: "Restrict screener and price alerts.",
+    note: "Review screener output with caution until data is refreshed.",
   },
   failed: {
     label: "Failed",
     className: "border-red-500/40 text-red-300",
-    note: "Provider failed; use failure/freshness alerts only.",
+    note: "Provider data could not be refreshed. Results may be incomplete.",
   },
   partial: {
     label: "Partial",
@@ -36,10 +41,17 @@ const STATE_COPY: Record<FreshnessState, { label: string; className: string; not
 
 interface Props {
   overview: DataQualityOverview | null;
-  error: string | null;
+  error: RuntimeErrorInfo | null;
+  runtimeStatus?: RuntimeStatus | null;
+  runtimeError?: RuntimeErrorInfo | null;
 }
 
-export function DataQualityDashboard({ overview, error }: Props): React.ReactElement {
+export function DataQualityDashboard({
+  overview,
+  error,
+  runtimeStatus = null,
+  runtimeError = null,
+}: Props): React.ReactElement {
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-6 py-10">
       <header>
@@ -51,12 +63,13 @@ export function DataQualityDashboard({ overview, error }: Props): React.ReactEle
         </p>
         <h1 className="mt-1 text-3xl font-semibold">Data Quality</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Provider health, freshness, coverage, and dependent-flow readiness before screener
-          or alerts.
+          Provider health, freshness, coverage, and runtime readiness before using dependent
+          decision-support workflows.
         </p>
       </header>
 
       {error ? <ErrorPanel error={error} /> : null}
+      <RuntimeReadiness status={runtimeStatus} error={runtimeError} />
 
       {overview ? (
         <>
@@ -91,29 +104,99 @@ function Summary({ overview }: { overview: DataQualityOverview }): React.ReactEl
 
 function EmptyState(): React.ReactElement {
   return (
+    <SharedEmptyState
+      title="Provider health has not been checked yet"
+      description="Refresh provider health after migrations and watchlist setup so dependent pages can show freshness and coverage caveats."
+      actionLabel="Refresh provider health"
+      command="uv run python -m scripts.provider_health refresh-yfinance --from-watchlist"
+    />
+  );
+}
+
+function RuntimeReadiness({
+  status,
+  error,
+}: {
+  status: RuntimeStatus | null;
+  error: RuntimeErrorInfo | null;
+}): React.ReactElement {
+  if (error) {
+    return (
+      <RuntimeErrorState
+        title="Runtime not ready"
+        message={error.message}
+        details={error.details}
+        recommendedCommand={error.recommended_command}
+      />
+    );
+  }
+
+  if (!status) {
+    return (
+      <SharedEmptyState
+        title="Runtime Readiness"
+        description="Runtime status is not available yet. Check the local runtime before debugging page-level data."
+        actionLabel="Check runtime status"
+        command="uv run python -m scripts.runtime status --json"
+      />
+    );
+  }
+
+  const ready = status.schema_status === "ready";
+  return (
     <section className="rounded-md border border-muted/30 bg-white/[0.02] p-5 text-sm">
-      <p className="font-medium">Belum ada provider health snapshot.</p>
-      <p className="mt-2 text-muted">
-        Run{" "}
-        <code className="font-mono">
-          uv run python -m scripts.provider_health refresh-yfinance --from-watchlist
-        </code>{" "}
-        after migrations and watchlist are ready.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-medium">Runtime Readiness</p>
+          <p className="mt-1 text-xs uppercase tracking-widest text-muted">
+            {status.schema_status} / {status.ok ? "ok" : "needs attention"}
+          </p>
+        </div>
+        <span
+          className={`rounded border px-2 py-1 text-xs uppercase tracking-widest ${
+            ready ? "border-emerald-500/40 text-emerald-300" : "border-amber-500/40 text-amber-300"
+          }`}
+        >
+          {ready ? "Ready" : "Not Ready"}
+        </span>
+      </div>
+      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+        <Metric label="Local DB" value={status.db_path ? "configured" : "not configured"} />
+        <Metric label="Applied" value={status.applied_migrations.length} />
+        <Metric label="Pending" value={status.pending_migrations.length} />
+      </dl>
+      {status.missing_tables.length > 0 ? (
+        <p className="mt-3 text-amber-200">
+          Missing tables: {status.missing_tables.slice(0, 6).join(", ")}
+          {status.missing_tables.length > 6 ? "..." : ""}
+        </p>
+      ) : null}
+      {status.recommended_commands.length > 0 ? (
+        <>
+          <p className="mt-3 font-medium text-accent">Check runtime status</p>
+          <CommandBlock command={status.recommended_commands[0]!} />
+        </>
+      ) : null}
+      {status.warnings.length > 0 ? (
+        <ul className="mt-3 list-inside list-disc text-sm text-muted">
+          {status.warnings.slice(0, 5).map((warning) => (
+            <li key={`${warning.code}-${warning.message}`}>{warning.message}</li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }
 
-function ErrorPanel({ error }: { error: string }): React.ReactElement {
+function ErrorPanel({ error }: { error: RuntimeErrorInfo }): React.ReactElement {
+  const isSchemaError = error.code === "missing_table" || error.code === "schema_stale";
   return (
-    <section className="rounded-md border border-red-500/40 bg-red-500/[0.05] p-5 text-sm">
-      <p className="font-medium text-red-300">Gagal membaca data quality.</p>
-      <p className="mt-2 text-muted">
-        Pastikan migration terbaru sudah jalan:{" "}
-        <code className="font-mono">uv run python -m scripts.migrate</code>
-      </p>
-      <pre className="mt-3 whitespace-pre-wrap text-xs text-red-200">{error}</pre>
-    </section>
+    <RuntimeErrorState
+      title={isSchemaError ? "Migration required" : "Data quality could not be loaded"}
+      message={error.message}
+      details={error.details}
+      recommendedCommand={error.recommended_command ?? "uv run python -m scripts.runtime status --json"}
+    />
   );
 }
 

@@ -1,4 +1,4 @@
-import { runPython } from "./pythonRunner";
+import { runPython, toRuntimeFetchError } from "./pythonRunner";
 
 export type WeeklyReviewStatus = "completed" | "partial" | "failed";
 export type WeeklyFindingType =
@@ -77,9 +77,13 @@ export async function fetchWeeklyReviews(
   options: FetchWeeklyReviewsOptions = {},
 ): Promise<WeeklyReviewRun[]> {
   const limit = options.limit ?? 20;
-  const { data } = await runPython<WeeklyReviewRun[]>("scripts.journal_review", {
-    args: ["--json", "review", "list", "--limit", String(limit)],
-    timeoutMs: 30_000,
-  });
-  return data;
+  try {
+    const { data } = await runPython<WeeklyReviewRun[]>("scripts.journal_review", {
+      args: ["--json", "review", "list", "--limit", String(limit)],
+      timeoutMs: 30_000,
+    });
+    return data;
+  } catch (err) {
+    throw toRuntimeFetchError(err);
+  }
 }

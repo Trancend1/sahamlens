@@ -67,16 +67,54 @@ describe("StrategyRulesDashboard", () => {
       <StrategyRulesDashboard rules={[]} evaluations={[]} error={null} />,
     );
 
-    expect(html).toContain("Belum ada strategy-rule data.");
+    expect(html).toContain("No strategy rules yet");
+    expect(html).toContain("Create your first rule");
     expect(html).toContain("scripts.journal_review");
+  });
+
+  it("renders named rules even when no evaluations exist yet", () => {
+    const html = renderToStaticMarkup(
+      <StrategyRulesDashboard rules={rules} evaluations={[]} error={null} />,
+    );
+
+    expect(html).toContain("Stop loss present");
+    expect(html).toContain("No rule evaluations yet");
+    expect(html).toContain("Evaluate strategy rules");
+    expect(html).not.toContain("Gagal membaca strategy rules.");
   });
 
   it("renders error state", () => {
     const html = renderToStaticMarkup(
-      <StrategyRulesDashboard rules={[]} evaluations={[]} error="missing strategy_rules" />,
+      <StrategyRulesDashboard
+        rules={[]}
+        evaluations={[]}
+        error={{
+          code: "missing_table",
+          message: "Missing runtime table: strategy_rule_evaluations.",
+          details: "Run the latest migration before opening Strategy Rules.",
+          recommended_command: "uv run python -m scripts.migrate",
+        }}
+      />,
     );
 
-    expect(html).toContain("Gagal membaca strategy rules.");
-    expect(html).toContain("missing strategy_rules");
+    expect(html).toContain("Migration required");
+    expect(html).toContain("strategy_rule_evaluations");
+    expect(html).toContain("scripts.migrate");
+    expect(html).not.toContain("Traceback");
+    expect(html).not.toContain("no such table");
+    expect(html).not.toContain("D:/DevSpace");
+  });
+
+  it("treats no violations as a valid evaluation state", () => {
+    const passed: StrategyRuleEvaluation[] = [
+      { ...evaluations[0]!, evaluation_status: "pass", violations: [] },
+    ];
+    const html = renderToStaticMarkup(
+      <StrategyRulesDashboard rules={rules} evaluations={passed} error={null} />,
+    );
+
+    expect(html).toContain("Pass");
+    expect(html).toContain("No rule violations found");
+    expect(html).not.toContain("Gagal membaca strategy rules.");
   });
 });

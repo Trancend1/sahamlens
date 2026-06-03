@@ -78,14 +78,17 @@ describe("ScreenerDashboard", () => {
       />,
     );
 
-    expect(html).toContain("No screener rows yet.");
+    expect(html).toContain("No screener results yet");
+    expect(html).toContain("Run screener");
     expect(html).toContain("scripts.screener");
   });
 
   it("renders error state when the CLI cannot read local data", () => {
     const html = renderToStaticMarkup(<ScreenerDashboard run={null} error="missing table" />);
 
-    expect(html).toContain("Gagal membaca screener.");
-    expect(html).toContain("missing table");
+    expect(html).toContain("Screener data is not ready");
+    expect(html).toContain("Check runtime status");
+    expect(html).not.toContain("Traceback");
+    expect(html).not.toContain("D:/DevSpace");
   });
 });

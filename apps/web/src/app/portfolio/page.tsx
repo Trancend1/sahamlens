@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { DataTableWrapper } from "@/components/ui/DataTableWrapper";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
 import { fetchPositions, type PortfolioPosition } from "@/lib/portfolio";
 import { fetchStockDetail } from "@/lib/stockDetail";
 
@@ -15,18 +18,19 @@ export default async function PortfolioPage() {
   }
 
   const closePrices =
-    positions.length > 0 ? await loadClosePrices(positions.map((p) => p.symbol)) : {};
+    positions.length > 0 ? await loadClosePrices(positions.map((position) => position.symbol)) : {};
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-6 px-6 py-10">
-      <header className="flex items-start justify-between gap-4">
+    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-6 py-10">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-widest text-muted">
-            <Link href="/" className="hover:text-fg">SahamLens</Link> · Portfolio
+            <Link href="/" className="hover:text-fg">SahamLens</Link> / Portfolio
           </p>
-          <h1 className="mt-1 text-3xl font-semibold">Posisi Aktual</h1>
-          <p className="mt-2 text-sm text-muted">
-            {positions.length} posisi · harga dari price_history lokal
+          <h1 className="mt-1 text-3xl font-semibold">Portfolio</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted">
+            {positions.length} local position(s). Prices use available local price history and may
+            be incomplete.
           </p>
         </div>
         <Link
@@ -38,57 +42,52 @@ export default async function PortfolioPage() {
       </header>
 
       {error ? (
-        <section className="rounded-md border border-red-500/40 bg-red-500/[0.05] p-5 text-sm">
-          <p className="font-medium text-red-300">Gagal membaca posisi.</p>
-          <pre className="mt-3 whitespace-pre-wrap text-xs text-red-200">{error}</pre>
-        </section>
+        <RuntimeErrorState
+          title="Portfolio could not be loaded"
+          message="The local portfolio command could not complete."
+          details={error}
+          recommendedCommand="uv run python -m scripts.runtime status --json"
+        />
       ) : positions.length === 0 ? (
-        <section className="rounded-md border border-muted/30 bg-white/[0.02] p-8 text-center text-sm">
-          <p className="text-muted">Belum ada posisi.</p>
-          <Link
-            href="/portfolio/import"
-            className="mt-3 inline-block text-accent underline hover:no-underline"
-          >
-            Import CSV untuk mulai
-          </Link>
-        </section>
+        <EmptyState
+          title="No portfolio positions yet"
+          description="Import a local CSV when you want portfolio context. This page is optional for V1 decision support."
+          actionLabel="Import CSV"
+          actionHref="/portfolio/import"
+        />
       ) : (
-        <div className="overflow-x-auto rounded-md border border-muted/30">
-          <table className="w-full text-sm">
+        <DataTableWrapper>
+          <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-muted/30 text-xs uppercase tracking-widest text-muted">
                 <th className="px-4 py-3 text-left">Symbol</th>
                 <th className="px-4 py-3 text-right">Lot</th>
-                <th className="px-4 py-3 text-right">Avg Beli</th>
-                <th className="px-4 py-3 text-right">Harga Kini</th>
+                <th className="px-4 py-3 text-right">Average Cost</th>
+                <th className="px-4 py-3 text-right">Latest Price</th>
                 <th className="px-4 py-3 text-right">P&amp;L %</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-muted/20">
-              {positions.map((p) => {
-                const close = closePrices[p.symbol] ?? null;
+              {positions.map((position) => {
+                const close = closePrices[position.symbol] ?? null;
                 const pnlPct =
-                  close != null ? ((close - p.avg_price) / p.avg_price) * 100 : null;
+                  close != null ? ((close - position.avg_price) / position.avg_price) * 100 : null;
                 return (
-                  <tr key={p.symbol} className="hover:bg-white/[0.02]">
+                  <tr key={position.symbol} className="hover:bg-white/[0.02]">
                     <td className="px-4 py-3">
                       <Link
-                        href={`/stocks/${p.symbol.replace(/\.JK$/i, "")}`}
+                        href={`/stocks/${position.symbol.replace(/\.JK$/i, "")}`}
                         className="font-mono text-fg hover:text-accent hover:underline"
                       >
-                        {p.symbol}
+                        {position.symbol}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums">{p.lots}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{position.lots}</td>
                     <td className="px-4 py-3 text-right font-mono tabular-nums">
-                      {formatRp(p.avg_price)}
+                      {formatRp(position.avg_price)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono tabular-nums">
-                      {close != null ? (
-                        formatRp(close)
-                      ) : (
-                        <span className="text-muted">—</span>
-                      )}
+                      {close != null ? formatRp(close) : <span className="text-muted">n/a</span>}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
                       {pnlPct != null ? (
@@ -97,7 +96,7 @@ export default async function PortfolioPage() {
                           {pnlPct.toFixed(2)}%
                         </span>
                       ) : (
-                        <span className="text-muted">—</span>
+                        <span className="text-muted">n/a</span>
                       )}
                     </td>
                   </tr>
@@ -105,7 +104,7 @@ export default async function PortfolioPage() {
               })}
             </tbody>
           </table>
-        </div>
+        </DataTableWrapper>
       )}
     </main>
   );
@@ -126,13 +125,13 @@ async function loadClosePrices(symbols: string[]): Promise<Record<string, number
           }
         }
       } catch {
-        // no close available — column shows —
+        // Missing local price history leaves the table cell as n/a.
       }
     }),
   );
   return results;
 }
 
-function formatRp(n: number): string {
-  return new Intl.NumberFormat("id-ID").format(Math.round(n));
+function formatRp(value: number): string {
+  return new Intl.NumberFormat("id-ID").format(Math.round(value));
 }

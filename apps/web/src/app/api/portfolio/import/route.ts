@@ -25,10 +25,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     if (err instanceof PythonRunnerError) {
       return NextResponse.json(
-        { error: "Parsing CSV gagal", detail: err.stderr || err.stdout },
+        { error: "CSV import could not be parsed.", detail: "Check the CSV format and try again." },
         { status: 422 },
       );
     }
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "CSV import could not be parsed." }, { status: 500 });
   }
 }

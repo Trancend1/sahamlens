@@ -8,9 +8,9 @@ interface Props {
 }
 
 const EVIDENCE_LABELS: Record<EvidenceItem["type"], string> = {
-  price: "Harga",
-  indicator: "Indikator",
-  news: "Berita",
+  price: "Price",
+  indicator: "Indicator",
+  news: "News",
   fundamental: "Fundamental",
   journal: "Journal",
 };
@@ -27,12 +27,12 @@ export function StockBriefPanel({ symbol }: Props) {
       const res = await fetch(`/api/stocks/${symbol}/brief`, { method: "POST" });
       if (!res.ok) {
         const body = (await res.json()) as { error?: string };
-        setError(body.error ?? `HTTP ${res.status}`);
+        setError(body.error ?? "The AI brief could not be generated.");
         return;
       }
       setBrief((await res.json()) as StockBrief);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Gagal generate brief.");
+    } catch {
+      setError("The AI brief could not be generated. Check local runtime readiness and try again.");
     } finally {
       setLoading(false);
     }
@@ -40,56 +40,60 @@ export function StockBriefPanel({ symbol }: Props) {
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">
           AI Brief
         </h2>
-        {!brief && (
+        {!brief ? (
           <button
             onClick={handleGenerate}
             disabled={loading}
             className="rounded border border-accent/40 px-3 py-1 text-xs text-accent hover:bg-accent/10 disabled:opacity-50"
+            type="button"
           >
-            {loading ? "Generating…" : "Generate Brief"}
+            {loading ? "Generating..." : "Generate brief"}
           </button>
-        )}
-        {brief && (
+        ) : null}
+        {brief ? (
           <button
-            onClick={() => { setBrief(null); }}
+            onClick={() => {
+              setBrief(null);
+            }}
             className="text-xs text-muted hover:text-accent"
+            type="button"
           >
-            Refresh
+            Refresh brief
           </button>
-        )}
+        ) : null}
       </div>
 
-      {error && (
+      {error ? (
         <p className="rounded border border-red-500/40 bg-red-500/[0.05] p-3 text-xs text-red-300">
           {error}
         </p>
-      )}
+      ) : null}
 
-      {!brief && !loading && !error && (
+      {!brief && !loading && !error ? (
         <p className="text-xs text-muted">
-          Klik Generate Brief untuk analisis AI berbasis data lokal.
+          Generate a brief from available local data, then review evidence and caveats manually.
         </p>
-      )}
+      ) : null}
 
-      {loading && (
-        <p className="text-xs text-muted animate-pulse">Memproses analisis…</p>
-      )}
+      {loading ? (
+        <p className="animate-pulse text-xs text-muted">Generating local-data brief...</p>
+      ) : null}
 
-      {brief && (
+      {brief ? (
         <div className="flex flex-col gap-4">
           <div className="grid gap-3 md:grid-cols-2">
-            <ViewBlock label="Sisi Bullish" text={brief.bullish_view} color="green" />
-            <ViewBlock label="Sisi Bearish" text={brief.bearish_view} color="red" />
+            <ViewBlock label="Bullish context" text={brief.bullish_view} color="green" />
+            <ViewBlock label="Bearish context" text={brief.bearish_view} color="red" />
           </div>
 
-          <ViewBlock label="Ketidakpastian" text={brief.uncertainty} color="yellow" />
+          <ViewBlock label="Uncertainty" text={brief.uncertainty} color="yellow" />
 
           <div className="rounded border border-muted/20 bg-white/[0.02] p-3">
-            <p className="mb-1 text-xs font-medium text-muted">Penjelasan Pemula</p>
+            <p className="mb-1 text-xs font-medium text-muted">Beginner explanation</p>
             <p className="text-sm">{brief.beginner_explanation}</p>
           </div>
 
@@ -98,39 +102,38 @@ export function StockBriefPanel({ symbol }: Props) {
               Evidence ({brief.evidence.length})
             </p>
             <ul className="flex flex-col gap-1">
-              {brief.evidence.map((ev, i) => (
-                <li key={i} className="flex gap-2 text-xs">
+              {brief.evidence.map((evidence, index) => (
+                <li key={`${evidence.type}-${index}`} className="flex gap-2 text-xs">
                   <span className="shrink-0 rounded bg-accent/10 px-1.5 py-0.5 text-accent">
-                    {EVIDENCE_LABELS[ev.type]}
+                    {EVIDENCE_LABELS[evidence.type]}
                   </span>
-                  <span className="text-muted">{ev.value}</span>
+                  <span className="text-muted">{evidence.value}</span>
                 </li>
               ))}
             </ul>
           </div>
 
           <div className="rounded border border-yellow-500/20 bg-yellow-500/[0.03] p-3">
-            <p className="mb-1 text-xs font-medium text-yellow-400">Catatan & Caveats</p>
+            <p className="mb-1 text-xs font-medium text-yellow-400">Caveats</p>
             <ul className="list-disc pl-4 text-xs text-muted">
-              {brief.caveats.map((c, i) => (
-                <li key={i}>{c}</li>
+              {brief.caveats.map((caveat, index) => (
+                <li key={`${caveat}-${index}`}>{caveat}</li>
               ))}
             </ul>
           </div>
 
-          {brief.suggested_next_question && (
+          {brief.suggested_next_question ? (
             <p className="text-xs text-muted">
-              <span className="font-medium text-accent">Pertanyaan lanjutan:</span>{" "}
+              <span className="font-medium text-accent">Suggested follow-up:</span>{" "}
               {brief.suggested_next_question}
             </p>
-          )}
+          ) : null}
 
           <p className="text-xs text-muted/60">
-            Bukan saran keuangan. AI menjelaskan, kamu memutuskan.
-            Model: {brief.model} · {brief.analysis_date}
+            Not financial advice. AI explains; you decide. Model: {brief.model} / {brief.analysis_date}
           </p>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

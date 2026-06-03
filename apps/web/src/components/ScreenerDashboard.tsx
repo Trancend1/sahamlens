@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { EmptyState as SharedEmptyState } from "@/components/ui/EmptyState";
+import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
 import type {
   CompletenessState,
   ConfidenceLevel,
@@ -62,8 +64,8 @@ export function ScreenerDashboard({ run, error }: Props): React.ReactElement {
         </p>
         <h1 className="mt-1 text-3xl font-semibold">Screener</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Transparent local filters that show matched rows, exclusions, missing fields, freshness,
-          and confidence caveats.
+          Transparent local filters that show candidates, exclusions, missing fields, freshness,
+          and confidence caveats. Review the context before making decisions.
         </p>
       </header>
 
@@ -71,7 +73,7 @@ export function ScreenerDashboard({ run, error }: Props): React.ReactElement {
       {run ? (
         <>
           <RuleSummary run={run} />
-          {run.results.length === 0 ? <EmptyState /> : <ResultTable run={run} />}
+          {run.results.length === 0 ? <EmptyState run={run} /> : <ResultTable run={run} />}
         </>
       ) : null}
     </main>
@@ -162,31 +164,35 @@ function ResultTable({ run }: { run: ScreenerRun }): React.ReactElement {
   );
 }
 
-function EmptyState(): React.ReactElement {
+function EmptyState({ run }: { run: ScreenerRun }): React.ReactElement {
+  if (run.universe_count > 0) {
+    return (
+      <SharedEmptyState
+        title="No candidates match current filters"
+        description="The screener completed, but every ticker was excluded by the current rule, freshness, coverage, or confidence gates."
+        actionLabel="Adjust filters"
+        tone="healthy"
+      />
+    );
+  }
   return (
-    <section className="rounded-md border border-muted/30 bg-white/[0.02] p-5 text-sm">
-      <p className="font-medium">No screener rows yet.</p>
-      <p className="mt-2 text-muted">
-        Run{" "}
-        <code className="font-mono">
-          uv run python -m scripts.screener --json run --builtin fundamentals-basic --from-watchlist
-        </code>{" "}
-        after V1-S1 and V1-S2 local snapshots are populated.
-      </p>
-    </section>
+    <SharedEmptyState
+      title="No screener results yet"
+      description="Run the screener after V1-S1 Data Quality and V1-S2 coverage/fundamental snapshots are populated."
+      actionLabel="Run screener"
+      command="uv run python -m scripts.screener --json run --builtin fundamentals-basic --from-watchlist"
+    />
   );
 }
 
 function ErrorPanel({ error }: { error: string }): React.ReactElement {
   return (
-    <section className="rounded-md border border-red-500/40 bg-red-500/[0.05] p-5 text-sm">
-      <p className="font-medium text-red-300">Gagal membaca screener.</p>
-      <p className="mt-2 text-muted">
-        Pastikan migration dan snapshot lokal sudah siap:{" "}
-        <code className="font-mono">uv run python -m scripts.migrate</code>
-      </p>
-      <pre className="mt-3 whitespace-pre-wrap text-xs text-red-200">{error}</pre>
-    </section>
+    <RuntimeErrorState
+      title="Screener data is not ready"
+      message="The local screener command could not complete."
+      details={error}
+      recommendedCommand="uv run python -m scripts.runtime status --json"
+    />
   );
 }
 

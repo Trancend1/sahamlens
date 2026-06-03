@@ -1,4 +1,4 @@
-import { runPython } from "./pythonRunner";
+import { runPython, toRuntimeFetchError } from "./pythonRunner";
 import type { StrategyRuleEvaluation } from "./journalReview";
 
 export type StrategyRuleCategory =
@@ -29,11 +29,15 @@ interface FetchStrategyRuleResultsOptions {
 }
 
 export async function fetchStrategyRules(): Promise<StrategyRule[]> {
-  const { data } = await runPython<StrategyRule[]>("scripts.journal_review", {
-    args: ["--json", "rules", "list", "--active-only"],
-    timeoutMs: 30_000,
-  });
-  return data;
+  try {
+    const { data } = await runPython<StrategyRule[]>("scripts.journal_review", {
+      args: ["--json", "rules", "list", "--active-only"],
+      timeoutMs: 30_000,
+    });
+    return data;
+  } catch (err) {
+    throw toRuntimeFetchError(err);
+  }
 }
 
 export async function fetchStrategyRuleResults(
@@ -41,9 +45,13 @@ export async function fetchStrategyRuleResults(
 ): Promise<StrategyRuleEvaluation[]> {
   const args = ["--json", "rules", "results"];
   if (options.reviewId) args.push("--review-id", options.reviewId);
-  const { data } = await runPython<StrategyRuleEvaluation[]>("scripts.journal_review", {
-    args,
-    timeoutMs: 30_000,
-  });
-  return data;
+  try {
+    const { data } = await runPython<StrategyRuleEvaluation[]>("scripts.journal_review", {
+      args,
+      timeoutMs: 30_000,
+    });
+    return data;
+  } catch (err) {
+    throw toRuntimeFetchError(err);
+  }
 }

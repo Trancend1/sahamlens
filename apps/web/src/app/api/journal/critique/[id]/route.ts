@@ -31,10 +31,10 @@ export async function POST(
         return NextResponse.json({ error: "plan not found" }, { status: 404 });
       }
       return NextResponse.json(
-        { error: "critique failed", detail: err.stderr },
+        { error: "AI critique could not be generated.", detail: "Check runtime readiness and try again." },
         { status: 422 },
       );
     }
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "AI critique could not be generated." }, { status: 500 });
   }
 }

@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { EmptyState as SharedEmptyState } from "@/components/ui/EmptyState";
+import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
 import type { StrategyEvaluationStatus } from "@/lib/journalReview";
+import type { RuntimeErrorInfo } from "@/lib/pythonRunner";
 import type { StrategyRule, StrategyRuleEvaluation } from "@/lib/strategyRules";
 
 const STATUS_COPY: Record<StrategyEvaluationStatus, { label: string; className: string }> = {
@@ -12,7 +15,7 @@ const STATUS_COPY: Record<StrategyEvaluationStatus, { label: string; className: 
 interface Props {
   rules: StrategyRule[];
   evaluations: StrategyRuleEvaluation[];
-  error: string | null;
+  error: RuntimeErrorInfo | null;
 }
 
 export function StrategyRulesDashboard({
@@ -31,8 +34,8 @@ export function StrategyRulesDashboard({
         </p>
         <h1 className="mt-1 text-3xl font-semibold">Strategy Rules</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Simple named checks for journal hygiene. No custom DSL, no optimization, and not trade
-          signals.
+          Simple named checks for journal hygiene. No custom DSL, no optimization, and not
+          trade signals.
         </p>
       </header>
 
@@ -99,36 +102,49 @@ function EvaluationList({
 }: {
   evaluations: StrategyRuleEvaluation[];
 }): React.ReactElement {
+  const hasViolations = evaluations.some((evaluation) => evaluation.violations.length > 0);
   return (
     <section className="grid gap-3">
       <h2 className="text-sm font-medium">Evaluation Results</h2>
       {evaluations.length === 0 ? (
-        <p className="rounded-md border border-muted/30 bg-white/[0.02] p-5 text-sm text-muted">
-          Belum ada evaluation results. Generate weekly review or run rules evaluate first.
-        </p>
+        <SharedEmptyState
+          title="No rule evaluations yet"
+          description="Evaluate strategy rules after journal entries exist for the selected period."
+          actionLabel="Evaluate strategy rules"
+          command="uv run python -m scripts.journal_review --json rules evaluate --start 2026-05-25 --end 2026-06-01"
+        />
       ) : (
-        evaluations.map((evaluation) => {
-          const status = STATUS_COPY[evaluation.evaluation_status];
-          return (
-            <article key={evaluation.evaluation_id} className="rounded-md border border-muted/30 bg-white/[0.02] p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-mono text-sm">{evaluation.rule_id}</p>
-                  <p className="mt-1 text-xs text-muted">
-                    {evaluation.symbol ?? "n/a"} / journal {evaluation.journal_id ?? "n/a"}
-                  </p>
+        <>
+          {!hasViolations ? (
+            <SharedEmptyState
+              title="No rule violations found"
+              description="The latest evaluation completed without recorded rule violations. Continue reviewing evidence and caveats before relying on the result."
+              tone="healthy"
+            />
+          ) : null}
+          {evaluations.map((evaluation) => {
+            const status = STATUS_COPY[evaluation.evaluation_status];
+            return (
+              <article key={evaluation.evaluation_id} className="rounded-md border border-muted/30 bg-white/[0.02] p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-mono text-sm">{evaluation.rule_id}</p>
+                    <p className="mt-1 text-xs text-muted">
+                      {evaluation.symbol ?? "n/a"} / journal {evaluation.journal_id ?? "n/a"}
+                    </p>
+                  </div>
+                  <span className={`rounded border px-2 py-1 text-xs uppercase tracking-widest ${status.className}`}>
+                    {status.label}
+                  </span>
                 </div>
-                <span className={`rounded border px-2 py-1 text-xs uppercase tracking-widest ${status.className}`}>
-                  {status.label}
-                </span>
-              </div>
-              <p className="mt-3 text-sm text-fg">{evaluation.reason}</p>
-              <ViolationList evaluation={evaluation} />
-              <List title="Evidence" items={evaluation.evidence} />
-              <List title="Caveats" items={evaluation.caveats} />
-            </article>
-          );
-        })
+                <p className="mt-3 text-sm text-fg">{evaluation.reason}</p>
+                <ViolationList evaluation={evaluation} />
+                <List title="Evidence" items={evaluation.evidence} />
+                <List title="Caveats" items={evaluation.caveats} />
+              </article>
+            );
+          })}
+        </>
       )}
     </section>
   );
@@ -152,26 +168,24 @@ function ViolationList({ evaluation }: { evaluation: StrategyRuleEvaluation }): 
 
 function EmptyState(): React.ReactElement {
   return (
-    <section className="rounded-md border border-muted/30 bg-white/[0.02] p-5 text-sm">
-      <p className="font-medium">Belum ada strategy-rule data.</p>
-      <p className="mt-2 text-muted">
-        Run{" "}
-        <code className="font-mono">
-          uv run python -m scripts.journal_review --json rules evaluate --start 2026-05-25 --end
-          2026-06-01
-        </code>{" "}
-        after journal entries are ready.
-      </p>
-    </section>
+    <SharedEmptyState
+      title="No strategy rules yet"
+      description="Create your first named rule before evaluating journal discipline. V1 rules stay explicit and do not use a custom DSL."
+      actionLabel="Create your first rule"
+      command="uv run python -m scripts.journal_review --json rules evaluate --start 2026-05-25 --end 2026-06-01"
+    />
   );
 }
 
-function ErrorPanel({ error }: { error: string }): React.ReactElement {
+function ErrorPanel({ error }: { error: RuntimeErrorInfo }): React.ReactElement {
+  const isSchemaError = error.code === "missing_table" || error.code === "schema_stale";
   return (
-    <section className="rounded-md border border-red-500/40 bg-red-500/[0.05] p-5 text-sm">
-      <p className="font-medium text-red-300">Gagal membaca strategy rules.</p>
-      <pre className="mt-3 whitespace-pre-wrap text-xs text-red-200">{error}</pre>
-    </section>
+    <RuntimeErrorState
+      title={isSchemaError ? "Migration required" : "Strategy rules could not be loaded"}
+      message={error.message}
+      details={error.details}
+      recommendedCommand={error.recommended_command ?? "uv run python -m scripts.runtime status --json"}
+    />
   );
 }
 

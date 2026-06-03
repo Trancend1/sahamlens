@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { EmptyState as SharedEmptyState } from "@/components/ui/EmptyState";
+import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
 import type { WeeklyFindingSeverity, WeeklyReviewRun } from "@/lib/journalReview";
+import type { RuntimeErrorInfo } from "@/lib/pythonRunner";
 
 const SEVERITY_COPY: Record<WeeklyFindingSeverity, { label: string; className: string }> = {
   info: { label: "Info", className: "border-sky-500/40 text-sky-300" },
@@ -9,7 +12,7 @@ const SEVERITY_COPY: Record<WeeklyFindingSeverity, { label: string; className: s
 
 interface Props {
   reviews: WeeklyReviewRun[];
-  error: string | null;
+  error: RuntimeErrorInfo | null;
 }
 
 export function WeeklyReviewDashboard({ reviews, error }: Props): React.ReactElement {
@@ -26,6 +29,7 @@ export function WeeklyReviewDashboard({ reviews, error }: Props): React.ReactEle
         <h1 className="mt-1 text-3xl font-semibold">Weekly Journal Review</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           Behavior review from local journal entries and simple named strategy-rule checks.
+          This is reflection support, not a trading recommendation.
         </p>
       </header>
 
@@ -76,6 +80,13 @@ function Findings({ review }: { review: WeeklyReviewRun }): React.ReactElement {
   return (
     <section className="grid gap-3">
       <h2 className="text-sm font-medium">Findings</h2>
+      {review.findings.length === 0 ? (
+        <SharedEmptyState
+          title="No major findings for this period"
+          description="The review completed and did not surface major journal behavior issues for the selected period."
+          tone="healthy"
+        />
+      ) : null}
       {review.findings.map((finding) => {
         const severity = SEVERITY_COPY[finding.severity];
         return (
@@ -114,30 +125,24 @@ function EvidenceAndCaveats({ review }: { review: WeeklyReviewRun }): React.Reac
 
 function EmptyState(): React.ReactElement {
   return (
-    <section className="rounded-md border border-muted/30 bg-white/[0.02] p-5 text-sm">
-      <p className="font-medium">Belum ada weekly review.</p>
-      <p className="mt-2 text-muted">
-        Run{" "}
-        <code className="font-mono">
-          uv run python -m scripts.journal_review --json review generate --start 2026-05-25 --end
-          2026-06-01
-        </code>{" "}
-        after journal entries are ready.
-      </p>
-    </section>
+    <SharedEmptyState
+      title="No weekly review generated yet"
+      description="Generate a review after adding journal entries for the selected period. The output focuses on plan adherence, repeated mistakes, and unresolved follow-ups."
+      actionLabel="Generate weekly review"
+      command="uv run python -m scripts.journal_review --json review generate --start 2026-05-25 --end 2026-06-01"
+    />
   );
 }
 
-function ErrorPanel({ error }: { error: string }): React.ReactElement {
+function ErrorPanel({ error }: { error: RuntimeErrorInfo }): React.ReactElement {
+  const isSchemaError = error.code === "missing_table" || error.code === "schema_stale";
   return (
-    <section className="rounded-md border border-red-500/40 bg-red-500/[0.05] p-5 text-sm">
-      <p className="font-medium text-red-300">Gagal membaca weekly review.</p>
-      <p className="mt-2 text-muted">
-        Pastikan migration terbaru sudah jalan:{" "}
-        <code className="font-mono">uv run python -m scripts.migrate</code>
-      </p>
-      <pre className="mt-3 whitespace-pre-wrap text-xs text-red-200">{error}</pre>
-    </section>
+    <RuntimeErrorState
+      title={isSchemaError ? "Migration required" : "Weekly review could not be loaded"}
+      message={error.message}
+      details={error.details}
+      recommendedCommand={error.recommended_command ?? "uv run python -m scripts.runtime status --json"}
+    />
   );
 }
 
