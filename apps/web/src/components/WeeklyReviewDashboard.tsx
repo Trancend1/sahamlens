@@ -29,7 +29,7 @@ export function WeeklyReviewDashboard({ reviews, error }: Props): React.ReactEle
         <h1 className="mt-1 text-3xl font-semibold">Weekly Journal Review</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           Behavior review from local journal entries and simple named strategy-rule checks.
-          This is reflection support, not a trading recommendation.
+          This is reflection support, not an instruction.
         </p>
       </header>
 

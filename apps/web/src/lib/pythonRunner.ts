@@ -136,6 +136,9 @@ export function classifyPythonRunnerError(error: unknown): RuntimeErrorInfo {
     };
   }
 
+  const structured = parseStructuredRuntimeError(error.stdout);
+  if (structured) return structured;
+
   const combined = `${error.message}\n${error.stderr}\n${error.stdout}`;
   const missingTable = combined.match(/Table with name\s+([A-Za-z0-9_]+)\s+does not exist/i);
   if (missingTable?.[1]) {
@@ -200,6 +203,48 @@ export function classifyPythonRunnerError(error: unknown): RuntimeErrorInfo {
     details: sanitizeDetails(error.stderr || error.message),
     recommended_command: null,
   };
+}
+
+function parseStructuredRuntimeError(stdout: string): RuntimeErrorInfo | null {
+  if (!stdout.trim()) return null;
+  try {
+    const parsed = JSON.parse(stdout) as {
+      status?: string;
+      errors?: Array<{ code?: string; message?: string; details?: unknown }>;
+      recommended_commands?: string[];
+    };
+    const first = parsed.errors?.[0];
+    if (!first || !isRuntimeErrorCode(first.code)) return null;
+    const code = first.code;
+    {
+      const details =
+        typeof first.details === "string"
+          ? first.details
+          : first.details
+            ? JSON.stringify(first.details)
+            : "No additional details.";
+      return {
+        code,
+        message: first.message || "Runtime command failed.",
+        details: sanitizeDetails(details),
+        recommended_command: parsed.recommended_commands?.[0] ?? null,
+      };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function isRuntimeErrorCode(value: unknown): value is RuntimeErrorCode {
+  return (
+    value === "schema_stale" ||
+    value === "missing_table" ||
+    value === "python_not_found" ||
+    value === "db_locked" ||
+    value === "empty_data" ||
+    value === "command_failed"
+  );
 }
 
 function sanitizeDetails(raw: string): string {

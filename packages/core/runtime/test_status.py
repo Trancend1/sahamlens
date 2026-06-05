@@ -40,6 +40,23 @@ def test_runtime_status_detects_pending_migration_and_missing_s4_tables(tmp_path
     assert "uv run python -m scripts.migrate" in status.recommended_commands
 
 
+def test_runtime_status_detects_pending_s6_migration_and_alert_tables(tmp_path: Path) -> None:
+    db_path = tmp_path / "s6-stale.duckdb"
+    with duckdb.connect(str(db_path)) as conn:
+        for migration in discover_migrations()[:6]:
+            apply_migration(conn, migration)
+
+    status = get_runtime_status(str(db_path), python_executable="python-test")
+
+    assert status.ok is False
+    assert status.status == "stale"
+    assert "0007" in status.pending_migrations
+    assert "alert_rules" in status.missing_tables
+    assert "alert_events" in status.missing_tables
+    assert "earnings_events" in status.missing_tables
+    assert "uv run python -m scripts.migrate" in status.recommended_commands
+
+
 def test_runtime_status_detects_missing_required_tables_even_if_migrations_claim_applied(
     tmp_path: Path,
 ) -> None:
