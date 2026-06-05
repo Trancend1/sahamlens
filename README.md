@@ -4,7 +4,7 @@ Personal trading companion untuk satu trader retail IDX. Local-first, public-rep
 
 SahamLens is not SaaS, not a signal seller, not an autonomous trader, and not broker integration.
 
-Status: Phase V1 planning is frozen. Implementation starts from V1-S1: Provider Health + Data Quality Foundation.
+Status: Phase V1 planning is frozen. V1-S6 Alerts + Telegram Optional + Earnings Summary is implemented on the current feature branch.
 
 Personal learning and analysis tool only. Not financial advice. Read [DISCLAIMER.md](DISCLAIMER.md) before use.
 

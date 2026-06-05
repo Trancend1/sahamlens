@@ -11,6 +11,8 @@ describe("HomePage", () => {
       "Screener",
       "Weekly Review",
       "Strategy Rules",
+      "Alerts",
+      "Earnings",
       "Watchlist",
       "Trade Journal",
       "Portfolio",

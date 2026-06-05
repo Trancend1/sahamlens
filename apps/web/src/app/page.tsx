@@ -5,6 +5,8 @@ const NAV = [
   { href: "/screener", label: "Screener", desc: "Run transparent filters with confidence caveats." },
   { href: "/journal/weekly-review", label: "Weekly Review", desc: "Review journal consistency and follow-ups." },
   { href: "/strategy-rules", label: "Strategy Rules", desc: "Evaluate named rule discipline checks." },
+  { href: "/alerts", label: "Alerts", desc: "Review local rule conditions and false-positive feedback." },
+  { href: "/earnings", label: "Earnings", desc: "Track manual events and caveated post-event summaries." },
   { href: "/watchlist", label: "Watchlist", desc: "Track the tickers you review regularly." },
   { href: "/journal", label: "Trade Journal", desc: "Record plans, risk, thesis, and emotions." },
   { href: "/portfolio", label: "Portfolio", desc: "Review local positions with available prices." },

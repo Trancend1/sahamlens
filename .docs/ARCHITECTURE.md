@@ -84,6 +84,31 @@ Candidate scripts:
 
 Scripts should be idempotent where practical and safe to run manually.
 
+## V1-S6 Alert and Earnings Boundary
+
+V1-S6 keeps the same local CLI-backed runtime. Alerts and earnings do not introduce
+FastAPI, a background service, a scheduler, or a daemon.
+
+Alert boundary:
+
+- Alert evaluation is manually invoked through CLI/API surfaces.
+- Local alert events are the source of truth.
+- Alert events must store freshness, confidence, rule context, caveats, and review state.
+- False-positive feedback is quality tracking only; it is not predictive labeling.
+- Telegram delivery is optional and can only happen after a local alert event exists.
+- Telegram delivery failure must not delete or invalidate the local alert event.
+- Telegram delivery is explicit/manual in V1-S6; no background service sends alerts.
+- Telegram secrets are env-based and redacted from CLI/UI output.
+
+Earnings boundary:
+
+- Earnings events are manual-first.
+- Summaries use available local/manual input and must show caveats and confidence.
+- Automated unreliable scraping is out of scope for V1-S6.
+- Earnings output supports post-event review and must not produce buy/sell judgment.
+- Earnings UI is a local `/earnings` page backed by `scripts.earnings`; it does not
+  fetch network data during render.
+
 ## Local Runtime Contract
 
 V1 remains CLI-backed and local-first. It does not introduce FastAPI or a long-running
@@ -124,7 +149,7 @@ V1 pages/components:
 - Fundamental Snapshot card.
 - Screener page.
 - Alerts page.
-- Earnings Summary section.
+- Earnings page.
 - Weekly Journal Review page.
 - Strategy Rules page.
 

@@ -47,6 +47,12 @@ REQUIRED_TABLES: tuple[str, ...] = (
     "strategy_rules",
     "strategy_rule_evaluations",
     "strategy_rule_violations",
+    "alert_rules",
+    "alert_evaluations",
+    "alert_events",
+    "alert_delivery_attempts",
+    "earnings_events",
+    "earnings_summaries",
 )
 
 
