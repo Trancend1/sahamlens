@@ -17,18 +17,21 @@ from typing import Any
 
 import duckdb
 from packages.core.alerts import (
+    AlertDeliveryAttempt,
     AlertRuleInput,
     acknowledge_alert_event,
     archive_alert_rule,
     create_alert_rule,
     dismiss_alert_event,
     evaluate_active_alert_rules,
+    get_alert_event,
     get_telegram_status,
+    insert_alert_delivery_attempt,
     list_alert_events,
     list_alert_rules,
     mark_alert_event_false_positive,
     pause_alert_rule,
-    send_alert_event_to_telegram,
+    send_loaded_alert_event_to_telegram,
 )
 from packages.core.runtime import get_runtime_status
 from packages.core.schemas.repository import open_connection
@@ -49,7 +52,7 @@ def cmd_rules_list(args: argparse.Namespace) -> int:
     if readiness is not None:
         _emit(readiness, as_json=args.json)
         return EXIT_FAILED
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         items = [item.model_dump(mode="json") for item in list_alert_rules(conn)]
     _emit(_ok(items=items), as_json=args.json)
     return EXIT_OK
@@ -109,7 +112,7 @@ def cmd_events_list(args: argparse.Namespace) -> int:
     if readiness is not None:
         _emit(readiness, as_json=args.json)
         return EXIT_FAILED
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         items = [
             item.model_dump(mode="json")
             for item in list_alert_events(conn, status=args.status, limit=args.limit)
@@ -152,8 +155,18 @@ def cmd_telegram_send(args: argparse.Namespace) -> int:
         _emit(readiness, as_json=args.json)
         return EXIT_FAILED
     try:
-        with open_connection(args.db) as conn:
-            result = send_alert_event_to_telegram(conn, args.event_id)
+        with open_connection(args.db, read_only=True) as conn:
+            event = get_alert_event(conn, args.event_id)
+        if event is None:
+            result_payload = _error("not_found", "Alert event was not found.")
+            _emit(result_payload, as_json=args.json)
+            return EXIT_FAILED
+
+        def record_attempt(attempt: AlertDeliveryAttempt) -> AlertDeliveryAttempt:
+            with open_connection(args.db) as conn:
+                return insert_alert_delivery_attempt(conn, attempt)
+
+        result = send_loaded_alert_event_to_telegram(event, record_attempt=record_attempt)
     except duckdb.Error as exc:
         _emit(_duckdb_error(exc), as_json=args.json)
         return EXIT_FAILED
@@ -299,6 +312,14 @@ def _duckdb_error(exc: duckdb.Error) -> dict[str, Any]:
             "Local alert schema is not ready. Run migration before using alerts.",
             status="schema_stale",
             recommended_commands=["uv run python -m scripts.migrate"],
+        )
+    if "lock" in raw.lower() or "locked" in raw.lower() or "IO Error" in raw:
+        return _error(
+            "db_locked",
+            (
+                "Local DuckDB file is locked. Close other SahamLens commands using "
+                "the same DB, then retry sequentially."
+            ),
         )
     return _error("command_failed", "The local alert command could not complete.")
 

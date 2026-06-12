@@ -142,7 +142,7 @@ def get_runtime_status(
         )
 
     try:
-        with duckdb.connect(str(resolved)) as conn:
+        with duckdb.connect(str(resolved), read_only=True) as conn:
             tables = _list_tables(conn)
             applied = _applied_versions(conn, tables)
             pending = [version for version in migration_versions if version not in applied]
@@ -371,7 +371,7 @@ def _db_open_error(
     raw = str(exc)
     code = "db_locked" if "lock" in raw.lower() or "locked" in raw.lower() else fallback_code
     message = (
-        "Local DuckDB file is locked; close other SahamLens commands and retry."
+        "Local DuckDB file is locked. Close other SahamLens commands using the same DB, then retry sequentially."
         if code == "db_locked"
         else "Local DuckDB file could not be opened."
     )

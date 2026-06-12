@@ -29,7 +29,7 @@ DEFAULT_SEED = Path(__file__).resolve().parent.parent / "data" / "sample" / "sam
 
 
 def cmd_list(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         entries = [e.model_dump(mode="json") for e in list_entries(conn)]
     if args.json:
         print(json.dumps(entries))

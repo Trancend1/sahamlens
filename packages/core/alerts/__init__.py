@@ -17,6 +17,7 @@ from packages.core.alerts.repo import (
     dismiss_alert_event,
     get_alert_event,
     get_alert_rule,
+    insert_alert_delivery_attempt,
     insert_alert_evaluation,
     insert_alert_event,
     list_alert_delivery_attempts,
@@ -33,6 +34,7 @@ from packages.core.alerts.telegram import (
     format_telegram_alert_message,
     get_telegram_status,
     send_alert_event_to_telegram,
+    send_loaded_alert_event_to_telegram,
 )
 
 __all__ = [
@@ -56,6 +58,7 @@ __all__ = [
     "get_alert_event",
     "get_alert_rule",
     "get_telegram_status",
+    "insert_alert_delivery_attempt",
     "insert_alert_evaluation",
     "insert_alert_event",
     "list_alert_delivery_attempts",
@@ -65,4 +68,5 @@ __all__ = [
     "pause_alert_rule",
     "resolve_alert_event",
     "send_alert_event_to_telegram",
+    "send_loaded_alert_event_to_telegram",
 ]

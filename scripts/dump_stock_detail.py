@@ -149,7 +149,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     limit = args.days if args.days > 0 else None
 
     try:
-        with open_connection(args.db) as conn:
+        with open_connection(args.db, read_only=True) as conn:
             payload = build_payload(conn, args.symbol, limit=limit)
     except ValueError as exc:
         print(json.dumps({"error": str(exc)}))

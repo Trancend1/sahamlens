@@ -15,10 +15,8 @@ export default async function StrategyRulesPage() {
   let error: RuntimeErrorInfo | null = null;
 
   try {
-    [rules, evaluations] = await Promise.all([
-      fetchStrategyRules(),
-      fetchStrategyRuleResults(),
-    ]);
+    rules = await fetchStrategyRules();
+    evaluations = await fetchStrategyRuleResults();
   } catch (err) {
     error = normalizeRuntimeError(err);
   }

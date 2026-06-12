@@ -127,6 +127,14 @@ The runtime contract is:
   schema or missing migration tables.
 - `status` is read-only. Real local DB mutation must be an explicit developer action via
   `scripts.migrate` or `scripts.runtime bootstrap`; tests use temporary DuckDB fixtures.
+- Read-only CLI commands should open DuckDB with `read_only=True` where possible.
+- Web page renders should not spawn multiple DB-backed Python subprocesses in parallel; aggregate
+  or sequence DB-backed fetches to reduce Windows file-lock contention.
+- Write commands should run sequentially against the local DuckDB file. If the file is locked,
+  close other SahamLens commands using the same DB, then retry.
+- Slow network work, including yfinance fetches and Telegram HTTP delivery, must not hold a
+  DuckDB connection open. Load required local data, close DB, perform network work, then reopen
+  only to persist results.
 - Web fetchers must translate Python/DuckDB failures into structured runtime errors:
   `schema_stale`, `missing_table`, `python_not_found`, `db_locked`, `empty_data`, or
   `command_failed`.

@@ -22,7 +22,7 @@ from packages.core.schemas.repository import open_connection
 
 
 def cmd_list(args: argparse.Namespace) -> int:
-    with open_connection() as conn:
+    with open_connection(read_only=True) as conn:
         positions = list_positions(conn)
     print(
         json.dumps(

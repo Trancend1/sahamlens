@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 
 import duckdb
 import pytest
 from packages.core.schemas.models import PriceRow
-from packages.core.schemas.repository import load_ohlcv, upsert_price_rows
+from packages.core.schemas.repository import load_ohlcv, open_connection, upsert_price_rows
 from scripts.migrate import applied_versions, apply_migration, discover_migrations
 
 
@@ -94,3 +95,22 @@ def test_load_ohlcv_handles_null_columns(conn: duckdb.DuckDBPyConnection) -> Non
     rows = load_ohlcv(conn, "BBCA")
     assert rows[0]["close"] is None
     assert rows[0]["volume"] is None
+
+
+def test_open_connection_can_request_read_only(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, bool]] = []
+
+    def fake_connect(path: str, *, read_only: bool = False) -> object:
+        calls.append((path, read_only))
+        return object()
+
+    monkeypatch.setattr(duckdb, "connect", fake_connect)
+
+    db_path = tmp_path / "readonly.duckdb"
+    conn = open_connection(str(db_path), read_only=True)
+
+    assert conn is not None
+    assert calls == [(str(db_path.resolve()), True)]

@@ -48,7 +48,7 @@ def cmd_review_generate(args: argparse.Namespace) -> int:
 
 
 def cmd_review_list(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         reviews = list_weekly_review_runs(conn, limit=args.limit)
     _emit([review.model_dump(mode="json") for review in reviews], as_json=args.json)
     return EXIT_OK
@@ -94,7 +94,7 @@ def cmd_rules_evaluate(args: argparse.Namespace) -> int:
 
 
 def cmd_rules_results(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         evaluations = list_strategy_rule_evaluations(conn, review_id=args.review_id)
     _emit([evaluation.model_dump(mode="json") for evaluation in evaluations], as_json=args.json)
     return EXIT_OK

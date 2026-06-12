@@ -39,7 +39,7 @@ def cmd_plan_add(args: argparse.Namespace) -> int:
 
 
 def cmd_plan_list(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         plans = list_plans(
             conn,
             symbol=args.symbol or None,
@@ -50,7 +50,7 @@ def cmd_plan_list(args: argparse.Namespace) -> int:
 
 
 def cmd_plan_get(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         plan = load_plan(conn, args.id)
     if plan is None:
         print(f"plan {args.id} not found", file=sys.stderr)
