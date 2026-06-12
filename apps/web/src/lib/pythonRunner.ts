@@ -183,7 +183,8 @@ export function classifyPythonRunnerError(error: unknown): RuntimeErrorInfo {
     return {
       code: "db_locked",
       message: "Local DuckDB file is locked.",
-      details: "Close other commands using the same DuckDB file, then retry sequentially.",
+      details:
+        "Local DuckDB file is locked. Close other SahamLens commands using the same DB, then retry sequentially.",
       recommended_command: null,
     };
   }

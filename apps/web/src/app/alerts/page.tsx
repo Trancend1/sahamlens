@@ -28,15 +28,12 @@ export default async function AlertsPage() {
   let error: RuntimeErrorInfo | null = null;
 
   try {
-    [rules, events, telegram] = await Promise.all([
-      fetchAlertRules(),
-      fetchAlertEvents(),
-      fetchTelegramStatus(),
-    ]);
+    rules = await fetchAlertRules();
+    events = await fetchAlertEvents();
   } catch (err) {
     error = normalizeRuntimeError(err);
-    telegram = await fetchTelegramStatus();
   }
+  telegram = await fetchTelegramStatus();
 
   return (
     <AlertsDashboard

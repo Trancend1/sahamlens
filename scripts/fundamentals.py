@@ -72,7 +72,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
 
 
 def cmd_list(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         snapshots = [
             snapshot.model_dump(mode="json")
             for snapshot in list_fundamental_snapshots(conn, symbol=args.symbol)
@@ -105,7 +105,7 @@ def cmd_refresh_coverage(args: argparse.Namespace) -> int:
 
 
 def cmd_coverage_list(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         snapshots = [
             snapshot.model_dump(mode="json") for snapshot in list_ticker_lifecycle_snapshots(conn)
         ]
@@ -114,7 +114,7 @@ def cmd_coverage_list(args: argparse.Namespace) -> int:
 
 
 def cmd_snapshot(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         symbol = _resolve_symbols(conn, explicit=[args.symbol], from_watchlist=False)[0]
         coverage = get_ticker_lifecycle_snapshot(conn, symbol)
         fundamental = get_latest_fundamental_snapshot(conn, symbol)

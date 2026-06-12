@@ -31,6 +31,7 @@ TelegramDeliveryStatusValue = Literal[
     "not_found",
 ]
 TelegramTransport = Callable[[str, str, str], "TelegramSendResponse"]
+DeliveryRecorder = Callable[[AlertDeliveryAttempt], AlertDeliveryAttempt]
 
 
 class TelegramConfigStatus(BaseModel):
@@ -112,13 +113,36 @@ def send_alert_event_to_telegram(
             errors=[{"code": "not_found", "message": "Alert event was not found."}],
         )
 
+    return send_loaded_alert_event_to_telegram(
+        event,
+        record_attempt=lambda attempt: insert_alert_delivery_attempt(conn, attempt),
+        env=env,
+        transport=transport,
+        attempted_at=attempted_at,
+    )
+
+
+def send_loaded_alert_event_to_telegram(
+    event: AlertEvent,
+    *,
+    record_attempt: DeliveryRecorder,
+    env: Mapping[str, str] | None = None,
+    transport: TelegramTransport | None = None,
+    attempted_at: datetime | None = None,
+) -> TelegramDeliveryResult:
+    """Send an already-loaded local alert event and record the delivery result.
+
+    This lets CLI/web flows close DuckDB before the Telegram HTTP call, then
+    reopen only to persist the delivery attempt.
+    """
+
     values = env if env is not None else os.environ
     status = get_telegram_status(env=values)
     now = attempted_at or datetime.now(UTC)
     if not status.configured:
         attempt = _record_attempt(
-            conn,
             event,
+            record_attempt=record_attempt,
             status="skipped_not_configured",
             attempted_at=now,
             error_code="telegram_not_configured",
@@ -143,8 +167,8 @@ def send_alert_event_to_telegram(
     response = sender(token, chat_id, message)
     if response.ok:
         attempt = _record_attempt(
-            conn,
             event,
+            record_attempt=record_attempt,
             status="sent",
             attempted_at=now,
             redacted_details={"status_code": response.status_code},
@@ -152,8 +176,8 @@ def send_alert_event_to_telegram(
         return TelegramDeliveryResult(ok=True, status="sent", event_id=event.id, attempt=attempt)
 
     attempt = _record_attempt(
-        conn,
         event,
+        record_attempt=record_attempt,
         status="failed",
         attempted_at=now,
         error_code=response.error_code or "telegram_delivery_failed",
@@ -195,9 +219,9 @@ def format_telegram_alert_message(event: AlertEvent) -> str:
 
 
 def _record_attempt(
-    conn: duckdb.DuckDBPyConnection,
     event: AlertEvent,
     *,
+    record_attempt: DeliveryRecorder,
     status: Literal["skipped_not_configured", "sent", "failed"],
     attempted_at: datetime,
     error_code: str | None = None,
@@ -214,7 +238,7 @@ def _record_attempt(
         error_message=_safe_error_message(error_message),
         redacted_details=redacted_details or {},
     )
-    return insert_alert_delivery_attempt(conn, attempt)
+    return record_attempt(attempt)
 
 
 def _send_telegram_http(token: str, chat_id: str, text: str) -> TelegramSendResponse:

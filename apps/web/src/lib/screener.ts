@@ -51,7 +51,7 @@ interface FetchScreenerRunOptions {
 }
 
 export async function fetchScreenerRun(options: FetchScreenerRunOptions = {}): Promise<ScreenerRun> {
-  const args = ["--json", "run", "--builtin", "fundamentals-basic"];
+  const args = ["--json", "run", "--builtin", "fundamentals-basic", "--no-persist"];
   if (options.symbols && options.symbols.length > 0) {
     args.push("--symbols", options.symbols.join(","));
   } else {

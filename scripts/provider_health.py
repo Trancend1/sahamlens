@@ -52,14 +52,31 @@ def refresh_yfinance_provider_health(
     end: date,
     updated_at: datetime | None = None,
 ) -> ProviderHealthSnapshot:
+    snapshot = fetch_yfinance_provider_health_snapshot(
+        source,
+        symbols,
+        start=start,
+        end=end,
+        updated_at=updated_at,
+    )
+    upsert_provider_health_snapshot(conn, snapshot)
+    return snapshot
+
+
+def fetch_yfinance_provider_health_snapshot(
+    source: PriceSource,
+    symbols: Sequence[str],
+    *,
+    start: date,
+    end: date,
+    updated_at: datetime | None = None,
+) -> ProviderHealthSnapshot:
     results = [source.fetch_ohlcv(symbol, start, end) for symbol in symbols]
-    snapshot = build_yfinance_snapshot(
+    return build_yfinance_snapshot(
         source_name=source.name,
         results=results,
         updated_at=updated_at or datetime.now(UTC),
     )
-    upsert_provider_health_snapshot(conn, snapshot)
-    return snapshot
 
 
 def build_yfinance_snapshot(
@@ -116,7 +133,7 @@ def _failure_reason(failures: Sequence[FetchResult]) -> str | None:
 
 
 def cmd_list(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         overview = load_data_quality_overview(conn)
     _emit_overview(overview_payload(overview), as_json=args.json)
     return EXIT_OK
@@ -124,23 +141,24 @@ def cmd_list(args: argparse.Namespace) -> int:
 
 def cmd_refresh_yfinance(args: argparse.Namespace) -> int:
     explicit = [symbol for symbol in (args.symbols or "").split(",") if symbol.strip()]
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         symbols = resolve_symbols(conn, explicit=explicit, from_watchlist=args.from_watchlist)
-        if not symbols:
-            print(
-                "no symbols: pass --symbols or --from-watchlist (and ensure watchlist non-empty)",
-                file=sys.stderr,
-            )
-            return EXIT_FAILED
-        end = datetime.now(UTC).date()
-        start = end - timedelta(days=args.days)
-        refresh_yfinance_provider_health(
-            conn,
-            YFinanceSource(),
-            symbols,
-            start=start,
-            end=end,
+    if not symbols:
+        print(
+            "no symbols: pass --symbols or --from-watchlist (and ensure watchlist non-empty)",
+            file=sys.stderr,
         )
+        return EXIT_FAILED
+    end = datetime.now(UTC).date()
+    start = end - timedelta(days=args.days)
+    snapshot = fetch_yfinance_provider_health_snapshot(
+        YFinanceSource(),
+        symbols,
+        start=start,
+        end=end,
+    )
+    with open_connection(args.db) as conn:
+        upsert_provider_health_snapshot(conn, snapshot)
         overview = load_data_quality_overview(conn)
     _emit_overview(overview_payload(overview), as_json=args.json)
     return EXIT_OK

@@ -36,8 +36,12 @@ def resolve_db_path(override: str | None = None) -> Path:
     return path
 
 
-def open_connection(override: str | None = None) -> duckdb.DuckDBPyConnection:
-    return duckdb.connect(str(resolve_db_path(override)))
+def open_connection(
+    override: str | None = None,
+    *,
+    read_only: bool = False,
+) -> duckdb.DuckDBPyConnection:
+    return duckdb.connect(str(resolve_db_path(override)), read_only=read_only)
 
 
 def upsert_price_rows(conn: duckdb.DuckDBPyConnection, rows: Iterable[PriceRow]) -> int:

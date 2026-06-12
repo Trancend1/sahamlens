@@ -58,6 +58,16 @@ def ingest(
     return results
 
 
+def fetch_ohlcv_results(
+    source: PriceSource,
+    symbols: Sequence[str],
+    *,
+    start: date,
+    end: date,
+) -> list[FetchResult]:
+    return [source.fetch_ohlcv(sym, start, end) for sym in symbols]
+
+
 class Summary(TypedDict):
     rows_written: int
     by_status: dict[str, list[str]]
@@ -95,19 +105,23 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     explicit = [s for s in (args.symbols or "").split(",") if s.strip()]
 
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         symbols = resolve_symbols(conn, explicit=explicit, from_watchlist=args.from_watchlist)
-        if not symbols:
-            print(
-                "no symbols: pass --symbols or --from-watchlist (and ensure watchlist non-empty)",
-                file=sys.stderr,
-            )
-            return EXIT_FAILED
+    if not symbols:
+        print(
+            "no symbols: pass --symbols or --from-watchlist (and ensure watchlist non-empty)",
+            file=sys.stderr,
+        )
+        return EXIT_FAILED
 
-        end = datetime.now(UTC).date()
-        start = end - timedelta(days=args.days)
-        source = YFinanceSource()
-        results = ingest(conn, source, symbols, start=start, end=end)
+    end = datetime.now(UTC).date()
+    start = end - timedelta(days=args.days)
+    source = YFinanceSource()
+    results = fetch_ohlcv_results(source, symbols, start=start, end=end)
+    with open_connection(args.db) as conn:
+        for result in results:
+            if result.status != "failed":
+                upsert_price_rows(conn, result.rows)
 
     summary = summarize(results)
     if args.json:

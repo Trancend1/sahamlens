@@ -21,10 +21,8 @@ export default async function EarningsPage() {
   let error: RuntimeErrorInfo | null = null;
 
   try {
-    [events, summaries] = await Promise.all([
-      fetchEarningsEvents(),
-      fetchEarningsSummaries(),
-    ]);
+    events = await fetchEarningsEvents();
+    summaries = await fetchEarningsSummaries();
   } catch (err) {
     error = normalizeRuntimeError(err);
   }

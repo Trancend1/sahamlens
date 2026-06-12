@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./pythonRunner", () => ({
   runPython: vi.fn(),
@@ -8,6 +8,10 @@ const { runPython } = await import("./pythonRunner");
 const runMock = vi.mocked(runPython);
 
 describe("fetchScreenerRun", () => {
+  beforeEach(() => {
+    runMock.mockReset();
+  });
+
   it("calls screener CLI for the built-in watchlist filter", async () => {
     runMock.mockResolvedValueOnce({
       data: {
@@ -37,7 +41,14 @@ describe("fetchScreenerRun", () => {
 
     expect(run.rule.rule_id).toBe("fundamentals-basic");
     expect(runMock).toHaveBeenCalledWith("scripts.screener", {
-      args: ["--json", "run", "--builtin", "fundamentals-basic", "--from-watchlist"],
+      args: [
+        "--json",
+        "run",
+        "--builtin",
+        "fundamentals-basic",
+        "--no-persist",
+        "--from-watchlist",
+      ],
       timeoutMs: 30_000,
     });
   });
@@ -70,7 +81,15 @@ describe("fetchScreenerRun", () => {
     await fetchScreenerRun({ symbols: ["BBCA", "TLKM"] });
 
     expect(runMock).toHaveBeenCalledWith("scripts.screener", {
-      args: ["--json", "run", "--builtin", "fundamentals-basic", "--symbols", "BBCA,TLKM"],
+      args: [
+        "--json",
+        "run",
+        "--builtin",
+        "fundamentals-basic",
+        "--no-persist",
+        "--symbols",
+        "BBCA,TLKM",
+      ],
       timeoutMs: 30_000,
     });
   });

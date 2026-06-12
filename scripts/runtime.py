@@ -14,7 +14,6 @@ from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
-import duckdb
 from packages.core.runtime import (
     BootstrapResult,
     BootstrapStep,
@@ -53,13 +52,13 @@ def _run_optional_data_bootstrap(
     if result.status.schema_status != "ready":
         return result
 
-    with open_connection(db_path) as conn:
+    with open_connection(db_path, read_only=True) as conn:
         symbols = [entry.symbol for entry in list_entries(conn)]
-        if not symbols:
-            return result
-        result.steps.extend(_refresh_provider_health(conn, symbols))
-        result.steps.extend(_refresh_coverage(conn, symbols))
-        result.steps.extend(_run_screener(conn, symbols))
+    if not symbols:
+        return result
+    result.steps.extend(_refresh_provider_health(db_path, symbols))
+    result.steps.extend(_refresh_coverage(db_path, symbols))
+    result.steps.extend(_run_screener(db_path, symbols))
 
     status = get_runtime_status(db_path)
     warnings = [*status.warnings]
@@ -90,18 +89,23 @@ def _run_optional_data_bootstrap(
     )
 
 
-def _refresh_provider_health(
-    conn: duckdb.DuckDBPyConnection,
-    symbols: list[str],
-) -> list[BootstrapStep]:
+def _refresh_provider_health(db_path: str | None, symbols: list[str]) -> list[BootstrapStep]:
     try:
+        from packages.core.data_quality.repo import upsert_provider_health_snapshot
         from packages.core.data_sources.yfinance import YFinanceSource
 
-        from scripts.provider_health import refresh_yfinance_provider_health
+        from scripts.provider_health import fetch_yfinance_provider_health_snapshot
 
         end = datetime.now(UTC).date()
         start = end - timedelta(days=7)
-        refresh_yfinance_provider_health(conn, YFinanceSource(), symbols, start=start, end=end)
+        snapshot = fetch_yfinance_provider_health_snapshot(
+            YFinanceSource(),
+            symbols,
+            start=start,
+            end=end,
+        )
+        with open_connection(db_path) as conn:
+            upsert_provider_health_snapshot(conn, snapshot)
         return [
             BootstrapStep(
                 name="provider_health",
@@ -122,19 +126,17 @@ def _refresh_provider_health(
         ]
 
 
-def _refresh_coverage(
-    conn: duckdb.DuckDBPyConnection,
-    symbols: list[str],
-) -> list[BootstrapStep]:
+def _refresh_coverage(db_path: str | None, symbols: list[str]) -> list[BootstrapStep]:
     try:
         from scripts.fundamentals import refresh_ticker_coverage
 
-        refresh_ticker_coverage(
-            conn,
-            symbols,
-            lifecycle_status="active",
-            checked_at=datetime.now(UTC),
-        )
+        with open_connection(db_path) as conn:
+            refresh_ticker_coverage(
+                conn,
+                symbols,
+                lifecycle_status="active",
+                checked_at=datetime.now(UTC),
+            )
         return [
             BootstrapStep(
                 name="coverage_fundamentals",
@@ -155,23 +157,21 @@ def _refresh_coverage(
         ]
 
 
-def _run_screener(
-    conn: duckdb.DuckDBPyConnection,
-    symbols: list[str],
-) -> list[BootstrapStep]:
+def _run_screener(db_path: str | None, symbols: list[str]) -> list[BootstrapStep]:
     try:
         from packages.core.screener import evaluate_screener_rule, upsert_screener_run
 
         from scripts.screener import _load_candidates, fundamentals_basic_rule
 
         rule = fundamentals_basic_rule()
-        run = evaluate_screener_rule(
-            rule,
-            _load_candidates(conn, symbols),
-            run_id=f"bootstrap-screener-{uuid4().hex}",
-            evaluated_at=datetime.now(UTC),
-        )
-        upsert_screener_run(conn, run)
+        with open_connection(db_path) as conn:
+            run = evaluate_screener_rule(
+                rule,
+                _load_candidates(conn, symbols),
+                run_id=f"bootstrap-screener-{uuid4().hex}",
+                evaluated_at=datetime.now(UTC),
+            )
+            upsert_screener_run(conn, run)
         return [
             BootstrapStep(
                 name="screener",

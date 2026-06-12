@@ -37,7 +37,7 @@ EXIT_FAILED = 3
 
 
 def cmd_run(args: argparse.Namespace) -> int:
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=args.no_persist) as conn:
         rule = _resolve_rule(conn, builtin=args.builtin, rule_id=args.rule_id)
         if rule is None:
             print("screener rule not found", file=sys.stderr)

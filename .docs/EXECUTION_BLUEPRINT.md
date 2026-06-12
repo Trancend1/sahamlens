@@ -12,6 +12,27 @@ Implementation must follow the critical path:
 
 Data Quality -> Coverage/Fundamentals -> Screener -> Journal/Strategy -> Polish Gate -> Alerts/Earnings
 
+## Current Factual Brief
+
+SahamLens V1 MVP is code-complete for local-first decision support. The codebase now contains Python core modules for data quality, provider health, ticker coverage, fundamentals, screener evaluation, journal review, strategy-rule checks, alert lifecycle, optional Telegram delivery, earnings summaries, runtime readiness, AI wrappers, portfolio, indicators, news, watchlist, and schema migrations. The web app exposes the main V1 surfaces through App Router pages for dashboard, watchlist, stock detail, data quality, screener, journal, weekly review, strategy rules, alerts, earnings, portfolio, and import flows.
+
+Implemented core feature surfaces:
+
+- Data trust: provider health, data-quality overview, freshness states, and source caveats.
+- Coverage and fundamentals: ticker lifecycle, support tiers, fundamental completeness, confidence, missing-field caveats, and local snapshot reads.
+- Screener: transparent rule evaluation with freshness/confidence gates, local candidates, exclusions, and no signal language.
+- Journal and strategy: weekly behavior review plus named strategy-rule checks with evidence, caveats, and no custom DSL.
+- Alerts and earnings: local alert rules/events, acknowledge/dismiss/false-positive lifecycle, optional manual Telegram delivery, manual-first earnings events, notes, archives, and caveated summaries.
+- Runtime hardening: DuckDB schema status, explicit bootstrap/migration commands, read-only status checks, structured web runtime errors, and reduced Windows DB-lock risk through read-only connections and sequential DB-backed web fetches.
+
+Engineering state:
+
+- Core business logic remains in `packages/core`; CLI orchestration remains in `scripts`; web presentation and Python bridges remain in `apps/web`.
+- Schema migrations currently run through `0007_alerts_earnings.sql`.
+- ADRs currently run through ADR-0017 and cover local-first storage, no broker credentials, no predictive AI, provider health, freshness, coverage, fundamentals, screener semantics, simple strategy rules, alert lifecycle, Telegram optional delivery, and earnings manual-first workflow.
+- Known remaining operational checks are release readiness / PR review, owner-approved local DB migration smoke test, and pending dogfood notes for screener and weekly-review/strategy-rule flows.
+- Local DB data under `data/private` remains out of source control; Telegram secrets use `SAHAMLENS_TELEGRAM_BOT_TOKEN` and `SAHAMLENS_TELEGRAM_CHAT_ID` and must not be rendered or committed.
+
 ## Planning Freeze
 
 V1 planning is closed. This file keeps only execution-critical scope, roadmap, backlog index, gates, and first PR order. Historical planning notes are intentionally removed from active docs.
@@ -413,6 +434,16 @@ UI tests:
 - Automated tests mock Telegram network calls and do not send real messages.
 - Local DB mutation policy remains explicit: `status` is read-only; developers must run `scripts.migrate` or `scripts.runtime bootstrap` intentionally.
 - Constraints preserved: no FastAPI, no scheduler/background service, no broker integration, no scraping, no auto-trading, no realtime/intraday alerting, and no signal/profit language.
+
+### V1-S4.1 Runtime DB Lock Hardening Notes
+
+- Root cause: Windows cross-process DuckDB contention from multiple Python subprocesses opening the same local DB file, not a production connection leak.
+- `open_connection(..., read_only=True)` is available for read-only CLI commands.
+- Web renders must not call multiple DB-backed Python subprocesses in parallel; `/alerts`, `/earnings`, and `/strategy-rules` should load DB-backed data sequentially unless an aggregate CLI command replaces them.
+- Screener page render uses `--no-persist`; persisted screener runs remain an explicit CLI behavior.
+- yfinance/provider refresh and Telegram HTTP delivery must avoid holding DuckDB connections during network work.
+- Write commands should be run sequentially. If DuckDB is locked, close other SahamLens commands using the same DB and retry.
+- A broad global mutex was intentionally not added; use a narrow write queue only if lock telemetry shows remaining write-after-revalidate contention.
 
 ## First Safe PR Order
 

@@ -34,7 +34,7 @@ def cmd_events_list(args: argparse.Namespace) -> int:
     if readiness is not None:
         _emit(readiness, as_json=args.json)
         return EXIT_FAILED
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         items = [
             item.model_dump(mode="json")
             for item in list_earnings_events(conn, include_archived=args.include_archived)
@@ -74,7 +74,7 @@ def cmd_events_detail(args: argparse.Namespace) -> int:
     if readiness is not None:
         _emit(readiness, as_json=args.json)
         return EXIT_FAILED
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         item = get_earnings_event(conn, args.event_id)
     if item is None:
         _emit(_error("not_found", "Earnings event was not found."), as_json=args.json)
@@ -158,7 +158,7 @@ def cmd_summaries_list(args: argparse.Namespace) -> int:
     if readiness is not None:
         _emit(readiness, as_json=args.json)
         return EXIT_FAILED
-    with open_connection(args.db) as conn:
+    with open_connection(args.db, read_only=True) as conn:
         items = [item.model_dump(mode="json") for item in list_earnings_summaries(conn)]
     _emit(_ok(items=items), as_json=args.json)
     return EXIT_OK
@@ -240,6 +240,14 @@ def _duckdb_error(exc: duckdb.Error) -> dict[str, Any]:
             "Local earnings schema is not ready. Run migration before using earnings.",
             status="schema_stale",
             recommended_commands=["uv run python -m scripts.migrate"],
+        )
+    if "lock" in raw.lower() or "locked" in raw.lower() or "IO Error" in raw:
+        return _error(
+            "db_locked",
+            (
+                "Local DuckDB file is locked. Close other SahamLens commands using "
+                "the same DB, then retry sequentially."
+            ),
         )
     return _error("command_failed", "The local earnings command could not complete.")
 
