@@ -13,6 +13,7 @@ from packages.core.agent.audit import (
     list_agent_log,
     record_agent_interaction,
 )
+from packages.core.agent.brief_delivery import format_brief_message
 from packages.core.agent.exposure import (
     ExposureHolding,
     ExposureSummary,
@@ -37,6 +38,7 @@ __all__ = [
     "JournalDigestToolResult",
     "exposure_summary",
     "exposure_tool",
+    "format_brief_message",
     "journal_digest",
     "journal_digest_tool",
     "list_agent_log",

@@ -20,6 +20,7 @@ from packages.core.alerts.telegram import (
     format_telegram_alert_message,
     get_telegram_status,
     send_alert_event_to_telegram,
+    send_text_to_telegram,
 )
 from scripts.migrate import applied_versions, apply_migration, discover_migrations
 
@@ -98,6 +99,32 @@ def test_telegram_send_success_records_attempt_without_secret_leak(tmp_path: Pat
         assert "Rule condition matched" in calls[0][2]
         assert BOT_SAMPLE_VALUE not in payload
         assert CHAT_SAMPLE_VALUE not in payload
+
+
+def test_send_text_skipped_when_not_configured() -> None:
+    response = send_text_to_telegram("hello", env={})
+    assert response.ok is False
+    assert response.error_code == "telegram_not_configured"
+
+
+def test_send_text_uses_transport_when_configured() -> None:
+    captured: dict[str, str] = {}
+
+    def transport(token: str, chat_id: str, text: str) -> TelegramSendResponse:
+        captured.update(token=token, chat_id=chat_id, text=text)
+        return TelegramSendResponse(ok=True, status_code=200)
+
+    response = send_text_to_telegram(
+        "SahamLens brief — BBCA.JK",
+        env={
+            "SAHAMLENS_TELEGRAM_BOT_TOKEN": BOT_SAMPLE_VALUE,
+            "SAHAMLENS_TELEGRAM_CHAT_ID": CHAT_SAMPLE_VALUE,
+        },
+        transport=transport,
+    )
+    assert response.ok is True
+    assert captured["text"] == "SahamLens brief — BBCA.JK"
+    assert captured["token"] == BOT_SAMPLE_VALUE
 
 
 def test_telegram_send_failure_records_attempt_and_keeps_event(tmp_path: Path) -> None:

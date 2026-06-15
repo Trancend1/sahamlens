@@ -96,6 +96,32 @@ def get_telegram_status(
     )
 
 
+def send_text_to_telegram(
+    text: str,
+    *,
+    env: Mapping[str, str] | None = None,
+    transport: TelegramTransport | None = None,
+) -> TelegramSendResponse:
+    """Send arbitrary outbound text (e.g. an agent brief). No DB, no alert event.
+
+    Returns the raw send response. When Telegram is not configured, returns a
+    non-ok response with `telegram_not_configured` rather than raising. The
+    caller must ensure `text` contains no secrets.
+    """
+    values = env if env is not None else os.environ
+    status = get_telegram_status(env=values)
+    if not status.configured:
+        return TelegramSendResponse(
+            ok=False,
+            error_code="telegram_not_configured",
+            error_message="Telegram delivery is not configured.",
+        )
+    token = values[TOKEN_ENV].strip()
+    chat_id = values[CHAT_ID_ENV].strip()
+    sender = transport or _send_telegram_http
+    return sender(token, chat_id, text)
+
+
 def send_alert_event_to_telegram(
     conn: duckdb.DuckDBPyConnection,
     event_id: str,
