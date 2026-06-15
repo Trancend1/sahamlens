@@ -1,138 +1,182 @@
-# AGENTS.md - SahamLens
+# AGENTS.md — SahamLens
 
-SahamLens is a personal trading companion for one retail IDX trader. It is local-first, public-repo-safe, and AI-assisted. AI explains; the user decides.
+SahamLens is a personal trading companion for one retail IDX trader. It is local-first, public-repo-safe, and AI-assisted. AI explains; the user decides. It is **not** a broker, signal service, portfolio manager, or SaaS platform.
 
-This file is an agent alignment layer. Product and technical facts live in `.docs/`.
+> **Phase aktif:**---*
+> **Status *planning*:** *frozen*
+> **Branch:** `---`
+---
 
-## Documentation Map
+## 1. Documentation Map
 
 Always cite or edit the canonical file instead of duplicating facts here.
 
-| Topic | Source of truth |
+| Topic | Source of Truth |
 |---|---|
 | Product scope, goals, non-goals | [.docs/PRD.md](.docs/PRD.md) |
-| Execution roadmap, sprint, backlog | [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRINT.md) |
-| System architecture and module boundaries | [.docs/ARCHITECTURE.md](.docs/ARCHITECTURE.md) |
-| Data providers, freshness, coverage, confidence | [.docs/DATA_SOURCES.md](.docs/DATA_SOURCES.md) |
-| AI rules and output boundaries | [.docs/AI_BOUNDARIES.md](.docs/AI_BOUNDARIES.md) |
-| Privacy, secrets, and threat model | [.docs/SECURITY.md](.docs/SECURITY.md) |
-| Trading disclaimer copy and placement | [.docs/TRADING_DISCLAIMER.md](.docs/TRADING_DISCLAIMER.md) |
-| UI rules and visual vocabulary | [.docs/DESIGN_SYSTEM.md](.docs/DESIGN_SYSTEM.md) |
+| Execution roadmap, sprint backlog | [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRINT.md) |
+| System architecture, module boundaries | [.docs/ARCHITECTURE.md](.docs/ARCHITECTURE.md) |
+| Data providers, freshness, coverage | [.docs/DATA_SOURCES.md](.docs/DATA_SOURCES.md) |
+| AI rules, output boundaries, safety | [.docs/AI_BOUNDARIES.md](.docs/AI_BOUNDARIES.md) |
+| Privacy, secrets, threat model | [.docs/SECURITY.md](.docs/SECURITY.md) |
+| Trading disclaimer copy, placement | [.docs/TRADING_DISCLAIMER.md](.docs/TRADING_DISCLAIMER.md) |
+| UI rules, visual vocabulary | [.docs/DESIGN_SYSTEM.md](.docs/DESIGN_SYSTEM.md) |
 | Engineering workflow | [.docs/ENGINEERING_STANDARDS.md](.docs/ENGINEERING_STANDARDS.md) |
-| Contribution process | [.docs/CONTRIBUTING.md](.docs/CONTRIBUTING.md) |
 | Long-lived technical decisions | [.docs/adr/](.docs/adr/) |
+| Agent workflow template (this skeleton) | `@C:\Users\transcend\.claude\WORKFLOW.md` |
+| RTK shell tooling rules | `@C:\Users\transcend\.codex\RTK.md` |
 
-Rules:
-
+**Rules:**
 - Before claiming a fact, check the relevant source-of-truth doc.
 - Before changing a fact, edit the canonical doc.
 - Before creating a new doc, check whether it belongs in an existing doc.
 - Keep planning history out of active docs unless the owner explicitly asks for an archive.
 
-## Current Phase
+---
 
-Phase: V1 - Better Decision Support.
-Planning status: frozen.
-Current sprint: V1-S6 - Completed.
-Next step: Release readiness / PR review.
+## 2. Progress — Phase Schedule
 
-Critical path:
+### 2.1 Roadmap
 
-Data Quality -> Coverage/Fundamentals -> Screener -> Journal/Strategy -> Polish Gate -> Alerts/Earnings
+```
+Phase 0: Docs Readiness + Foundation
+  → Phase V1-S1: Provider Health + Data Quality
+  → Phase V1-S2: Ticker Lifecycle + Fundamental Snapshot
+  → Phase V1-S3: Screener
+  → Phase V1-S4: Journal Review + Strategy Rules
+  → Phase V1-S5: Polish + Runtime Readiness + UX Stabilization
+  → Phase V1-S6: Alerts + Telegram Optional + Earnings Summary
+  → Release Readiness: PR review, merge, release
+```
 
-Start implementation from [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRINT.md). Do not reopen product scope during implementation unless a real blocker appears.
+**Phase V1-S1 — Provider Health + Data Quality**
+- Make data trust visible before building dependent features.
+- Provider health schema, CLI refresh, Data Quality UI shell.
 
-## Sprint Log
+**Phase V1-S2 — Ticker Lifecycle + Fundamental Snapshot**
+- Coverage tiers, lifecycle states, lightweight fundamentals with confidence.
+- Coverage classifier, fundamental snapshot ingestion, CLI, UI.
 
-| Sprint | Status | Branch / commit | Detail kecil | Kesulitan / catatan | Pending berikutnya |
-|---|---|---|---|---|---|
-| V1-S0 Docs Readiness | Done | `main` / `05a1a08`, `8ab8ee0` | Canonicalized `.docs`, added `AGENTS.md`, kept `CLAUDE.md` as pointer, locked ADR-0009 to ADR-0013. | Pre-commit line-ending hook tried to touch many files during all-files run; restored noise and committed only docs/alignment. | None for sprint start; main is ahead of origin until pushed. |
-| V1-S1 Provider Health Foundation | Done | `v1/s1-provider-health-foundation` / `96939a5` | Added `packages/core/data_quality` with `ProviderHealthSnapshot`, `DataQualityOverview`, freshness states, trust tiers, source types, and focused tests. | Direct path pytest on `packages/core/data_quality/test_models.py` hit import-root quirk; full repo pytest passed and is the CI-like check. | Foundation model ready for CLI/UI consumers. |
-| V1-S1 Schema / Migration | Done | `v1/s1-provider-health-foundation` / schema slice | Added `0003_provider_health.sql` plus repository upsert/list/overview helpers and migration-backed tests. | Mypy required hydrating DuckDB rows through `ProviderHealthSnapshot.model_validate` to preserve Literal validation. | Use repository from refresh CLI. |
-| V1-S1 Provider Health CLI | Done | `v1/s1-provider-health-foundation` / current slice | Added `scripts.provider_health` with `list` and `refresh-yfinance`, JSON output, yfinance snapshot mapping, and CLI tests. | Kept UI reads separate from refresh so dashboard render does not hit yfinance/network. | Richer provider history deferred until dogfooding shows it is needed. |
-| V1-S1 Data Quality UI Shell | Done | `v1/s1-provider-health-foundation` / current slice | Added `/data-quality`, `fetchDataQualityOverview`, dashboard summary cards, provider cards, empty/error state, and all six freshness states. | Existing `FreshnessBadge` still uses legacy `fresh/stale/old`; V1 data-quality UI uses new explicit states separately. | None for S1; watch legacy freshness naming during S2 integration. |
-| V1-S1 Dogfood + Local Refresh | Done | `v1/s1-provider-health-foundation` / local DB | Ran migration, confirmed empty overview, refreshed yfinance for `BBCA.JK` and `TLKM.JK`, and persisted a fresh snapshot with coverage `2`. | Requires network availability; yfinance remains Tier 3 and must keep caveat visibility. Local DB is ignored at `data/private/sahamlens.duckdb`. | V1-S1 ready for review/PR; next implementation should begin V1-S2 after merge. |
-| V1-S2 Sprint Prep | Done | `v1/s2-ticker-fundamental-snapshot` / `cad43e2` | Prepared vertical slice for ticker lifecycle, coverage tiers, and lightweight fundamental snapshot with confidence. | Must reuse V1-S1 Data Quality as prerequisite and avoid reopening frozen product scope. | ADR readiness confirmed; proceed to schema/migration with tests. |
-| V1-S2 ADR Readiness | Done | `v1/s2-ticker-fundamental-snapshot` / readiness slice | Confirmed ADR-0011 covers lifecycle/coverage and ADR-0012 covers fundamental completeness/confidence. | Implementation vocabulary is locked: active/suspended/delisted/renamed/unknown, tier_a/tier_b/tier_c, complete/partial/sparse/missing, high/medium/low/none. | Schema must store source, timestamps, missing fields, caveat/reason text, and avoid predictive scores. |
-| V1-S2 Schema / Migration | Done | `v1/s2-ticker-fundamental-snapshot` / schema slice | Added DuckDB schema for ticker lifecycle status, source coverage, fundamental snapshots, missing fields, completeness, confidence, source, and fetched/imported timestamps. | Kept migration narrow; no financial terminal scope, no automated IDX parser, and no predictive scoring. | Next: implement coverage repository/classifier and fundamental snapshot models. |
-| V1-S2 Coverage Core | Done | `v1/s2-ticker-fundamental-snapshot` / coverage slice | Implemented coverage classifier for Tier A/B/C and lifecycle states: active, suspended, delisted, renamed, unknown. | Screener/alert eligibility stays conservative for stale, failed, partial, unknown, suspended, delisted, or unmapped renamed tickers. | Next: connect fundamental snapshots into coverage/fundamental CLI flows. |
-| V1-S2 Fundamental Snapshot Core | Done | `v1/s2-ticker-fundamental-snapshot` / fundamental slice | Implemented lightweight fundamental snapshot model, ingestion builder, completeness calculation, confidence calculation, and DuckDB repository. | Public-provider/manual fundamentals preserve missing fields and confidence caveats; no predictive score or financial-terminal scope. | Next: expose coverage/fundamental flows through CLI. |
-| V1-S2 CLI | Done | `v1/s2-ticker-fundamental-snapshot` / CLI slice | Added `scripts.fundamentals` commands to ingest/list fundamental snapshots, refresh/list ticker coverage, and show combined symbol snapshot. | CLI orchestrates only; classifier/completeness/confidence logic stays in `packages/core`. UI reads local snapshots and does not refresh network during render. | Next: add Fundamental Snapshot card and coverage/lifecycle badges in web UI. |
-| V1-S2 UI | Done | `v1/s2-ticker-fundamental-snapshot` / UI slice | Added Fundamental Snapshot card, coverage/lifecycle badges, completeness/confidence badges, caveats, empty state, and read-only state when incomplete. | UI renders core-provided states via `scripts.fundamentals snapshot`; no classifier logic or network refresh runs during render. | Next: dogfood watchlist tickers and verify full S2 sprint. |
-| V1-S2 Dogfood | Done | `v1/s2-ticker-fundamental-snapshot` / local DB | Reviewed watchlist coverage and fundamental snapshots after local ingest/refresh. `BBCA.JK` resolved Tier A with partial/medium fundamentals; `TLKM.JK` stayed Tier C with sparse/low fundamentals because OHLCV coverage is missing locally. | DuckDB local file can lock when multiple CLI commands read/write in parallel; run dogfood refresh/read commands sequentially. | V1-S2 implemented and verified; next sprint can begin after review/PR merge. |
-| V1-S2 Verification | Done | `v1/s2-ticker-fundamental-snapshot` / verification slice | Full S2 verification passed: Python tests/type/lint/format, web tests/type/lint/build, migration idempotency, CLI ingest/list/snapshot/coverage dogfood. | Existing non-blocking warnings remain: Vite CJS API deprecation, `next lint` deprecation, and Next `experimental.typedRoutes` warning. | Prepare PR summary and move to V1-S3 only after merge. |
-| V1-S3 Sprint Prep | Done | `v1/s3-screener` / prep slice | Prepared transparent screener vertical slice that consumes V1-S1 Data Quality and V1-S2 Coverage/Fundamental confidence gates. | Must not introduce signal language, recommendations, prediction, or hidden scoring. | Next: write/confirm Screener semantics ADR before schema work. |
-| V1-S3 ADR Readiness | Done | `v1/s3-screener` / ADR slice | Added ADR-0014 Screener Semantics and locked transparent filter language, rule gates, result states, and exclusion behavior. | Screener language must remain filter/explain/exclude, never buy/sell/hold or candidate recommendation. | Schema must encode required fields, freshness/confidence gates, run metadata, results, exclusions, and caveats. |
-| V1-S3 Schema / Migration | Done | `v1/s3-screener` / schema slice | Added DuckDB schema for screener rules, rule conditions, runs, results, exclusions, required fields, freshness/confidence gates, and run metadata. | Kept rules transparent and local; no strategy DSL and no predictive scoring. | Next: implement `packages/core/screener` evaluator against these tables. |
-| V1-S3 Screener Core | Done | `v1/s3-screener` / core slice | Implemented transparent evaluator that applies explicit rules to local ticker coverage, fundamentals, optional price/indicator fields, freshness states, and confidence gates. | Result copy stays filter/exclude/caveat only; no signal language. Direct path pytest still has package-root quirks, so full repo pytest is the reliable check. | Next: expose saved/built-in rule execution through CLI. |
-| V1-S3 CLI | Done | `v1/s3-screener` / CLI slice | Added `scripts.screener run` for saved or built-in rules, watchlist/symbol input, explainable JSON output, and persisted run/results. | CLI orchestrates only and reads local DuckDB; it does not call AI or external network during screener evaluation. | Next: add Screener page that renders core-provided explanations and exclusion reasons. |
-| V1-S3 UI | Done | `v1/s3-screener` / UI slice | Added `/screener`, rule summary, result table, exclusion reasons, freshness/confidence/completeness badges, empty state, and error state. | UI renders core-provided explanations and does not duplicate evaluator logic in React. | Next: run full S3 verification and tighten no-signal test coverage. |
-| V1-S3 Tests | Done | `v1/s3-screener` / verification slice | Added Python core/repo/CLI tests and web lib/component tests for eligibility gates, stale behavior, missing fields, Tier C exclusions, lifecycle exclusions, and no-signal copy. | Full verification passed; existing non-blocking warnings remain: Vite CJS API deprecation, `next lint` deprecation, and Next `experimental.typedRoutes` warning. | Next: dogfood against local watchlist after owner wants S3 dogfood/run-through. |
-| V1-S3 Dogfood | Pending | `v1/s3-screener` / local DB | Run screener against local watchlist and review included/excluded tickers with reasons. | Success means transparent filtering and caveats, not profitable signals. | Dogfood after migration, core, CLI, and UI are verified. |
-| V1-S4 Sprint Prep | Done | `v1/s4-journal-strategy` / `b9c5993` | Prepared behavior-review vertical slice for weekly journal review and simple named strategy-rule checks. | Must use existing journal data as input and avoid turning strategy rules into a custom DSL or trade signal engine. | ADR readiness next: lock no-DSL rule vocabulary before schema. |
-| V1-S4 ADR Readiness | Done | `v1/s4-journal-strategy` / ADR slice | Added ADR-0015 Simple Strategy Rules and No DSL before schema and rule-checker work. | Rules must be named, explicit, explainable checks; no predictive scoring, no buy/sell/hold language, and no configurable mini-language. | Schema must store named rules, evaluations, violations, evidence, caveats, run metadata, and timestamps. |
-| V1-S4 Schema / Migration | Done | `v1/s4-journal-strategy` / schema slice | Added DuckDB schema for weekly review runs, review findings, strategy rule definitions, rule evaluations, violations, evidence, caveats, and timestamps. | Kept schema narrow and local-first; no performance-analytics expansion, strategy DSL, or predictive scoring. | Next: implement weekly review and strategy-rule core modules. |
-| V1-S4 Weekly Journal Review Core | Done | `v1/s4-journal-strategy` / core review slice | Implemented weekly review generator that summarizes journal behavior, plan adherence, repeated mistakes, risk discipline, and unresolved follow-ups. | Review is reflective decision-support only; it does not judge profitability as skill or produce trade recommendations. | Next: persist review/rule outputs and expose CLI commands. |
-| V1-S4 Strategy Rules Core | Done | `v1/s4-journal-strategy` / core strategy slice | Implemented simple strategy-rule checker for named rules such as planned entry, stop-loss present, risk limit present, thesis present, invalidation present, and emotion logged. | No strategy DSL, no hidden scoring, no optimization/backtesting semantics. Rule failures are explicit and auditable. | Next: connect evaluations into weekly review core and persistence. |
-| V1-S4 CLI | Done | `v1/s4-journal-strategy` / CLI slice | Added commands to generate/list weekly journal reviews and evaluate/list simple strategy-rule results for a date range. | CLI orchestrates only and does not call external providers during review generation. | JSON output is available for web UI and dogfood logs. |
-| V1-S4 Weekly Review UI | Done | `v1/s4-journal-strategy` / weekly review UI slice | Added Weekly Journal Review page with date range, summary cards, behavior findings, evidence snippets, caveats, and empty/error states. | UI helps reflection without shame, prediction, or trade recommendation language. | Next: add Strategy Rules page for named rule status and violations. |
-| V1-S4 Strategy Rules UI | Done | `v1/s4-journal-strategy` / strategy rules UI slice | Added Strategy Rules page with named rules, pass/fail/needs-data status, violation reasons, evidence, and clear no-DSL copy. | Does not expose custom scripting, optimization knobs, or signal language. | Next: run full S4 test and verification suite. |
-| V1-S4 Tests | Done | `v1/s4-journal-strategy` / verification slice | Added tests for weekly review generation, rule evaluation, missing journal fields, empty weeks, evidence/caveat output, no-signal copy, CLI JSON, and UI states. | Tests catch accidental performance-analytics expansion and forbidden recommendation language. | Next: dogfood local weekly review and strategy-rule outputs. |
-| V1 Runtime Readiness + Bootstrap CLI | Done | `v1/s4-journal-strategy` / runtime slice | Added `packages/core/runtime`, `scripts.runtime status/bootstrap`, structured web runtime errors, Data Quality runtime readiness, and migration-required UI states for Weekly Review/Strategy Rules. | Root cause was stale local DB missing `0006_journal_strategy_review.sql`; fix keeps V1 CLI-backed and avoids FastAPI/service creep. | Use `uv run python -m scripts.runtime status --json` before debugging UI fetch failures; run `uv run python -m scripts.runtime bootstrap --json` for safe local setup. |
-| V1-S4 Runtime Stabilization | Done | `v1/s4-journal-strategy` / runtime lock slice | Locked Local Runtime Contract across core, CLI, web bridge, UI states, tests, README, and Architecture docs. Contract fields: `ok`, `status`, `db_path`, `python_executable`, migrations, missing tables, warnings, errors, and recommended commands. | `status` is read-only; real local DB mutation requires explicit `scripts.migrate` or `scripts.runtime bootstrap`. FastAPI sidecar, background jobs/progress, and port/service lifecycle are deferred to V1.5/V2. Non-blocking warnings remain: Vite CJS API, `next lint` deprecation, and Next `experimental.typedRoutes`. | Next recommended work: V1-S5 polish gate before feature expansion. |
-| V1-S4.1 Runtime DB Lock Hardening | Done | `main` / runtime lock hardening slice | Added DuckDB read-only connection support, converted read-only CLI/web fetch commands, made `/alerts`, `/earnings`, and `/strategy-rules` DB-backed fetches sequential, changed web screener render to `--no-persist`, shortened yfinance/bootstrap DB windows, and refactored Telegram send to load-close-send-reopen-record. | Root cause is Windows cross-process DuckDB contention, not a production connection leak. `journal_review rules list` still auto-seeds defaults and is therefore not read-only. AI brief/chat can still hold DB while logging around provider calls; treat as a remaining non-critical lock risk. | If lock appears again, prefer aggregate read CLI commands or a narrow web write queue before broad global mutex. |
-| V1-S5 Roadmap Update | Done | `v1/s4-journal-strategy` / polish gate slice | Reclassified V1-S5 as Polish + Runtime Readiness + UX Stabilization and deferred Alerts + Telegram optional + Earnings Summary to V1-S6. | This is a polish gate, not a feature sprint. Do not add alerts, Telegram, earnings, FastAPI, background workers, or migrations here. | Continue UI/UX consistency, empty state, copy, responsive, and runtime recovery polish. |
-| V1-S5 UI/UX Consistency Audit | Done | `v1/s4-journal-strategy` / polish UI slice | Polished Dashboard, Watchlist, Screener, Journal, Strategy Rules, Weekly Review, Data Quality, Stock Detail, Portfolio, import, news, indicators, and AI panels with shared actionable empty/error states, calmer copy, responsive wrappers, and no raw traceback exposure. | Main difficulty was keeping copy calm and actionable without changing core business logic, runtime JSON contract, migrations, alerts, Telegram, or earnings scope. Verification passed: Python 311 tests, mypy, ruff check/format, web 98 tests, typecheck, lint, and build. | Dogfood full V1-S5 walkthrough after review; begin V1-S6 Alerts + Earnings only after V1-S5 merge. |
-| V1-S5 Final Closeout Audit | Done | `v1/s4-journal-strategy` / closeout lock slice | Locked V1-S5 as completed: roadmap consistency audited, S6 deferred/next confirmed, signal/profit copy searched, traceback/internal leak paths checked, shared UI components reviewed, and main V1 pages rechecked for distinct empty/error/healthy states. | No FastAPI, alert engine, Telegram integration, earnings workflow, background jobs, scheduler, migration, or dependency was added. Remaining warnings are non-blocking: Vite CJS API deprecation, `next lint` deprecation, and Next `experimental.typedRoutes` config warning. | Next: review/merge V1-S5, then start V1-S6 Alerts + Telegram optional + Earnings Summary as a separate feature sprint. |
-| V1-S6-01 Scope Lock + ADR/Data Contract | Done | `main` / docs slice | Locked V1-S6 planning for local alert lifecycle, optional Telegram delivery, and manual-first earnings summary. Added proposed `0007_alerts_earnings.sql`, CLI contracts, UI states, safety copy rules, and test plan. | Planning/docs only: no migration, no alert engine, no Telegram implementation, no earnings automation, no FastAPI, and no background service. ADR-0013 was updated; ADR-0016 and ADR-0017 were added. | Next: `V1-S6-02 Local Alert Lifecycle Core + Migration`. |
-| V1-S6-02 Local Alert Lifecycle Core + Migration | Done | `v1/s6-alert-lifecycle` / working slice | Added `0007_alerts_earnings.sql`, `packages/core/alerts`, alert rule CRUD, manual evaluation, event creation, acknowledge/dismiss/false-positive lifecycle, structured `scripts.alerts` JSON CLI, runtime required-table checks, and tests. | Implemented only local alert lifecycle. Telegram is disabled placeholder only; earnings is schema placeholder only. No UI, no FastAPI, no background scheduler, no broker integration, no network provider call, and no signal/profit language. | Next: `V1-S6-03 Alert Review UI + False Positive Tracking`. |
-| V1-S6-03 Alert Review UI + False Positive Tracking | Done | `v1/s6-alert-lifecycle` / UI slice | Added `/alerts`, web bridge `apps/web/src/lib/alerts.ts`, server actions, dashboard sections for rules/events/manual evaluation/Telegram disabled, create rule form, lifecycle actions, and false-positive UX. | UI still relies on manual CLI-backed evaluation; no Telegram delivery, no earnings workflow, no new migration, no FastAPI, no background scheduler, and no signal/profit language. | Next: `V1-S6-04 Manual-first Earnings Summary Workflow`. |
-| V1-S6-04 Manual-first Earnings Summary Workflow | Done | `v1/s6-alert-lifecycle` / earnings slice | Added `packages/core/earnings`, `scripts.earnings`, `/earnings`, manual event create/list/detail, notes update/archive, caveated summary generation, input snapshots, confidence status, and UI empty/runtime states. | Summary uses manual/local input only. No scraping, Telegram delivery, FastAPI, background scheduler, new migration, or signal/profit language was added. DuckDB FK limitation required updating event status before inserting summary rows. | Next: `V1-S6-05 Optional Telegram Delivery + Final Hardening`. |
-| V1-S6-05 Optional Telegram Delivery + Final Hardening | Done | `v1/s6-alert-lifecycle` / telegram slice | Added optional Telegram config/status using `SAHAMLENS_TELEGRAM_BOT_TOKEN` and `SAHAMLENS_TELEGRAM_CHAT_ID`, explicit manual `telegram send`, safe message formatting, delivery attempt persistence, UI configured/disabled states, and send action for configured alerts. | Telegram is delivery only; local alert events remain source of truth. Missing config is not an app failure. Secrets are never rendered; tests mock network. No FastAPI, scheduler, broker integration, scraping, new migration, or signal/profit language was added. | Next: `V1-S6 Final Closeout + Release Readiness Audit`. |
-| V1-S6 Final Closeout + Release Readiness Audit | Done | `v1/s6-alert-lifecycle` / closeout slice | Audited docs, ADRs, runtime, migration 0007, alert lifecycle, Telegram delivery, earnings workflow, UI/navigation, copy, security/privacy boundaries, and regression coverage. V1-S6 is locked as completed. | Local DB was not migrated; `scripts.runtime status --json` remains read-only and correctly reports pending `0006/0007` until owner explicitly runs migrate/bootstrap. Non-blocking warnings remain: Vite CJS API deprecation, `next lint` deprecation, and Next `experimental.typedRoutes` warning. | Next: release readiness / PR review, or manual local migration smoke test if owner wants to exercise real local DB. |
-| V1-S6 Release Readiness / PR Review | Done | `v1/s6-alert-lifecycle` / PR-ready slice | Reviewed git state, migration safety, Telegram secret boundary, signal-language copy, public routes, runtime status, CLI status, and full verification. `.env.example` now uses the canonical `SAHAMLENS_TELEGRAM_*` variables. | No local DB migration/bootstrap or real Telegram send was run. Manual smoke test remains owner opt-in. CRLF warnings are Windows line-ending noise, not diff errors. | Next: open PR / review branch, or run owner-approved manual local migration smoke test. |
-| V1-S4 Dogfood | Pending | Not started | Generate a weekly review from local journal entries and inspect strategy-rule violations for the owner's recent plans. | Success means clearer behavior feedback and visible rule evidence, not better trade outcomes. | Run after migration, core, CLI, and UI pass verification; record findings without committing private DB data. |
+**Phase V1-S3 — Screener**
+- Transparent rule evaluation with freshness/confidence gates.
+- No signal language, no hidden scoring.
 
-## Scope Guardrails
+**Phase V1-S4 — Journal Review + Strategy Rules**
+- Weekly behavior review from journal entries.
+- Simple named strategy-rule checks, no DSL.
 
-Allowed V1 work:
+**Phase V1-S5 — Polish + Runtime Readiness + UX Stabilization**
+- Consistent actionable empty/error/loading states.
+- Runtime readiness bootstrap, DuckDB lock hardening.
 
-- Data Quality Dashboard.
-- Provider Health.
-- Ticker lifecycle and coverage.
-- Fundamental Snapshot with completeness/confidence.
-- Screener with transparent no-signal language.
-- Local alert rules/events with false-positive feedback.
-- Weekly Journal Review.
-- Simple Strategy Rules.
-- Earnings Summary manual-first.
+**Phase V1-S6 — Alerts + Telegram Optional + Earnings Summary**
+- Local alert rules/events, acknowledge/dismiss/false-positive lifecycle.
+- Optional manual Telegram delivery, manual-first earnings summaries.
 
-Out of scope for V1:
+---
 
-- Broker login, cookies, sessions, account sync, or order placement.
-- Realtime or tick-data promise.
-- Predictive AI, AI buy/sell alerts, or forecasting alerts.
-- Public recommendations, signal selling, SaaS, auth, billing, or multi-user scope.
-- Automated IDX crawling.
-- Full news article storage or republication.
-- Strategy DSL.
+### 2.2 Reusable Phase Gate
 
-## Stack
+Universal checklist — must pass before any phase is considered exited:
 
-Locked stack:
+- [x] **Scope:** all deliverables for this phase done; scope creep documented as "carry-forward"
+- [x] **Build:** Python + web build zero error; typecheck clean
+- [x] **Lint/format:** ruff + prettier pass; no debug artifacts; no `any` without justification
+- [x] **Agent handoff:** each implementation agent left a handoff note
+- [x] **Tests:** relevant tests pass; regressions documented
+- [x] **Docs:** AGENTS.md or CLAUDE.md updated if active phase or stack changed
+- [ ] **Critic review:** Devil's Advocate review completed; actionable alternatives documented
+- [ ] **Phase log:** new entry written in §2.5 with lesson + carry-forward
 
-- UI: Next.js 15 App Router, TypeScript strict, Tailwind, shadcn/ui.
-- Core: Python 3.11+ with strict typing.
-- DB: DuckDB local file.
-- Charts: `lightweight-charts`.
-- Tests: `vitest`, `pytest`, `hypothesis`.
-- Lint/format: `eslint`, `prettier`, `ruff`, `mypy`.
-- Package managers: `pnpm`, `uv`.
-- AI: provider-agnostic wrapper in `packages/core/ai`.
+---
 
-Changing the stack requires an ADR.
+### 2.3 Active Phase
 
-## Engineering Rules
+**Active phase:** V1 — Release Readiness / PR Review
+
+**Sprint focus:** Review codebase, confirm migration safety, verify no signal/profit language, audit Telegram secret boundary, run full verification suite, and prepare merge.
+
+**Orchestrator:** Lead Technical Orchestrator
+
+**Next:** Open PR / review branch, or run owner-approved manual local migration smoke test.
+
+---
+
+### 2.4 Exit Criteria
+
+Phase V1 exits only when:
+
+- [ ] Full Python + web verification suite passes (tests, typecheck, lint, format, build)
+- [ ] No signal/profit/prediction language in UI, CLI, or core copy
+- [ ] Telegram secrets never rendered or committed
+- [ ] Migration safety confirmed — no stale local DB breaks UX without runtime guidance
+- [ ] Critic / Devil's Advocate review completed
+- [ ] Known gaps documented in handoff
+- [ ] Merge ready — open PR or branch ready for owner review
+
+---
+
+### 2.5 Phase Log
+
+| Phase | Status | Lesson | Carry-forward |
+|---|---|---|---|
+| V1-S0 Docs Readiness | Complete | Pre-commit line-ending hook touched many files during all-files run; restore noise and commit only docs/alignment. | Main is ahead of origin until pushed. |
+| V1-S1 Provider Health + DQ | Complete | Direct path pytest on subpackage hit import-root quirk; full repo pytest is the CI-like check. | Watch legacy freshness naming during S2 integration. |
+| V1-S2 Ticker + Fundamentals | Complete | DuckDB file locks when multiple CLI commands read/write in parallel. | Run refresh/read commands sequentially. |
+| V1-S3 Screener | Complete | Direct path pytest still has package-root quirks; full repo pytest is reliable. | Dogfood pending — owner opt-in. |
+| V1-S4 Journal + Strategy | Complete | Stale local DB breaks dependent UI pages; runtime bootstrap command is the fix. | V1-S4 Dogfood pending — owner opt-in. |
+| V1-S4.1 Runtime Lock Harden | Complete | Windows cross-process DuckDB contention, not a production leak. | Prefer read-only connections and sequential DB-backed fetches to avoid lock. |
+| V1-S5 Polish + Runtime | Complete | Keeping copy calm and actionable without changing core business logic was the main challenge. | No alerts/Telegram/earnings scope was added. |
+| V1-S6 Alerts + Telegram + Earnings | Complete | DuckDB FK limitation required updating event status before inserting summary rows. Telegram missing config is not an app failure. | Local DB was not migrated; `scripts.runtime status --json` is read-only. |
+| V1-S6 Release Readiness / PR Review | Complete | CRLF warnings are Windows line-ending noise, not diff errors. Manual smoke test remains owner opt-in. | Next: open PR or run owner-approved migration smoke test. |
+
+---
+
+## 3. Stack (Locked)
+
+| Layer | Decision |
+|---|---|
+| Web | Next.js 15 App Router, TypeScript strict, Tailwind, shadcn/ui |
+| Core | Python 3.11+, strict typing |
+| Database | DuckDB file-based local database (`data/private/sahamlens.duckdb`) |
+| Charts | `lightweight-charts` |
+| Tests | `vitest`, `pytest`, `hypothesis` |
+| Lint/format | `eslint`, `prettier`, `ruff`, `mypy` |
+| Package managers | `pnpm`, `uv` |
+| AI | Provider-agnostic wrapper in `packages/core/ai` |
+| Agent runtime | Local long-running Hermes process (`services/hermes`), outbound long-polling Telegram; Discord gateway later. See ADR-0019. |
+
+Stack changes require an explicit ADR or user approval.
+
+**Allowed by ADR-0019 (previously deferred):**
+- Long-running service — **only** the local Hermes runtime (single-user, single-process, outbound long-polling, no inbound port). Not a license for other services.
+
+**Deferred (still out of scope):**
+- FastAPI sidecar, generic background scheduler, inbound HTTP server/webhook, multi-process orchestration
+- Real-time or intraday alerting
+- Broker integration, account sync, order placement
+- Push notification beyond Telegram/Discord agentic surface
+- Cloud sync, multi-user auth, SaaS, billing
+
+**Banned unless explicitly overridden:**
+- Strategy DSL, custom scripting, buy/sell/hold signal language
+- Predictive AI price forecasts
+- Automated IDX scraping/crawling
+- Any dependency that requires paid API keys by default
+
+---
+
+## 4. AI Instructions
+
+### 4.1 Before Coding
+
+1. Read this file first, then the relevant documents from §1.
+2. Check active phase in §2.3 before starting any work.
+3. Run `rtk git status --short --branch`. If WIP overlaps relevant area, tell the orchestrator before editing.
+4. Confirm whether code scaffolding is actually requested. If user asks only for docs/strategy, do not scaffold.
+5. Check file tree before creating new files or folders.
+
+### 4.2 Code Rules (Non-Negotiable)
 
 - Keep business logic in `packages/core`.
 - Keep `scripts` as orchestration only.
@@ -145,44 +189,211 @@ Changing the stack requires an ADR.
 - Prefer small vertical PRs.
 - Use conventional commits.
 
-## AI Rules
+### 4.3 Anti-Slop
 
-AI may:
+- Do not claim something is complete before checking the actual file or running verification.
+- Do not add new architectural layers or parallel systems without orchestrator approval.
+- Do not mark a feature complete without validation evidence.
+- Do not introduce new dependencies unless the orchestrator approves.
+- Do not duplicate evaluator/classifier logic in React or CLI — core owns domain rules.
 
-- Summarize evidence.
-- Explain caveats.
-- Critique a user-written plan.
-- Generate reflection and review.
-- Redact private context before LLM use.
+### 4.4 Scope Discipline
 
-AI must not:
+Build vertically, not horizontally. One polished slice beats several half-finished ones.
 
-- Say buy, sell, hold, strong buy, safe, guaranteed, or equivalent signal language.
-- Predict exact future prices as fact.
-- Approve a trade plan.
-- Auto-execute anything.
-- Generate public recommendations or client-facing signal content.
+Build order for this project:
+1. Data trust (Provider Health, Data Quality)
+2. Data coverage (Ticker Lifecycle, Fundamentals)
+3. Screening (Screener)
+4. Behavior review (Journal, Strategy Rules)
+5. Polish gate (Runtime Readiness, UX)
+6. Alert/Earnings lifecycle
 
-Product AI output must include non-empty `evidence`, non-empty `caveats`, and `not_financial_advice: true`. See [.docs/AI_BOUNDARIES.md](.docs/AI_BOUNDARIES.md).
+When in doubt between spectacle and correctness, prioritize correctness.
 
-## Communication
+### 4.5 Communication
 
-- Bahasa Indonesia by default unless the user switches.
-- Be concise and direct.
-- Cite files with paths.
-- If data is insufficient, say so.
-- Do not claim completion before relevant verification passes or limitations are stated.
+- Use concise Indonesian by default when the user writes in Indonesian.
+- Refer to exact files and rules when explaining decisions.
+- When uncertain, present 2-3 concrete options with trade-offs instead of improvising.
+- Flag conflicts early: locked stack changes, phase jumps, scope creep, direction regressions.
+- During debugging: state what is happening, what was expected, and what evidence supports the conclusion.
+- Cite files with paths. If data is insufficient, say so.
 
-## Contribution Identity
+### 4.6 Contribution Identity
 
-- Do not add `Co-Authored-By: Codex` or other AI co-author trailers.
-- Do not add generated-with-AI metadata to commits or PRs.
-- Use the repo owner's git identity.
-- AI is a ghostwriter; the owner is the author.
+> **Copy this section verbatim into every project AGENTS.md / CLAUDE.md. Do not modify.**
+
+AI is a ghostwriter. Repository accountability remains with the human owner.
+
+- Do not add `Co-Authored-By: Claude` or any AI/model co-author trailer to commits.
+- Do not add "Generated with Claude Code" or equivalent tags to commit messages or PR bodies.
+- Do not push commits with AI or bot author identity.
+- Do not make AI appear in the GitHub contributor graph.
+- Author and committer identity must be the repo owner's human identity configured for the project.
+- If AI assistance needs to be disclosed, mention it only in normal prose in a PR description or changelog, never in git metadata.
+
+---
+
+## 5. Implementation Agent Team
+
+| # | Agent Role | Responsibility | Owns | Must Not Do | Handoff Output |
+|---|---|---|---|---|---|
+| 1 | **Lead Technical Orchestrator** | Sequencing, scope control, task distribution, merge readiness, final validation | Breaking roadmap into tracks; assigning agents; preventing duplication and architecture drift | Skip final validation; assign ambiguous work without acceptance criteria; overload tracks | Phase gate status, next-track assignment, risk summary |
+| 2 | **Product / Workflow Architect** | Product flow, user journey, page hierarchy, workflow coherence | Ensuring features support core user workflow — not isolated UI additions | Design features that bypass the core workflow; add pages without user-journey justification | Updated workflow blueprint, journey impact notes |
+| 3 | **Frontend Engineer** | UI implementation, page layout, interaction states, accessibility, client-side behavior | Templates, components, navigation, responsive states | Add noisy UI outside the design system; introduce a frontend build step | Files changed, new/interaction states rendered, a11y notes |
+| 4 | **Backend Engineer** | API routes, services, storage logic, validation, integration boundaries | Route handlers, service layer, CLI commands, provider integration | Put business logic in route/controller layers; bypass service layer | New/edited routes and services, contract changes, validation rules |
+| 5 | **Data / Storage Engineer** | Schema, migrations, persistence rules, seed data, backward compatibility | Database schema files, migration scripts, data access patterns | Introduce schema churn without orchestrator approval; break backward compatibility without ADR | Migration diff, schema diff, compatibility notes |
+| 6 | **QA / Validation Engineer** | Test plan, regression checks, acceptance criteria, final validation | Test suite, validation runs, edge-case coverage, regression list | Validate only unit-level assumptions; skip user-facing workflow paths | Test results, regression list, acceptance pass/fail, known gaps |
+| 7 | **Security / Safety Engineer** | Input validation, file handling risks, secret handling, path traversal, dependency risk | Security review of all I/O surfaces, credential handling, dependency audit | Introduce unsafe file/subprocess patterns; store secrets in config/logs/render | Security review notes, filed risks, surfaces reviewed |
+| 8 | **Performance / Reliability Engineer** | Slow paths, job handling, long-running operations, resource limits, failure recovery | Performance budget, concurrency handling, error recovery paths, blocking UX | Ship code that blocks main thread or UI for >1 s; hide errors with silent retries | Perf benchmarks, bottleneck list, failure-path coverage |
+| 9 | **Documentation / Handoff Writer** | Changelog notes, sprint summaries, ADR drafting, agent handoff clarity | Sprint reports, handoff documents, README updates, ADR drafts | Duplicate info already in source-of-truth docs; write verbose non-operational docs | Handoff notes for each completed track, changelog draft |
+| 10 | **Critic / Devil's Advocate** | Challenge assumptions, detect overengineering, UX friction, hidden bugs | Pre-release review, alternative proposal generation, scope-creep detection | Block progress without giving actionable alternatives; file complaints without evidence | Review findings, alternative proposals, risk flags |
+| 11 | **Release Captain** | Final gate checklist, merge readiness, release notes, done/not-done status | Gate D sign-off, release notes, status summary, known-gap documentation | Mark "done" without validation evidence; merge incomplete work into release branch | Release checklist status, merge readiness verdict, known gaps doc |
+
+**Rule:** No implementation agent may override the Lead Technical Orchestrator's scope without explicitly documenting the reason, risk, and proposed alternative.
+
+---
+
+## 6. Implementation Tracks
+
+| Track | Name | Owner Agent | Purpose | Entry Criteria | Exit Criteria |
+|---|---|---|---|---|---|
+| T0 | Documentation & Source of Truth | Documentation / Handoff Writer | Keep AGENTS.md, roadmap, architecture, sprint notes aligned | Sprint started; new phase scope defined | All source-of-truth docs updated; ADRs current; handoff notes complete |
+| T1 | Product Workflow & UX | Product / Workflow Architect | Ensure app workflow is coherent from entry → main action → completion | Phase scope defines new flow or modifies existing one | Workflow blueprint updated; no orphan pages/states |
+| T2 | Frontend Implementation | Frontend Engineer | Implement layouts, components, states, navigation | T1 defines UI to build; design tokens exist | Pages render correctly at 390px+; keyboard navigable; states handled |
+| T3 | Backend / CLI Implementation | Backend Engineer | Implement CLI commands, validation, integration | Route contracts defined; storage layer exists | Commands respond correctly; edge cases handled; integration test passes |
+| T4 | Data, Storage & Migration | Data / Storage Engineer | Maintain schema safety, migrations, persistence | Schema change or migration required by feature | Migration forward tested; existing data preserved; no silent data loss |
+| T5 | AI Provider / Agent Integration | Backend Engineer | Implement provider boundaries, model config, retries | New provider or model config required by feature | Provider integration tested; retry/fallback works; secret handling confirmed |
+| T6 | QA, Testing & Regression | QA / Validation Engineer | Validate workflows, regression coverage, edge cases | Feature implementation complete; test plan written | Full test suite passes; regressions documented; acceptance verified |
+| T7 | Security & Reliability | Security / Safety Engineer | Review secrets, permissions, unsafe inputs, failure recovery | Feature touches I/O, secrets, file system, subprocess, or network | Security review done; sensitive surfaces enumerated; risks documented |
+| T8 | Performance & Runtime Readiness | Performance / Reliability Engineer | Identify bottlenecks, blocking states, runtime constraints | Feature complete; integration test passing | Perf budget met; no blocking UX; job recovery tested |
+| T9 | Release & Final Gate | Release Captain | Confirm final state, summarize changes, mark ready/not-ready | All tracks complete; T6/T7/T8 passed | Release checklist signed; known gaps documented; next-step clear |
+
+---
+
+## 7. Orchestrator Operating Model
+
+1. **Read** the Documentation Map (§1) and understand which docs govern the current phase.
+2. **Identify** the current sprint/phase from Progress → Phase Schedule (§2).
+3. **Confirm** Stack Locked constraints (§3) — no new dependencies or architecture shifts without approval.
+4. **Split** the task into implementation tracks (§6). Assign each track an owner agent.
+5. **Define** acceptance criteria for each track before implementation starts. State non-goals explicitly.
+6. **Assign** each track to the correct owner. Provide track scope, acceptance criteria, non-goals, and handoff format.
+7. **Require** each agent to produce a handoff note (§8) at the end of their work.
+8. **Run** Critic / Devil's Advocate review (§5 agent #10) before final gate.
+9. **Run** QA + Security + Release validation (T6 + T7 + T9) before merging.
+10. **Produce** final status for each track: Done, Partial, Blocked, Deferred, or Risk Accepted.
+
+**Operating rule:** Optimize for sequence, coherence, and risk reduction — not maximum parallel work.
+
+---
+
+## 8. Agent Handoff Protocol
+
+Every implementation agent must produce a handoff note at the end of their work. Use this format:
+
+```
+## Handoff: [Agent Role]
+
+**Agent:** [Role name]
+**Track:** [T0-T9]
+**Scope:** [What this agent was asked to do]
+**Files/Areas Touched:** [List of files created or modified]
+**What Changed:** [Summary of changes]
+**What Was Intentionally Not Changed:** [Scope boundaries respected]
+**Validation Performed:** [Tests run, manual checks, evidence]
+**Known Risks:** [Anything incomplete, fragile, or uncertain]
+**Recommended Next Agent:** [Which agent should continue]
+**Next Step:** [The single next action the next agent should take]
+```
+
+**Rule:** Every handoff must leave enough context for the next agent to continue without re-auditing the entire repository.
+
+---
+
+## 9. Review Gates
+
+| Gate | Stage | Checks | When to Use | Skippable? |
+|---|---|---|---|---|
+| **A — Scope Confirmation** | Before work starts | Task aligned with current sprint? Owner agent clear? Non-goals stated? Acceptance criteria defined? | Every new task | No |
+| **B — Implementation Readiness** | Before coding | Affected files/areas known? Stack constraints respected? Design matches existing patterns? | Every implementation track | No for T2-T5; yes for T0/T9 |
+| **C — Validation** | After implementation | Tests or manual checks documented? Regressions considered? Edge cases listed? Handoff note written? | Every track that produced code or schema | No for T2-T8; yes for T0 |
+| **D — Release Readiness** | Before merge/ship | Work actually complete? Known gaps documented? Next step clear? Critic review done? Checklist signed? | Every phase/sprint exit | No |
+
+**Gate-skip rule:** Use fewer gates for small changes (single file, <50 lines, no schema change), but never skip Gate C (validation).
+
+---
+
+## 10. Decision Rules
+
+| Priority | Rule |
+|---|---|
+| 1 | Prefer **existing architecture** over new patterns. Do not invent a new pattern when an existing one works. |
+| 2 | Prefer **small, sequenced changes** over broad rewrites. One file changed correctly beats ten files changed incompletely. |
+| 3 | Prefer **user workflow completion** over isolated technical polish. A working end-to-end flow is worth more than a perfectly refactored component with no user path. |
+| 4 | Prefer **explicit ownership** over anonymous "agent" work. Every task has a named owner. |
+| 5 | Do **not introduce new dependencies** unless the orchestrator approves. A new import is an architecture decision. |
+| 6 | Do **not mark a feature complete** without validation evidence. "It compiles" is not validation. |
+| 7 | Do **not modify roadmap, architecture, or stack constraints silently**. Propose changes in a handoff note or ADR draft. |
+| 8 | **When in doubt, document the uncertainty** and propose the smallest safe next step. A documented question is better than an undocumented assumption. |
+
+---
+
+## 11. Recommended Workflow Optimizations
+
+1. **RACI-style clarity** — R: implementation owner, A: Lead Orchestrator, C: Critic/Security/QA, I: Documentation/Release Captain.
+2. **Separate builder and reviewer roles** — Same agent should not be sole reviewer of its own work.
+3. **Keep Progress → Phase Schedule as execution truth** — Roadmap (§2.1) says what *should* happen; schedule (§2.3) says what *is* being executed.
+4. **Add "Non-Goals" per sprint** — Prevents scope creep and random refactors.
+5. **Add "Definition of Done" per track** — Done = implemented + validated + documented + handed off.
+6. **Add "Risk Register" per sprint** — Keep small (5-10 risks max), update as risks close or emerge.
+7. **"Next Agent Recommendation" is mandatory** — Every handoff must suggest which agent should continue next.
+
+---
+
+## 12. Final Notes for Future Agents
+
+1. **This file is the operating system of the project.** Read it before any code change.
+2. **The orchestrator is your entry point.** If scope is unclear, ask. Do not improvise scope.
+3. **You are a specialist, not a generalist.** Flag cross-boundary issues in your handoff — do not fix them yourself unless the orchestrator says so.
+4. **Handoff is not optional.** If your track ends without a handoff note (§8), the work is incomplete.
+5. **Validation is not optional.** If your track ends without evidence that it works, the work is incomplete.
+6. **Scope is the enemy of quality.** Flag oversized scope to the orchestrator immediately.
+7. **Read the docs before the code.** If a doc contradicts the code, flag the contradiction.
+8. **Critic is your friend.** Welcome the review. Engage with alternatives.
+9. **One PR = one concern.** Do not bundle refactors with features. Split concerns or document why they must be bundled.
+10. **Git history is the permanent record.** Write clear conventional commits. Do not force-push shared branches.
+
+---
+
+## Scope Guardrails
+
+**Allowed V1 work:**
+- Data Quality Dashboard
+- Provider Health
+- Ticker lifecycle and coverage
+- Fundamental Snapshot with completeness/confidence
+- Screener with transparent no-signal language
+- Local alert rules/events with false-positive feedback
+- Weekly Journal Review
+- Simple Strategy Rules
+- Earnings Summary manual-first
+
+**Out of scope for V1:**
+- Broker login, cookies, sessions, account sync, or order placement
+- Realtime or tick-data promise
+- Predictive AI, AI buy/sell alerts, or forecasting alerts
+- Public recommendations, signal selling, SaaS, auth, billing, or multi-user scope
+- Automated IDX crawling
+- Full news article storage or republication
+- Strategy DSL
+
+---
 
 ## Repo Mental Model
 
-```text
+```
 apps/web/          Next.js dashboard
 packages/core/     Python data core
   data_sources     providers and source metadata
@@ -204,4 +415,6 @@ config/            example config committed, local config ignored
 .docs/             canonical documentation
 ```
 
-End of AGENTS.md.
+---
+
+*This AGENTS.md follows the global WORKFLOW.md template at `@C:\Users\transcend\.claude\WORKFLOW.md`. Changes to the template structure should be made there and propagated here.*
