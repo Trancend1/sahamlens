@@ -18,7 +18,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 
 from packages.core.ai.critique_plan import critique_trade_plan
-from packages.core.ai.provider import AnthropicProvider
+from packages.core.ai.provider import resolve_provider
 from packages.core.ai.router import CircuitBreaker, ModelRouter, load_budget
 from packages.core.journal.models import TradePlan
 from packages.core.journal.repo import create_plan, list_plans, load_plan, update_status
@@ -83,7 +83,7 @@ def cmd_plan_critique(args: argparse.Namespace) -> int:
         if plan is None:
             print(f"plan {args.id} not found", file=sys.stderr)
             return 2
-        provider = AnthropicProvider()
+        provider = resolve_provider()
         router = ModelRouter()
         breaker = CircuitBreaker(load_budget())
         critique = critique_trade_plan(

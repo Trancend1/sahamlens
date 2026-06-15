@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import duckdb
+import pytest
 from scripts.migrate import applied_versions, apply_migration, discover_migrations
 
 
@@ -43,6 +44,9 @@ def test_apply_creates_expected_tables(tmp_path: Path) -> None:
         "strategy_rules",
         "strategy_rule_evaluations",
         "strategy_rule_violations",
+        "agent_log",
+        "agent_write_action",
+        "research_queue",
         "schema_migrations",
     }
     assert expected.issubset(tables)
@@ -267,6 +271,101 @@ def test_v1_s4_migration_creates_weekly_review_and_strategy_schema(tmp_path: Pat
             "caveats",
             "created_at",
         }.issubset(violation_columns)
+
+
+def test_v2_migration_creates_agent_runtime_schema(tmp_path: Path) -> None:
+    db = tmp_path / "test.duckdb"
+    with duckdb.connect(str(db)) as conn:
+        applied_versions(conn)
+        for path in discover_migrations():
+            apply_migration(conn, path)
+
+        agent_log_columns = _columns(conn, "agent_log")
+        assert {
+            "id",
+            "session_id",
+            "surface",
+            "intent",
+            "command_text_redacted",
+            "ai_log_id",
+            "context_scope",
+            "redaction_applied",
+            "created_at",
+        }.issubset(agent_log_columns)
+
+        write_action_columns = _columns(conn, "agent_write_action")
+        assert {
+            "id",
+            "agent_log_id",
+            "action",
+            "target_ref",
+            "idempotency_key",
+            "status",
+            "confirmed_at",
+            "created_at",
+        }.issubset(write_action_columns)
+
+        research_queue_columns = _columns(conn, "research_queue")
+        assert {
+            "id",
+            "ticker",
+            "note",
+            "source_surface",
+            "status",
+            "created_at",
+            "updated_at",
+        }.issubset(research_queue_columns)
+
+
+def test_v2_agent_runtime_constraints_and_relations(tmp_path: Path) -> None:
+    """Audit rows insert through the intended FK + idempotency path; bad data is rejected."""
+    db = tmp_path / "test.duckdb"
+    with duckdb.connect(str(db)) as conn:
+        applied_versions(conn)
+        for path in discover_migrations():
+            apply_migration(conn, path)
+
+        conn.execute(
+            "INSERT INTO ai_log (id, prompt_template_id, model, input_context, output, "
+            "confidence, caveats_count, created_at) VALUES "
+            "(1, 'stock_chat', 'claude', '{}', '{}', NULL, 0, '2026-06-15T00:00:00+00:00')"
+        )
+        conn.execute(
+            "INSERT INTO agent_log (id, session_id, surface, intent, command_text_redacted, "
+            "ai_log_id, context_scope, redaction_applied, created_at) VALUES "
+            "('agent-log-1', 'sess-1', 'telegram', 'ticker_snapshot', '/ticker [redacted]', "
+            "1, 'aggregate', 1, '2026-06-15T00:00:01+00:00')"
+        )
+        conn.execute(
+            "INSERT INTO agent_write_action (id, agent_log_id, action, target_ref, "
+            "idempotency_key, status, confirmed_at, created_at) VALUES "
+            "('wa-1', 'agent-log-1', 'acknowledge_alert', 'event-1', 'idem-1', "
+            "'pending_confirmation', NULL, '2026-06-15T00:00:02+00:00')"
+        )
+
+        # Duplicate idempotency_key must be rejected.
+        with pytest.raises(duckdb.ConstraintException):
+            conn.execute(
+                "INSERT INTO agent_write_action (id, agent_log_id, action, target_ref, "
+                "idempotency_key, status, confirmed_at, created_at) VALUES "
+                "('wa-2', 'agent-log-1', 'acknowledge_alert', 'event-1', 'idem-1', "
+                "'pending_confirmation', NULL, '2026-06-15T00:00:03+00:00')"
+            )
+
+        # Unknown surface must fail the CHECK constraint.
+        with pytest.raises(duckdb.ConstraintException):
+            conn.execute(
+                "INSERT INTO agent_log (id, session_id, surface, intent, "
+                "command_text_redacted, ai_log_id, context_scope, redaction_applied, "
+                "created_at) VALUES ('agent-log-2', 'sess-1', 'sms', 'ticker_snapshot', "
+                "'', NULL, 'none', 1, '2026-06-15T00:00:04+00:00')"
+            )
+
+        row = conn.execute(
+            "SELECT a.surface, w.action FROM agent_write_action w "
+            "JOIN agent_log a ON a.id = w.agent_log_id WHERE w.id = 'wa-1'"
+        ).fetchone()
+        assert row == ("telegram", "acknowledge_alert")
 
 
 def test_idempotent_apply(tmp_path: Path) -> None:

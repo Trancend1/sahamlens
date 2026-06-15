@@ -13,7 +13,7 @@ import sys
 from collections.abc import Sequence
 
 from packages.core.ai.generate_brief import generate_stock_brief
-from packages.core.ai.provider import AnthropicProvider
+from packages.core.ai.provider import resolve_provider
 from packages.core.ai.router import CircuitBreaker, ModelRouter, load_budget
 from packages.core.ai.stock_chat import answer_stock_question
 from packages.core.schemas.repository import open_connection
@@ -24,7 +24,7 @@ EXIT_UNAVAILABLE = 3
 
 
 def cmd_brief(args: argparse.Namespace) -> int:
-    provider = AnthropicProvider()
+    provider = resolve_provider()
     router = ModelRouter()
     breaker = CircuitBreaker(load_budget())
     with open_connection(args.db) as conn:
@@ -43,7 +43,7 @@ def cmd_brief(args: argparse.Namespace) -> int:
 
 
 def cmd_chat(args: argparse.Namespace) -> int:
-    provider = AnthropicProvider()
+    provider = resolve_provider()
     router = ModelRouter()
     breaker = CircuitBreaker(load_budget())
     with open_connection(args.db) as conn:
