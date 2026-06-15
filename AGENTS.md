@@ -47,6 +47,12 @@ Phase 0: Docs Readiness + Foundation
   → Phase V1-S5: Polish + Runtime Readiness + UX Stabilization
   → Phase V1-S6: Alerts + Telegram Optional + Earnings Summary
   → Release Readiness: PR review, merge, release
+  → V2: Agentic Research Layer (ADR-0018 boundary, ADR-0019 runtime/audit)
+        M0 Outbound Brief → M1 Audit Schema → M2 Safe Context
+        → M3 Tool Contracts → M4 Hermes Runtime → (M5 Discord, deferred)
+  → V3 (horizon, ADR-0020): possible multi-agent/container platform.
+        Boundary-only, NO implementation. Local-first/single-user/
+        non-advisory identity preserved. Does not change V2 scope.
 ```
 
 **Phase V1-S1 — Provider Health + Data Quality**

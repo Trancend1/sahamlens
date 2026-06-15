@@ -48,6 +48,9 @@ Phase 0: Docs Readiness + Foundation
   → V2: Agentic Research Layer (ADR-0018 boundary, ADR-0019 runtime/audit)
         M0 Outbound Brief → M1 Audit Schema → M2 Safe Context
         → M3 Tool Contracts → M4 Hermes Runtime → (M5 Discord, deferred)
+  → V3 (horizon, ADR-0020): kemungkinan platform multi-agent/container.
+        Boundary-only, TANPA implementasi. Identitas local-first/single-user/
+        non-advisory dipertahankan. Tidak mengubah scope V2.
 ```
 
 ### 2.2 *Reusable Phase Gate*
