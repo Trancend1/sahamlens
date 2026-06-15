@@ -66,23 +66,33 @@ Phase 0: Docs Readiness + Foundation
 
 ### 2.3 *Active Phase*
 
-**Phase aktif:** V2 — *Agentic Research Layer / Foundation (M0–M2)*
+**Phase aktif:** V2 — *Agentic Research Layer / Hermes Runtime (M4)*
 
-**Fokus sprint:** Membangun fondasi *agentic layer* sesuai ADR-0019 — M0 *outbound brief* (reuse `generate_stock_brief`), M1 migrasi `agent_log`/`agent_write_action`/`research_queue`, M2 *safe context boundaries* (aggregate exposure + redacted journal digest). Runtime interaktif (M4) dan Discord (M5) ditunda di belakang *gate* masing-masing.
+**Fokus sprint:** Membangun *runtime* Hermes (`services/hermes`) di atas fondasi yang sudah selesai. **M0–M3 + ADR-0021 (provider config) DONE & committed.** Berikutnya M4 (*gated* — proses *long-running*). Detail task tersisa ada di **§2.6**.
+
+**Selesai (committed di branch `docs/agentic-research-layer-boundary`):**
+- ADR-0018 (boundary), ADR-0019 (runtime/audit), ADR-0020 (platform horizon), ADR-0021 (configurable LLM provider)
+- M0 — `scripts/agent_brief.py` (pull-only outbound brief, reuse `generate_stock_brief`)
+- M1 — migrasi `0008_agent_runtime.sql` (`agent_log`, `agent_write_action`, `research_queue`)
+- M2 — `packages/core/agent/` `exposure_summary()` (aggregate-only) + `journal_digest()` (redacted)
+- M3 — `packages/core/agent/` tool contracts (`tools.py`) + audit repo (`audit.py`)
+- Provider config — `LLMTextProvider`, `OpenAICompatibleProvider`, `resolve_provider()` env-driven; semua scripts pakai factory
 
 **Orchestrator:** *Lead Technical Orchestrator* (lihat AGENTS.md §5)
 
-**Next:** Jalankan M0 (`scripts/agent_brief.py`) lalu M1 (migrasi `0008_agent_runtime.sql`). Gate-0 sudah lolos — owner telah menyetujui D1–D4 di ADR-0019.
+**Next:** M4 — lihat breakdown **§2.6**. **GATE:** M4 menyalakan proses *long-running* (Telegram *long-polling*); butuh *go-ahead* eksplisit owner sebelum mulai. M5 (Discord) tetap *deferred*.
 
-### 2.4 *Exit Criteria*
+### 2.4 *Exit Criteria* (V2)
 
-- [ ] *Full Python + web verification suite pass* (tests, typecheck, lint, format, build)
-- [ ] Tidak ada bahasa sinyal/*profit*/prediksi di UI, CLI, atau *core copy*
-- [ ] *Secrets* Telegram tidak pernah di-*render* atau di-*commit*
-- [ ] Keamanan migrasi terkonfirmasi — DB lokal *stale* tidak *break* UX tanpa *runtime guidance*
+- [ ] M4 sub-task M4.1–M4.8 (§2.6) selesai + tervalidasi
+- [ ] *Full Python verification suite pass* (pytest, mypy strict, ruff, ruff-format)
+- [ ] Tidak ada bahasa sinyal/*profit*/prediksi di *output* agentic — `validator.scan_banned` di setiap respons *outbound*
+- [ ] *Secrets* (Telegram + LLM API key) hanya dari *environment*, tidak pernah di-*render*/di-*commit*
+- [ ] *Write action* butuh konfirmasi manual + idempoten (`agent_write_action`); acknowledge/false-positive reuse *lifecycle* V1-S6 (bukan paralel)
+- [ ] Hermes reuse `packages/core/ai` + `packages/core/agent` (tanpa rebuild *engine*); tanpa *inbound port*
+- [ ] `agent_log` tertulis per interaksi; *ai_log linkage* dipasang
 - [ ] *Critic / Devil's Advocate review* selesai
-- [ ] Kesenjangan diketahui terdokumentasi di *handoff*
-- [ ] Siap *merge* — PR terbuka atau *branch* siap untuk *review owner*
+- [ ] Siap *merge* — PR terbuka atau *branch* siap *review owner*
 
 ### 2.5 *Phase Log*
 
@@ -97,6 +107,53 @@ Phase 0: Docs Readiness + Foundation
 | V1-S5 Polish + Runtime | Selesai | Menjaga *copy* tetap tenang tanpa mengubah *business logic* adalah tantangan utama. | Tidak ada *scope* alerts/Telegram/earnings ditambahkan. |
 | V1-S6 Alerts + Telegram + Earnings | Selesai | DuckDB FK *limitation*: harus *update event status* dulu sebelum *insert summary rows*. Telegram tanpa konfigurasi bukan *app failure*. | DB lokal tidak dimigrasi; `scripts.runtime status --json` bersifat *read-only*. |
 | V1-S6 Release Readiness / PR Review | Selesai | CRLF = *Windows line-ending noise*, bukan *diff errors*. *Manual smoke test* tetap *owner opt-in*. | Next: buka PR atau jalankan *migration smoke test* yang disetujui *owner*. |
+| V2-M1 Audit Schema | Selesai | DuckDB FK butuh urutan insert (parent dulu). `ai_log.id` acak (non-sequential) → linkage presisi butuh wiring runtime. | `agent_log.ai_log_id` *nullable* sampai M4 memasang linkage. |
+| V2-M2 Safe Context | Selesai | *Aggregate-only* = kirim rasio bobot, jangan nilai absolut. *Anti-leak test* (sentinel) adalah kunci. | Konsumen = tool contracts M3. |
+| V2-M3 Tool Contracts | Selesai | LLM-backed tools ditunda ke M4 (butuh provider wiring + linkage `ai_log_id`). | Pure tools (exposure/journal-digest) sudah audited. |
+| V2-M0 Outbound Brief | Selesai | `validator.scan_banned` = sumber kebenaran anti-signal untuk *outbound copy*. Telegram tak terkonfigurasi = print-only, bukan failure. | Script tak punya unit-test langsung (butuh network) — logika murni sudah ter-test. |
+| V2 Provider Config (ADR-0021) | Selesai | OpenAI-compat = 1 kelas untuk banyak provider; *structured output* beda per API (tool_use vs function-calling). `detect-secrets` false-positive untuk nama env `*_API_KEY` → pakai pragma allowlist. | M4 construct provider via `resolve_provider()`. Per-provider cost/budget ditunda. |
+
+---
+
+### 2.6 *Remaining Task Breakdown — M4, M5, dst*
+
+> Untuk agent lanjutan (*cold start*). Baca ADR-0018/0019/0020/0021 + AGENTS.md dulu. Semua di branch `docs/agentic-research-layer-boundary`. Pola test: invokasi root `uv run pytest -k ...` (direct-path sub-package gagal). Setiap sub-task = *Definition of Done*: implemented + validated (pytest+mypy strict+ruff) + handoff.
+
+**Aturan M4 yang tidak boleh dilanggar (dari ADR):**
+- Reuse `packages/core/ai` (via `resolve_provider()`) + `packages/core/agent` — **jangan** rebuild RAG/response-contract/engine (ADR-0019 D3).
+- `services/hermes` boleh import `core`; `core` **tidak** boleh import `services`/`scripts`/`web`.
+- Non-advisory: tanpa buy/sell/target/auto-exec; *default read-only*; setiap respons *outbound* lulus `validator.scan_banned`.
+- *Secret* (Telegram + LLM) hanya dari `environment`; tidak pernah di-render/commit.
+- *Outbound long-polling* saja — **tanpa** inbound port/webhook (ADR-0019 D1).
+
+#### M4 — Hermes Runtime (`services/hermes/`) — GATED (proses long-running)
+
+| Sub | Task | File target | Dependency | Acceptance |
+|---|---|---|---|---|
+| M4.1 | *Runtime config* env-driven: enable flag, session, Telegram token/chat, provider via `resolve_provider()` | `services/hermes/config.py` | ADR-0021 ✅ | Config dari env; default *disabled* bila unconfigured; tanpa secret ter-render; test |
+| M4.2 | *Intent router*: parse command/text → Intent (`brief`,`ticker_snapshot`,`alert_triage`,`journal_capture`,`research_add`,`exposure`,`journal_digest`,`help`,`unknown`) | `services/hermes/intents.py` | M4.1 | Tiap command → intent benar; unknown → fallback aman; unit-test |
+| M4.3 | *Policy gate* non-advisory: tolak buy/sell/target/auto-exec; *read-only default*; scan setiap respons | `services/hermes/policy.py` | M4.2 | Intent terlarang ditolak dengan pesan tenang; semua outbound lulus `scan_banned`; test |
+| M4.4 | *Read-only tool dispatch*: wire intent → `core/agent` tools (M3) + LLM tools (`generate_stock_brief`/`answer_stock_question` via `resolve_provider()`). **Pasang linkage `ai_log_id`** (item tertunda M3 — perlu `core/ai` mengembalikan log id atau wrapper tipis) | `services/hermes/dispatch.py` | M4.2, M4.3 | Tiap call ter-audit (`agent_log` + `ai_log_id`); respons tervalidasi; reuse M2 boundaries; tanpa akses storage dari surface |
+| M4.5 | *Write-action confirmation* idempoten: acknowledge alert + mark false-positive (reuse `alerts/repo` lifecycle V1-S6), save journal draft, add research item (`research_queue`). Flow `pending_confirmation→confirmed→applied` via `agent_write_action` + `idempotency_key` | `services/hermes/writes.py` | M1 ✅, M4.4 | Write butuh konfirmasi eksplisit; duplikat `idempotency_key` ditolak; acknowledge/false-positive lewat lifecycle existing (bukan paralel); journal draft default-only |
+| M4.6 | *Telegram long-polling listener*: loop `getUpdates`, dispatch ke router, balas via `send_text_to_telegram`. Offset tracking, graceful stop, single-process | `services/hermes/telegram_listener.py` | M4.2–M4.5 | Start/stop bersih; proses command; secret env-only; tanpa inbound port; test pakai fake transport (tanpa network nyata) |
+| M4.7 | *Entrypoint* `uv run -m services.hermes`: baca config, wajib enable eksplisit, status bila unconfigured (bukan failure) | `services/hermes/__main__.py` | M4.1–M4.6 | `python -m services.hermes --help` jalan; disabled-by-default; stoppable |
+| M4.8 | *Session/observability*: `session_id`, `agent_log` per interaksi, logging ter-redaksi, cost via `CircuitBreaker` existing | (lintas file) | M4.4 | `agent_log` rows ada; log tak bocor secret; budget terlihat |
+
+**M4 Definition of Done:** semua sub-task done + validated; full suite hijau; `scan_banned` di semua outbound; secret env-only; write idempoten + manual-confirm; reuse `core/ai`+`core/agent`; tanpa inbound port; handoff lengkap.
+
+#### M5 — Discord (DEFERRED)
+
+Prasyarat: nilai Telegram terbukti **dan** kriteria *readiness* Discord (ADR-0018 Q8) didefinisikan dulu. Tasks saat di-*unlock*:
+- **M5.1** — ADR kriteria *readiness* Discord + boundary (jawab Q8). Default *private-only*.
+- **M5.2** — Discord *gateway* adapter (websocket) reuse intent router/policy/tools M4 (jangan duplikasi).
+- **M5.3** — Channel privat threaded (`#research-queue`, `#ticker-*`, dst), weekly digest.
+- **Non-goal:** channel publik, sinyal, copy/social trading, advice untuk audience.
+
+#### Sesudah M4/M5 — Sisa V2 & tertunda
+
+- **V2 Release Readiness:** *full verification*, *Critic review*, PR/merge ke `main`, *dogfood* (owner opt-in). Migrasi DB lokal tetap owner opt-in (`uv run python -m scripts.migrate`).
+- **Tertunda teknis (ADR-0019/0021):** linkage `ai_log_id` presisi (M4.4), per-provider *cost/budget* config, `response_format: json_schema`, *ticker-level journal opt-in*, *portfolio lot detail* (butuh approval owner), *retention policy* draft chat (`data/private/`).
+- **V3 horizon (ADR-0020):** platform multi-agent/container — **hanya** via ADR teknis V3 masa depan; jaga identitas local-first/single-user/non-advisory.
 
 ---
 
