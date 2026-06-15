@@ -1,426 +1,447 @@
-# AGENTS.md — SahamLens
+# CLAUDE.md — SahamLens
 
-SahamLens is a personal trading companion for one retail IDX trader. It is local-first, public-repo-safe, and AI-assisted. AI explains; the user decides. It is **not** a broker, signal service, portfolio manager, or SaaS platform.
+SahamLens adalah *personal trading companion* untuk satu *retail* trader IDX. *Local-first*, publik-*repo-safe*, dan AI-*assisted*. AI menjelaskan; *user* memutuskan. **Bukan** broker, *signal service*, *portfolio manager*, atau SaaS.
 
-> **Phase aktif:**---*
-> **Status *planning*:** *frozen*
-> **Branch:** `---`
+> **Phase aktif:** V2 — *Agentic Research Layer / Hermes Runtime*
+> **Status:** Implementation complete, verification passed, Critic review done. Awaiting PR merge to main.
+
+Dokumen ini adalah *sibling* dari [`AGENTS.md`](AGENTS.md). Isi dan struktur mengikuti *template* yang sama. Detail agen, *track*, dan mekanisme *orchestration* ada di AGENTS.md — file ini ringkas untuk akses cepat.
+
 ---
 
-## 1. Documentation Map
+## 1. *Documentation Map*
 
-Always cite or edit the canonical file instead of duplicating facts here.
-
-| Topic | Source of Truth |
+| Topik | *Source of Truth* |
 |---|---|
-| Product scope, goals, non-goals | [.docs/PRD.md](.docs/PRD.md) |
-| Execution roadmap, sprint backlog | [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRINT.md) |
-| System architecture, module boundaries | [.docs/ARCHITECTURE.md](.docs/ARCHITECTURE.md) |
-| Data providers, freshness, coverage | [.docs/DATA_SOURCES.md](.docs/DATA_SOURCES.md) |
-| AI rules, output boundaries, safety | [.docs/AI_BOUNDARIES.md](.docs/AI_BOUNDARIES.md) |
-| Privacy, secrets, threat model | [.docs/SECURITY.md](.docs/SECURITY.md) |
-| Trading disclaimer copy, placement | [.docs/TRADING_DISCLAIMER.md](.docs/TRADING_DISCLAIMER.md) |
-| UI rules, visual vocabulary | [.docs/DESIGN_SYSTEM.md](.docs/DESIGN_SYSTEM.md) |
-| Engineering workflow | [.docs/ENGINEERING_STANDARDS.md](.docs/ENGINEERING_STANDARDS.md) |
-| Long-lived technical decisions | [.docs/adr/](.docs/adr/) |
-| Agent workflow template (this skeleton) | `@C:\Users\transcend\.claude\WORKFLOW.md` |
-| RTK shell tooling rules | `@C:\Users\transcend\.codex\RTK.md` |
+| *Scope* produk, *goal*, non-*goal* | [.docs/PRD.md](.docs/PRD.md) |
+| Arsitektur sistem, batas modul | [.docs/ARCHITECTURE.md](.docs/ARCHITECTURE.md) |
+| Eksekusi, *sprint backlog* | [.docs/EXECUTION_BLUEPRINT.md](.docs/EXECUTION_BLUEPRINT.md) |
+| *Data providers, freshness, coverage* | [.docs/DATA_SOURCES.md](.docs/DATA_SOURCES.md) |
+| Aturan AI, batasan output, keamanan | [.docs/AI_BOUNDARIES.md](.docs/AI_BOUNDARIES.md) |
+| Privasi, *secrets, threat model* | [.docs/SECURITY.md](.docs/SECURITY.md) |
+| *Disclaimer* *trading* | [.docs/TRADING_DISCLAIMER.md](.docs/TRADING_DISCLAIMER.md) |
+| Aturan UI, *visual vocabulary* | [.docs/DESIGN_SYSTEM.md](.docs/DESIGN_SYSTEM.md) |
+| *Workflow engineering* | [.docs/ENGINEERING_STANDARDS.md](.docs/ENGINEERING_STANDARDS.md) |
+| Keputusan teknis jangka panjang | [.docs/adr/](.docs/adr/) |
+| *Agent workflow template* (kerangka ini) | `@C:\Users\transcend\.claude\WORKFLOW.md` |
+| Aturan *shell tooling* RTK | `@C:\Users\transcend\.codex\RTK.md` |
+| **Dokumen utama agen** | **[`AGENTS.md`](AGENTS.md)** |
 
-**Rules:**
-- Before claiming a fact, check the relevant source-of-truth doc.
-- Before changing a fact, edit the canonical doc.
-- Before creating a new doc, check whether it belongs in an existing doc.
-- Keep planning history out of active docs unless the owner explicitly asks for an archive.
+**Aturan:** Cek AGENTS.md untuk *orchestration* detail sebelum memulai *task* baru.
 
 ---
 
-## 2. Progress — Phase Schedule
+## 2. *Progress — Phase Schedule*
 
-### 2.1 Roadmap
+### 2.1 *Roadmap*
 
 ```
 Phase 0: Docs Readiness + Foundation
-  → Phase V1-S1: Provider Health + Data Quality
-  → Phase V1-S2: Ticker Lifecycle + Fundamental Snapshot
-  → Phase V1-S3: Screener
-  → Phase V1-S4: Journal Review + Strategy Rules
-  → Phase V1-S5: Polish + Runtime Readiness + UX Stabilization
-  → Phase V1-S6: Alerts + Telegram Optional + Earnings Summary
+  → V1-S1: Provider Health + Data Quality
+  → V1-S2: Ticker Lifecycle + Fundamental Snapshot
+  → V1-S3: Screener
+  → V1-S4: Journal Review + Strategy Rules
+  → V1-S5: Polish + Runtime Readiness + UX Stabilization
+  → V1-S6: Alerts + Telegram Optional + Earnings Summary
   → Release Readiness: PR review, merge, release
   → V2: Agentic Research Layer (ADR-0018 boundary, ADR-0019 runtime/audit)
         M0 Outbound Brief → M1 Audit Schema → M2 Safe Context
         → M3 Tool Contracts → M4 Hermes Runtime → (M5 Discord, deferred)
-  → V3 (horizon, ADR-0020): possible multi-agent/container platform.
-        Boundary-only, NO implementation. Local-first/single-user/
-        non-advisory identity preserved. Does not change V2 scope.
+  → V3 (horizon, ADR-0020): kemungkinan platform multi-agent/container.
+        Boundary-only, TANPA implementasi. Identitas local-first/single-user/
+        non-advisory dipertahankan. Tidak mengubah scope V2.
 ```
 
-**Phase V1-S1 — Provider Health + Data Quality**
-- Make data trust visible before building dependent features.
-- Provider health schema, CLI refresh, Data Quality UI shell.
+### 2.2 *Reusable Phase Gate*
 
-**Phase V1-S2 — Ticker Lifecycle + Fundamental Snapshot**
-- Coverage tiers, lifecycle states, lightweight fundamentals with confidence.
-- Coverage classifier, fundamental snapshot ingestion, CLI, UI.
+- [x] **Scope:** semua *deliverable* selesai; *scope creep* terdokumentasi sebagai *carry-forward*
+- [x] **Build:** Python + web *build zero error*; *typecheck clean*
+- [x] **Lint/format:** ruff + prettier *pass*; tidak ada *debug artifacts*; tidak ada `any` tanpa justifikasi
+- [x] **Agent handoff:** setiap agen implementasi meninggalkan *handoff note*
+- [x] **Tests:** *test* relevan *pass*; regresi terdokumentasi
+- [x] **Docs:** AGENTS.md / CLAUDE.md terupdate jika *phase* aktif atau *stack* berubah
+- [x] **Critic review:** *Devil's Advocate review* selesai; alternatif *actionable* terdokumentasi
+- [x] **Phase log:** entri baru di §2.5 dengan *lesson* + *carry-forward*
 
-**Phase V1-S3 — Screener**
-- Transparent rule evaluation with freshness/confidence gates.
-- No signal language, no hidden scoring.
+### 2.3 *Active Phase*
 
-**Phase V1-S4 — Journal Review + Strategy Rules**
-- Weekly behavior review from journal entries.
-- Simple named strategy-rule checks, no DSL.
+**Phase aktif:** V2 — *Agentic Research Layer / Hermes Runtime*
 
-**Phase V1-S5 — Polish + Runtime Readiness + UX Stabilization**
-- Consistent actionable empty/error/loading states.
-- Runtime readiness bootstrap, DuckDB lock hardening.
+**Status:** Implementation complete, verification passed, Critic review done. Awaiting PR merge to main.
 
-**Phase V1-S6 — Alerts + Telegram Optional + Earnings Summary**
-- Local alert rules/events, acknowledge/dismiss/false-positive lifecycle.
-- Optional manual Telegram delivery, manual-first earnings summaries.
+**Selesai (committed di branch `docs/agentic-research-layer-boundary`):**
+- ADR-0018 (boundary), ADR-0019 (runtime/audit), ADR-0020 (platform horizon), ADR-0021 (configurable LLM provider)
+- M0 — `scripts/agent_brief.py` (pull-only outbound brief, reuse `generate_stock_brief`)
+- M1 — migrasi `0008_agent_runtime.sql` (`agent_log`, `agent_write_action`, `research_queue`)
+- M2 — `packages/core/agent/` `exposure_summary()` (aggregate-only) + `journal_digest()` (redacted)
+- M3 — `packages/core/agent/` tool contracts (`tools.py`) + audit repo (`audit.py`)
+- M4.1 — `services/hermes/config.py` runtime config env-driven
+- M4.2 — `services/hermes/intents.py` intent router
+- M4.3 — `services/hermes/policy.py` policy gate non-advisory
+- M4.4 — `services/hermes/dispatch.py` read-only tool dispatch + ai_log_id linkage
+- M4.5 — `services/hermes/writes.py` write-action confirmation idempoten
+- M4.6 — `services/hermes/telegram_listener.py` Telegram long-polling listener
+- M4.7 — `services/hermes/__main__.py` entrypoint
+- M4.8 — Session/observability lintas file
+- Provider config — `LLMTextProvider`, `OpenAICompatibleProvider`, `resolve_provider()` env-driven; semua scripts pakai factory
 
----
+**Orchestrator:** *Lead Technical Orchestrator* (lihat AGENTS.md §5)
 
-### 2.2 Reusable Phase Gate
+**Next:** V2 PR merge to main. M5 (Discord) tetap *deferred*.
 
-Universal checklist — must pass before any phase is considered exited:
+### 2.4 *Exit Criteria* (V2)
 
-- [x] **Scope:** all deliverables for this phase done; scope creep documented as "carry-forward"
-- [x] **Build:** Python + web build zero error; typecheck clean
-- [x] **Lint/format:** ruff + prettier pass; no debug artifacts; no `any` without justification
-- [x] **Agent handoff:** each implementation agent left a handoff note
-- [x] **Tests:** relevant tests pass; regressions documented
-- [x] **Docs:** AGENTS.md or CLAUDE.md updated if active phase or stack changed
-- [ ] **Critic review:** Devil's Advocate review completed; actionable alternatives documented
-- [ ] **Phase log:** new entry written in §2.5 with lesson + carry-forward
+- [x] M4 sub-task M4.1–M4.8 (§2.6) selesai + tervalidasi
+- [x] *Full Python verification suite pass* (pytest, mypy strict, ruff, ruff-format)
+- [x] Tidak ada bahasa sinyal/*profit*/prediksi di *output* agentic — `validator.scan_banned` di setiap respons *outbound*
+- [x] *Secrets* (Telegram + LLM API key) hanya dari *environment*, tidak pernah di-*render*/di-*commit*
+- [x] *Write action* butuh konfirmasi manual + idempoten (`agent_write_action`); acknowledge/false-positive reuse *lifecycle* V1-S6 (bukan paralel)
+- [x] Hermes reuse `packages/core/ai` + `packages/core/agent` (tanpa rebuild *engine*); tanpa *inbound port*
+- [x] `agent_log` tertulis per interaksi; *ai_log linkage* dipasang
+- [x] *Critic / Devil's Advocate review* selesai
+- [x] Siap *merge* — PR terbuka atau *branch* siap *review owner*
 
----
-
-### 2.3 Active Phase
-
-**Active phase:** V1 — Release Readiness / PR Review
-
-**Sprint focus:** Review codebase, confirm migration safety, verify no signal/profit language, audit Telegram secret boundary, run full verification suite, and prepare merge.
-
-**Orchestrator:** Lead Technical Orchestrator
-
-**Next:** Open PR / review branch, or run owner-approved manual local migration smoke test.
-
----
-
-### 2.4 Exit Criteria
-
-Phase V1 exits only when:
-
-- [ ] Full Python + web verification suite passes (tests, typecheck, lint, format, build)
-- [ ] No signal/profit/prediction language in UI, CLI, or core copy
-- [ ] Telegram secrets never rendered or committed
-- [ ] Migration safety confirmed — no stale local DB breaks UX without runtime guidance
-- [ ] Critic / Devil's Advocate review completed
-- [ ] Known gaps documented in handoff
-- [ ] Merge ready — open PR or branch ready for owner review
-
----
-
-### 2.5 Phase Log
+### 2.5 *Phase Log*
 
 | Phase | Status | Lesson | Carry-forward |
 |---|---|---|---|
-| V1-S0 Docs Readiness | Complete | Pre-commit line-ending hook touched many files during all-files run; restore noise and commit only docs/alignment. | Main is ahead of origin until pushed. |
-| V1-S1 Provider Health + DQ | Complete | Direct path pytest on subpackage hit import-root quirk; full repo pytest is the CI-like check. | Watch legacy freshness naming during S2 integration. |
-| V1-S2 Ticker + Fundamentals | Complete | DuckDB file locks when multiple CLI commands read/write in parallel. | Run refresh/read commands sequentially. |
-| V1-S3 Screener | Complete | Direct path pytest still has package-root quirks; full repo pytest is reliable. | Dogfood pending — owner opt-in. |
-| V1-S4 Journal + Strategy | Complete | Stale local DB breaks dependent UI pages; runtime bootstrap command is the fix. | V1-S4 Dogfood pending — owner opt-in. |
-| V1-S4.1 Runtime Lock Harden | Complete | Windows cross-process DuckDB contention, not a production leak. | Prefer read-only connections and sequential DB-backed fetches to avoid lock. |
-| V1-S5 Polish + Runtime | Complete | Keeping copy calm and actionable without changing core business logic was the main challenge. | No alerts/Telegram/earnings scope was added. |
-| V1-S6 Alerts + Telegram + Earnings | Complete | DuckDB FK limitation required updating event status before inserting summary rows. Telegram missing config is not an app failure. | Local DB was not migrated; `scripts.runtime status --json` is read-only. |
-| V1-S6 Release Readiness / PR Review | Complete | CRLF warnings are Windows line-ending noise, not diff errors. Manual smoke test remains owner opt-in. | Next: open PR or run owner-approved migration smoke test. |
+| V1-S0 Docs Readiness | Selesai | *Pre-commit line-ending hook* menyentuh banyak file; *restore noise* dan *commit* hanya docs/*alignment*. | Main di depan origin sampai di-*push*. |
+| V1-S1 Provider Health + DQ | Selesai | *Direct path pytest* di sub-*package* kena *import-root quirk*; *full repo pytest* adalah *check* yang andal. | Perhatikan penamaan *freshness* lama saat integrasi S2. |
+| V1-S2 Ticker + Fundamentals | Selesai | DuckDB *file lock* saat beberapa CLI baca/tulis paralel. | Jalankan perintah *refresh*/baca secara berurutan. |
+| V1-S3 Screener | Selesai | *Direct path pytest* masih bermasalah; *full repo pytest* andal. | *Dogfood* menunggu — *owner opt-in*. |
+| V1-S4 Journal + Strategy | Selesai | DB lokal *stale* *break* halaman UI dependen; *runtime bootstrap command* adalah solusinya. | Dogfood V1-S4 menunggu — *owner opt-in*. |
+| V1-S4.1 Runtime Lock Harden | Selesai | *Windows cross-process DuckDB contention*, bukan *production leak*. | Prefer *read-only connections* dan *sequential DB-backed fetches*. |
+| V1-S5 Polish + Runtime | Selesai | Menjaga *copy* tetap tenang tanpa mengubah *business logic* adalah tantangan utama. | Tidak ada *scope* alerts/Telegram/earnings ditambahkan. |
+| V1-S6 Alerts + Telegram + Earnings | Selesai | DuckDB FK *limitation*: harus *update event status* dulu sebelum *insert summary rows*. Telegram tanpa konfigurasi bukan *app failure*. | DB lokal tidak dimigrasi; `scripts.runtime status --json` bersifat *read-only*. |
+| V1-S6 Release Readiness / PR Review | Selesai | CRLF = *Windows line-ending noise*, bukan *diff errors*. *Manual smoke test* tetap *owner opt-in*. | Next: buka PR atau jalankan *migration smoke test* yang disetujui *owner*. |
+| V2-M1 Audit Schema | Selesai | DuckDB FK butuh urutan insert (parent dulu). `ai_log.id` acak (non-sequential) → linkage presisi butuh wiring runtime. | `agent_log.ai_log_id` *nullable* sampai M4 memasang linkage. |
+| V2-M2 Safe Context | Selesai | *Aggregate-only* = kirim rasio bobot, jangan nilai absolut. *Anti-leak test* (sentinel) adalah kunci. | Konsumen = tool contracts M3. |
+| V2-M3 Tool Contracts | Selesai | LLM-backed tools ditunda ke M4 (butuh provider wiring + linkage `ai_log_id`). | Pure tools (exposure/journal-digest) sudah audited. |
+| V2-M0 Outbound Brief | Selesai | `validator.scan_banned` = sumber kebenaran anti-signal untuk *outbound copy*. Telegram tak terkonfigurasi = print-only, bukan failure. | Script tak punya unit-test langsung (butuh network) — logika murni sudah ter-test. |
+| V2 Provider Config (ADR-0021) | Selesai | OpenAI-compat = 1 kelas untuk banyak provider; *structured output* beda per API (tool_use vs function-calling). `detect-secrets` false-positive untuk nama env `*_API_KEY` → pakai pragma allowlist. | M4 construct provider via `resolve_provider()`. Per-provider cost/budget ditunda. |
+| V2-M4 Hermes Runtime | Complete (PR pending) | `MAX(id)` ai_log_id linkage fragile for multi-process; `symbol='DRAFT'` journal bypass is acceptable for single-user | None. M5 Discord deferred. |
 
 ---
 
-## 3. Stack (Locked)
+### 2.6 *Remaining Task Breakdown — M4, M5, dst*
 
-| Layer | Decision |
+> Untuk agent lanjutan (*cold start*). Baca ADR-0018/0019/0020/0021 + AGENTS.md dulu. Semua di branch `docs/agentic-research-layer-boundary`. Pola test: invokasi root `uv run pytest -k ...` (direct-path sub-package gagal). Setiap sub-task = *Definition of Done*: implemented + validated (pytest+mypy strict+ruff) + handoff.
+
+**Aturan M4 yang tidak boleh dilanggar (dari ADR):**
+- Reuse `packages/core/ai` (via `resolve_provider()`) + `packages/core/agent` — **jangan** rebuild RAG/response-contract/engine (ADR-0019 D3).
+- `services/hermes` boleh import `core`; `core` **tidak** boleh import `services`/`scripts`/`web`.
+- Non-advisory: tanpa buy/sell/target/auto-exec; *default read-only*; setiap respons *outbound* lulus `validator.scan_banned`.
+- *Secret* (Telegram + LLM) hanya dari `environment`; tidak pernah di-render/commit.
+- *Outbound long-polling* saja — **tanpa** inbound port/webhook (ADR-0019 D1).
+
+#### M4 — Hermes Runtime (`services/hermes/`) — ✅ COMPLETE
+
+M4.1–M4.8 selesai, tervalidasi, dan telah melalui Critic review. Detail implementasi ada di commit branch `docs/agentic-research-layer-boundary`.
+
+#### M5 — Discord (DEFERRED)
+
+Prasyarat: nilai Telegram terbukti **dan** kriteria *readiness* Discord (ADR-0018 Q8) didefinisikan dulu. Tasks saat di-*unlock*:
+- **M5.1** — ADR kriteria *readiness* Discord + boundary (jawab Q8). Default *private-only*.
+- **M5.2** — Discord *gateway* adapter (websocket) reuse intent router/policy/tools M4 (jangan duplikasi).
+- **M5.3** — Channel privat threaded (`#research-queue`, `#ticker-*`, dst), weekly digest.
+- **Non-goal:** channel publik, sinyal, copy/social trading, advice untuk audience.
+
+#### Sesudah M4 — Sisa V2 & tertunda
+
+- **V2 Release Readiness:** PR/merge ke `main`, *dogfood* (owner opt-in). Migrasi DB lokal tetap owner opt-in (`uv run python -m scripts.migrate`).
+- **Tertunda teknis (ADR-0019/0021):** per-provider *cost/budget* config, `response_format: json_schema`, *ticker-level journal opt-in*, *portfolio lot detail* (butuh approval owner), *retention policy* draft chat (`data/private/`).
+- **V3 horizon (ADR-0020):** platform multi-agent/container — **hanya** via ADR teknis V3 masa depan; jaga identitas local-first/single-user/non-advisory.
+
+---
+
+## 3. *Stack* (Terkunci)
+
+| Layer | Keputusan |
 |---|---|
-| Web | Next.js 15 App Router, TypeScript strict, Tailwind, shadcn/ui |
-| Core | Python 3.11+, strict typing |
-| Database | DuckDB file-based local database (`data/private/sahamlens.duckdb`) |
+| Web | Next.js 15 App Router, TypeScript *strict*, Tailwind, shadcn/ui |
+| Core | Python 3.11+, *strict typing* |
+| Database | DuckDB *file-based* (`data/private/sahamlens.duckdb`) |
 | Charts | `lightweight-charts` |
 | Tests | `vitest`, `pytest`, `hypothesis` |
 | Lint/format | `eslint`, `prettier`, `ruff`, `mypy` |
-| Package managers | `pnpm`, `uv` |
-| AI | Provider-agnostic wrapper in `packages/core/ai` |
-| Agent runtime | Local long-running Hermes process (`services/hermes`), outbound long-polling Telegram; Discord gateway later. See ADR-0019. |
+| *Package managers* | `pnpm`, `uv` |
+| AI | *Wrapper* agnostik *provider* di `packages/core/ai` |
+| Agent runtime | Proses lokal *long-running* Hermes (`services/hermes`), *outbound long-polling* Telegram; Discord *gateway* menyusul. Lihat ADR-0019. |
 
-Stack changes require an explicit ADR or user approval.
+Perubahan *stack* butuh ADR eksplisit atau persetujuan *user*.
 
-**Allowed by ADR-0019 (previously deferred):**
-- Long-running service — **only** the local Hermes runtime (single-user, single-process, outbound long-polling, no inbound port). Not a license for other services.
+**Diizinkan oleh ADR-0019 (sebelumnya ditunda):**
+- *Long-running service* — **hanya** untuk *runtime* Hermes lokal (*single-user, single-process, outbound long-polling, tanpa inbound port*). Bukan lisensi untuk *service* lain.
 
-**Deferred (still out of scope):**
-- FastAPI sidecar, generic background scheduler, inbound HTTP server/webhook, multi-process orchestration
-- Real-time or intraday alerting
-- Broker integration, account sync, order placement
-- Push notification beyond Telegram/Discord agentic surface
-- Cloud sync, multi-user auth, SaaS, billing
+**Ditunda (tetap di luar *scope*):**
+- FastAPI *sidecar*, *background scheduler* generik, *inbound HTTP server*/*webhook*, *multi-process orchestration*
+- *Real-time* atau *intraday alerting*
+- Integrasi broker, *account sync*, *order placement*
+- *Push notification* di luar Telegram/Discord agentic
+- *Cloud sync*, *multi-user auth*, SaaS, *billing*
 
-**Banned unless explicitly overridden:**
-- Strategy DSL, custom scripting, buy/sell/hold signal language
-- Predictive AI price forecasts
-- Automated IDX scraping/crawling
-- Any dependency that requires paid API keys by default
+**Dilarang kecuali di-*override* eksplisit:**
+- DSL strategi, *custom scripting*, bahasa sinyal beli/jual/tahan
+- Prediksi harga AI
+- *Automated IDX scraping/crawling*
+- Dependensi yang butuh API *key* berbayar secara *default*
 
 ---
 
-## 4. AI Instructions
+## 4. *AI Instructions*
 
-### 4.1 Before Coding
+### 4.1 Sebelum Coding
 
-1. Read this file first, then the relevant documents from §1.
-2. Check active phase in §2.3 before starting any work.
-3. Run `rtk git status --short --branch`. If WIP overlaps relevant area, tell the orchestrator before editing.
-4. Confirm whether code scaffolding is actually requested. If user asks only for docs/strategy, do not scaffold.
-5. Check file tree before creating new files or folders.
+1. Baca AGENTS.md dulu, lalu dokumen relevan dari §1.
+2. Cek *active phase* di §2.3 sebelum mulai.
+3. Jalankan `rtk git status --short --branch`. Jika WIP tumpang tindih, beri tahu *orchestrator*.
+4. Konfirmasi apakah *code scaffolding* benar-benar diminta.
+5. Cek *file tree* sebelum membuat file/folder baru.
 
-### 4.2 Code Rules (Non-Negotiable)
+### 4.2 *Code Rules* (Non-Negotiable)
 
-- Keep business logic in `packages/core`.
-- Keep `scripts` as orchestration only.
-- Keep `apps/web` presentation-focused.
-- `packages/core/*` must not import `apps/web/**` or `scripts/**`.
-- Use strict TypeScript and strict Python typing.
-- Avoid `any` and `# type: ignore` unless a short why is included.
-- Add tests for changed behavior.
-- Do not commit private data from `data/private/*`.
-- Prefer small vertical PRs.
-- Use conventional commits.
+- *Business logic* di `packages/core`.
+- `scripts` hanya *orchestration* (*one-shot CLI*).
+- `apps/web` hanya presentasi.
+- `services/hermes` adalah *runtime* agentic: *listener*, *routing*, *policy gate*, *write confirmation*. Boleh *import* `packages/core`.
+- `packages/core/*` tidak boleh *import* `apps/web/**`, `scripts/**`, atau `services/**`.
+- *Agentic layer* (`core/agent` + `services/hermes`) **wajib reuse** `packages/core/ai` (`answer_stock_question`, `generate_stock_brief`, `validator`). Dilarang membangun ulang *RAG context*, *response contract*, atau memanggil *provider* LLM di luar *wrapper* `core/ai` (ADR-0019 D3).
+- TypeScript *strict* dan Python *strict typing*.
+- Hindari `any` dan `# type: ignore` tanpa alasan singkat.
+- Tambah *test* untuk perilaku yang diubah.
+- Jangan *commit data private* dari `data/private/*`.
+- Prefer PR kecil vertikal.
+- Gunakan *conventional commits*.
 
 ### 4.3 Anti-Slop
 
-- Do not claim something is complete before checking the actual file or running verification.
-- Do not add new architectural layers or parallel systems without orchestrator approval.
-- Do not mark a feature complete without validation evidence.
-- Do not introduce new dependencies unless the orchestrator approves.
-- Do not duplicate evaluator/classifier logic in React or CLI — core owns domain rules.
+- Jangan klaim selesai sebelum *check* file aktual atau menjalankan verifikasi.
+- Jangan tambah *layer* arsitektur baru atau sistem paralel tanpa persetujuan *orchestrator*.
+- Jangan tandai fitur selesai tanpa bukti validasi.
+- Jangan perkenalkan dependensi baru tanpa persetujuan *orchestrator*.
+- Jangan duplikasi logika *evaluator*/klasifier di React atau CLI — *core* pemilik aturan domain.
 
-### 4.4 Scope Discipline
+### 4.4 *Scope Discipline*
 
-Build vertically, not horizontally. One polished slice beats several half-finished ones.
+Bangun vertikal, bukan horizontal. Satu irisan yang dipoles lebih baik dari beberapa yang setengah jadi.
 
-Build order for this project:
-1. Data trust (Provider Health, Data Quality)
-2. Data coverage (Ticker Lifecycle, Fundamentals)
-3. Screening (Screener)
-4. Behavior review (Journal, Strategy Rules)
-5. Polish gate (Runtime Readiness, UX)
-6. Alert/Earnings lifecycle
+Urutan bangun:
+1. *Data trust* (Provider Health, Data Quality)
+2. *Data coverage* (Ticker Lifecycle, Fundamentals)
+3. *Screening* (Screener)
+4. *Behavior review* (Journal, Strategy Rules)
+5. *Polish gate* (Runtime Readiness, UX)
+6. *Alert/Earnings lifecycle*
 
-When in doubt between spectacle and correctness, prioritize correctness.
+Saat ragu antara spektakel dan kebenaran, prioritaskan kebenaran.
 
-### 4.5 Communication
+### 4.5 Komunikasi
 
-- Use concise Indonesian by default when the user writes in Indonesian.
-- Refer to exact files and rules when explaining decisions.
-- When uncertain, present 2-3 concrete options with trade-offs instead of improvising.
-- Flag conflicts early: locked stack changes, phase jumps, scope creep, direction regressions.
-- During debugging: state what is happening, what was expected, and what evidence supports the conclusion.
-- Cite files with paths. If data is insufficient, say so.
+- Bahasa Indonesia singkat secara *default* kecuali *user* beralih.
+- Rujuk ke file dan aturan tepat saat menjelaskan keputusan.
+- Saat tidak yakin, berikan 2-3 opsi konkret dengan *trade-off*.
+- Tandai konflik awal: perubahan *stack* terkunci, lompatan *phase*, *scope creep*, regresi arah.
+- Saat *debugging*: sebutkan apa yang terjadi, apa yang diharapkan, dan bukti.
+- Kutip file dengan *path*. Jika data tidak cukup, katakan.
 
-### 4.6 Contribution Identity
+### 4.6 *Contribution Identity*
 
-> **Copy this section verbatim into every project AGENTS.md / CLAUDE.md. Do not modify.**
+> **Salin bagian ini verbatim ke setiap AGENTS.md / CLAUDE.md proyek. Jangan dimodifikasi.**
 
-AI is a ghostwriter. Repository accountability remains with the human owner.
+AI adalah *ghostwriter*. Akuntabilitas repositori tetap pada pemilik manusia.
 
-- Do not add `Co-Authored-By: Claude` or any AI/model co-author trailer to commits.
-- Do not add "Generated with Claude Code" or equivalent tags to commit messages or PR bodies.
-- Do not push commits with AI or bot author identity.
-- Do not make AI appear in the GitHub contributor graph.
-- Author and committer identity must be the repo owner's human identity configured for the project.
-- If AI assistance needs to be disclosed, mention it only in normal prose in a PR description or changelog, never in git metadata.
-
----
-
-## 5. Implementation Agent Team
-
-| # | Agent Role | Responsibility | Owns | Must Not Do | Handoff Output |
-|---|---|---|---|---|---|
-| 1 | **Lead Technical Orchestrator** | Sequencing, scope control, task distribution, merge readiness, final validation | Breaking roadmap into tracks; assigning agents; preventing duplication and architecture drift | Skip final validation; assign ambiguous work without acceptance criteria; overload tracks | Phase gate status, next-track assignment, risk summary |
-| 2 | **Product / Workflow Architect** | Product flow, user journey, page hierarchy, workflow coherence | Ensuring features support core user workflow — not isolated UI additions | Design features that bypass the core workflow; add pages without user-journey justification | Updated workflow blueprint, journey impact notes |
-| 3 | **Frontend Engineer** | UI implementation, page layout, interaction states, accessibility, client-side behavior | Templates, components, navigation, responsive states | Add noisy UI outside the design system; introduce a frontend build step | Files changed, new/interaction states rendered, a11y notes |
-| 4 | **Backend Engineer** | API routes, services, storage logic, validation, integration boundaries | Route handlers, service layer, CLI commands, provider integration | Put business logic in route/controller layers; bypass service layer | New/edited routes and services, contract changes, validation rules |
-| 5 | **Data / Storage Engineer** | Schema, migrations, persistence rules, seed data, backward compatibility | Database schema files, migration scripts, data access patterns | Introduce schema churn without orchestrator approval; break backward compatibility without ADR | Migration diff, schema diff, compatibility notes |
-| 6 | **QA / Validation Engineer** | Test plan, regression checks, acceptance criteria, final validation | Test suite, validation runs, edge-case coverage, regression list | Validate only unit-level assumptions; skip user-facing workflow paths | Test results, regression list, acceptance pass/fail, known gaps |
-| 7 | **Security / Safety Engineer** | Input validation, file handling risks, secret handling, path traversal, dependency risk | Security review of all I/O surfaces, credential handling, dependency audit | Introduce unsafe file/subprocess patterns; store secrets in config/logs/render | Security review notes, filed risks, surfaces reviewed |
-| 8 | **Performance / Reliability Engineer** | Slow paths, job handling, long-running operations, resource limits, failure recovery | Performance budget, concurrency handling, error recovery paths, blocking UX | Ship code that blocks main thread or UI for >1 s; hide errors with silent retries | Perf benchmarks, bottleneck list, failure-path coverage |
-| 9 | **Documentation / Handoff Writer** | Changelog notes, sprint summaries, ADR drafting, agent handoff clarity | Sprint reports, handoff documents, README updates, ADR drafts | Duplicate info already in source-of-truth docs; write verbose non-operational docs | Handoff notes for each completed track, changelog draft |
-| 10 | **Critic / Devil's Advocate** | Challenge assumptions, detect overengineering, UX friction, hidden bugs | Pre-release review, alternative proposal generation, scope-creep detection | Block progress without giving actionable alternatives; file complaints without evidence | Review findings, alternative proposals, risk flags |
-| 11 | **Release Captain** | Final gate checklist, merge readiness, release notes, done/not-done status | Gate D sign-off, release notes, status summary, known-gap documentation | Mark "done" without validation evidence; merge incomplete work into release branch | Release checklist status, merge readiness verdict, known gaps doc |
-
-**Rule:** No implementation agent may override the Lead Technical Orchestrator's scope without explicitly documenting the reason, risk, and proposed alternative.
+- Jangan tambahkan `Co-Authored-By: Claude` atau *trailer* kointegrasi AI/model lain ke *commit*.
+- Jangan tambahkan tag "Generated with Claude Code" atau yang setara ke pesan *commit* atau badan PR.
+- Jangan *push commit* dengan identitas penulis AI atau bot.
+- Jangan buat AI muncul di grafik kontributor GitHub.
+- Identitas penulis dan *committer* harus identitas pemilik repositori manusia yang dikonfigurasi untuk proyek.
+- Jika bantuan AI perlu diungkapkan, sebutkan hanya dalam prosa normal di deskripsi PR atau *changelog*, jangan pernah di *metadata git*.
 
 ---
 
-## 6. Implementation Tracks
+## 5. *Implementation Agent Team*
 
-| Track | Name | Owner Agent | Purpose | Entry Criteria | Exit Criteria |
-|---|---|---|---|---|---|
-| T0 | Documentation & Source of Truth | Documentation / Handoff Writer | Keep AGENTS.md, roadmap, architecture, sprint notes aligned | Sprint started; new phase scope defined | All source-of-truth docs updated; ADRs current; handoff notes complete |
-| T1 | Product Workflow & UX | Product / Workflow Architect | Ensure app workflow is coherent from entry → main action → completion | Phase scope defines new flow or modifies existing one | Workflow blueprint updated; no orphan pages/states |
-| T2 | Frontend Implementation | Frontend Engineer | Implement layouts, components, states, navigation | T1 defines UI to build; design tokens exist | Pages render correctly at 390px+; keyboard navigable; states handled |
-| T3 | Backend / CLI Implementation | Backend Engineer | Implement CLI commands, validation, integration | Route contracts defined; storage layer exists | Commands respond correctly; edge cases handled; integration test passes |
-| T4 | Data, Storage & Migration | Data / Storage Engineer | Maintain schema safety, migrations, persistence | Schema change or migration required by feature | Migration forward tested; existing data preserved; no silent data loss |
-| T5 | AI Provider / Agent Integration | Backend Engineer | Implement provider boundaries, model config, retries | New provider or model config required by feature | Provider integration tested; retry/fallback works; secret handling confirmed |
-| T6 | QA, Testing & Regression | QA / Validation Engineer | Validate workflows, regression coverage, edge cases | Feature implementation complete; test plan written | Full test suite passes; regressions documented; acceptance verified |
-| T7 | Security & Reliability | Security / Safety Engineer | Review secrets, permissions, unsafe inputs, failure recovery | Feature touches I/O, secrets, file system, subprocess, or network | Security review done; sensitive surfaces enumerated; risks documented |
-| T8 | Performance & Runtime Readiness | Performance / Reliability Engineer | Identify bottlenecks, blocking states, runtime constraints | Feature complete; integration test passing | Perf budget met; no blocking UX; job recovery tested |
-| T9 | Release & Final Gate | Release Captain | Confirm final state, summarize changes, mark ready/not-ready | All tracks complete; T6/T7/T8 passed | Release checklist signed; known gaps documented; next-step clear |
+Lihat [`AGENTS.md §5`](AGENTS.md#5-implementation-agent-team) untuk tabel lengkap 11 peran agen.
 
----
-
-## 7. Orchestrator Operating Model
-
-1. **Read** the Documentation Map (§1) and understand which docs govern the current phase.
-2. **Identify** the current sprint/phase from Progress → Phase Schedule (§2).
-3. **Confirm** Stack Locked constraints (§3) — no new dependencies or architecture shifts without approval.
-4. **Split** the task into implementation tracks (§6). Assign each track an owner agent.
-5. **Define** acceptance criteria for each track before implementation starts. State non-goals explicitly.
-6. **Assign** each track to the correct owner. Provide track scope, acceptance criteria, non-goals, and handoff format.
-7. **Require** each agent to produce a handoff note (§8) at the end of their work.
-8. **Run** Critic / Devil's Advocate review (§5 agent #10) before final gate.
-9. **Run** QA + Security + Release validation (T6 + T7 + T9) before merging.
-10. **Produce** final status for each track: Done, Partial, Blocked, Deferred, or Risk Accepted.
-
-**Operating rule:** Optimize for sequence, coherence, and risk reduction — not maximum parallel work.
+| # | Peran | Tanggung Jawab Inti |
+|---|---|---|
+| 1 | **Lead Technical Orchestrator** | Urutan, *scope control*, pembagian tugas, kesiapan *merge*, validasi akhir |
+| 2 | **Product / Workflow Architect** | Alur produk, *user journey*, hierarki halaman |
+| 3 | **Frontend Engineer** | Implementasi UI, *layout*, *state interaksi*, aksesibilitas |
+| 4 | **Backend Engineer** | Rute API, *services*, *storage logic*, integrasi |
+| 5 | **Data / Storage Engineer** | Skema, migrasi, aturan persistensi, kompatibilitas mundur |
+| 6 | **QA / Validation Engineer** | Rencana *test*, *regression checks*, validasi akhir |
+| 7 | **Security / Safety Engineer** | Validasi input, penanganan *secret*, *path traversal* |
+| 8 | **Performance / Reliability Engineer** | *Slow paths*, *job handling*, *error recovery* |
+| 9 | **Documentation / Handoff Writer** | Catatan *changelog*, ringkasan *sprint*, draf ADR |
+| 10 | **Critic / Devil's Advocate** | Tantang asumsi, deteksi *overengineering*, gesekan UX |
+| 11 | **Release Captain** | *Checklist gate* akhir, kesiapan *merge*, status siap/tidak |
 
 ---
 
-## 8. Agent Handoff Protocol
+## 6. *Implementation Tracks*
 
-Every implementation agent must produce a handoff note at the end of their work. Use this format:
+Lihat [`AGENTS.md §6`](AGENTS.md#6-implementation-tracks) untuk detail T0-T9.
+
+| Track | Nama | Pemilik | Tujuan |
+|---|---|---|---|
+| T0 | Dokumentasi & Source of Truth | Documentation / Handoff Writer | Jaga dokumen tetap selaras |
+| T1 | *Product Workflow & UX* | Product / Workflow Architect | Koherensi alur aplikasi |
+| T2 | *Frontend Implementation* | Frontend Engineer | *Layout*, komponen, *state* |
+| T3 | *Backend / CLI Implementation* | Backend Engineer | CLI, validasi, integrasi |
+| T4 | Data, Storage & Migration | Data / Storage Engineer | Keamanan skema, migrasi |
+| T5 | AI Provider / Agent Integration | Backend Engineer | Batas *provider*, konfigurasi model |
+| T6 | QA, Testing & Regression | QA / Validation Engineer | Validasi *workflow*, cakupan regresi |
+| T7 | *Security & Reliability* | Security / Safety Engineer | *Review* keamanan, *secret* |
+| T8 | *Performance & Runtime Readiness* | Performance / Reliability Engineer | *Bottleneck*, kendala *runtime* |
+| T9 | *Release & Final Gate* | Release Captain | Status akhir, ringkasan perubahan |
+
+---
+
+## 7. *Orchestrator Operating Model*
+
+1. Baca *Documentation Map* dan pahami dokumen yang mengatur *phase* saat ini.
+2. Identifikasi *sprint*/phase dari *Progress → Phase Schedule*.
+3. Konfirmasi *Stack Locked constraints*.
+4. Pecah *task* ke *tracks* implementasi (§6). Tugaskan masing-masing ke agen pemilik.
+5. Definisikan *acceptance criteria* untuk setiap *track*.
+6. Tugaskan dengan *scope*, kriteria, non-*goal*, dan format *handoff*.
+7. Setiap agen harus hasilkan *handoff note* (§8).
+8. Jalankan *Critic / Devil's Advocate review* sebelum *gate* akhir.
+9. Jalankan QA + Keamanan + validasi Rilis (T6 + T7 + T9) sebelum *merge*.
+10. Produksi status akhir: *Done, Partial, Blocked, Deferred,* atau *Risk Accepted*.
+
+**Aturan operasi:** Optimalkan untuk urutan, koherensi, dan reduksi risiko — bukan kerja paralel maksimal.
+
+---
+
+## 8. *Agent Handoff Protocol*
+
+Setiap agen implementasi harus hasilkan *handoff note*. Format:
 
 ```
-## Handoff: [Agent Role]
+## Handoff: [Nama Peran]
 
-**Agent:** [Role name]
+**Agent:** [Nama peran]
 **Track:** [T0-T9]
-**Scope:** [What this agent was asked to do]
-**Files/Areas Touched:** [List of files created or modified]
-**What Changed:** [Summary of changes]
-**What Was Intentionally Not Changed:** [Scope boundaries respected]
-**Validation Performed:** [Tests run, manual checks, evidence]
-**Known Risks:** [Anything incomplete, fragile, or uncertain]
-**Recommended Next Agent:** [Which agent should continue]
-**Next Step:** [The single next action the next agent should take]
+**Scope:** [Apa yang diminta]
+**Files/Areas Touched:** [File yang dibuat/dimodifikasi]
+**What Changed:** [Ringkasan perubahan]
+**What Was Intentionally Not Changed:** [Batas scope yang dihormati]
+**Validation Performed:** [Test dijalankan, pemeriksaan manual, bukti]
+**Known Risks:** [Yang tidak lengkap, rapuh, atau tidak pasti]
+**Recommended Next Agent:** [Agen yang harus lanjut]
+**Next Step:** [Satu tindakan berikutnya]
 ```
 
-**Rule:** Every handoff must leave enough context for the next agent to continue without re-auditing the entire repository.
+**Aturan:** Setiap *handoff* harus tinggalkan konteks yang cukup untuk agen berikutnya tanpa perlu *audit* ulang seluruh repositori.
 
 ---
 
-## 9. Review Gates
+## 9. *Review Gates*
 
-| Gate | Stage | Checks | When to Use | Skippable? |
+| Gate | Tahap | Pemeriksaan | Kapan | Bisa Dilewati? |
 |---|---|---|---|---|
-| **A — Scope Confirmation** | Before work starts | Task aligned with current sprint? Owner agent clear? Non-goals stated? Acceptance criteria defined? | Every new task | No |
-| **B — Implementation Readiness** | Before coding | Affected files/areas known? Stack constraints respected? Design matches existing patterns? | Every implementation track | No for T2-T5; yes for T0/T9 |
-| **C — Validation** | After implementation | Tests or manual checks documented? Regressions considered? Edge cases listed? Handoff note written? | Every track that produced code or schema | No for T2-T8; yes for T0 |
-| **D — Release Readiness** | Before merge/ship | Work actually complete? Known gaps documented? Next step clear? Critic review done? Checklist signed? | Every phase/sprint exit | No |
-
-**Gate-skip rule:** Use fewer gates for small changes (single file, <50 lines, no schema change), but never skip Gate C (validation).
+| **A — Scope Confirmation** | Sebelum kerja | Tugas sesuai *sprint*? Agen pemilik jelas? Non-*goal* dinyatakan? Kriteria diterima? | Setiap *task* baru | Tidak |
+| **B — Implementation Readiness** | Sebelum coding | File/area terdampak diketahui? *Stack constraints* dihormati? Desain cocok pola yang ada? | Setiap *track implementasi* | Tidak untuk T2-T5; ya untuk T0/T9 |
+| **C — Validation** | Setelah implementasi | Test/manual *check* terdokumentasi? Regresi dipertimbangkan? *Edge cases* terdaftar? *Handoff note* ditulis? | Setiap *track* dengan kode/skema | Tidak untuk T2-T8; ya untuk T0 |
+| **D — Release Readiness** | Sebelum *merge* | Kerja benar-benar selesai? Kesenjangan diketahui terdokumentasi? *Critic review* selesai? | Setiap *exit phase*/sprint | Tidak |
 
 ---
 
-## 10. Decision Rules
+## 10. *Decision Rules*
 
-| Priority | Rule |
+| Prioritas | Aturan |
 |---|---|
-| 1 | Prefer **existing architecture** over new patterns. Do not invent a new pattern when an existing one works. |
-| 2 | Prefer **small, sequenced changes** over broad rewrites. One file changed correctly beats ten files changed incompletely. |
-| 3 | Prefer **user workflow completion** over isolated technical polish. A working end-to-end flow is worth more than a perfectly refactored component with no user path. |
-| 4 | Prefer **explicit ownership** over anonymous "agent" work. Every task has a named owner. |
-| 5 | Do **not introduce new dependencies** unless the orchestrator approves. A new import is an architecture decision. |
-| 6 | Do **not mark a feature complete** without validation evidence. "It compiles" is not validation. |
-| 7 | Do **not modify roadmap, architecture, or stack constraints silently**. Propose changes in a handoff note or ADR draft. |
-| 8 | **When in doubt, document the uncertainty** and propose the smallest safe next step. A documented question is better than an undocumented assumption. |
+| 1 | Prefer **arsitektur yang ada** daripada pola baru. |
+| 2 | Prefer **perubahan kecil berurutan** daripada *rewrite* besar. |
+| 3 | Prefer **penyelesaian *workflow user*** daripada polesan teknis terisolasi. |
+| 4 | Prefer **kepemilikan eksplisit** atas kerja agen anonim. |
+| 5 | **Jangan perkenalkan dependensi baru** tanpa persetujuan *orchestrator*. |
+| 6 | **Jangan tandai fitur selesai** tanpa bukti validasi. |
+| 7 | **Jangan modifikasi *roadmap*, arsitektur, atau *stack constraints* secara diam-diam**. |
+| 8 | **Saat ragu, dokumentasikan ketidakpastian** dan usulkan langkah aman terkecil. |
 
 ---
 
-## 11. Recommended Workflow Optimizations
+## 11. *Recommended Workflow Optimizations*
 
-1. **RACI-style clarity** — R: implementation owner, A: Lead Orchestrator, C: Critic/Security/QA, I: Documentation/Release Captain.
-2. **Separate builder and reviewer roles** — Same agent should not be sole reviewer of its own work.
-3. **Keep Progress → Phase Schedule as execution truth** — Roadmap (§2.1) says what *should* happen; schedule (§2.3) says what *is* being executed.
-4. **Add "Non-Goals" per sprint** — Prevents scope creep and random refactors.
-5. **Add "Definition of Done" per track** — Done = implemented + validated + documented + handed off.
-6. **Add "Risk Register" per sprint** — Keep small (5-10 risks max), update as risks close or emerge.
-7. **"Next Agent Recommendation" is mandatory** — Every handoff must suggest which agent should continue next.
-
----
-
-## 12. Final Notes for Future Agents
-
-1. **This file is the operating system of the project.** Read it before any code change.
-2. **The orchestrator is your entry point.** If scope is unclear, ask. Do not improvise scope.
-3. **You are a specialist, not a generalist.** Flag cross-boundary issues in your handoff — do not fix them yourself unless the orchestrator says so.
-4. **Handoff is not optional.** If your track ends without a handoff note (§8), the work is incomplete.
-5. **Validation is not optional.** If your track ends without evidence that it works, the work is incomplete.
-6. **Scope is the enemy of quality.** Flag oversized scope to the orchestrator immediately.
-7. **Read the docs before the code.** If a doc contradicts the code, flag the contradiction.
-8. **Critic is your friend.** Welcome the review. Engage with alternatives.
-9. **One PR = one concern.** Do not bundle refactors with features. Split concerns or document why they must be bundled.
-10. **Git history is the permanent record.** Write clear conventional commits. Do not force-push shared branches.
+1. **RACI-*style clarity*** — R: pemilik implementasi, A: Lead Orchestrator, C: Critic/Security/QA, I: Documentation/Release Captain.
+2. **Pisahkan peran *builder* dan *reviewer*** — Agen yang sama tidak boleh *reviewer* tunggal karyanya sendiri.
+3. **Jadikan *Progress → Phase Schedule* sebagai kebenaran eksekusi** — *Roadmap* = rencana; *schedule* = status.
+4. **Tambahkan "Non-Goals" per *sprint*** — Cegah *scope creep*.
+5. **Tambahkan "Definition of Done" per *track*** — Selesai = diimplementasi + divalidasi + didokumentasi + di-*handoff*.
+6. **Tambahkan "*Risk Register*" per *sprint*** — Maks 5-10 risiko.
+7. **"Next Agent Recommendation" bersifat wajib** — Setiap *handoff* harus usul agen lanjutan.
 
 ---
 
-## Scope Guardrails
+## 12. *Final Notes for Future Agents*
 
-**Allowed V1 work:**
+1. **File ini adalah sistem operasi proyek.** Baca sebelum perubahan kode apa pun.
+2. ***Orchestrator* adalah pintu masukmu.** Jika *scope* tidak jelas, tanya. Jangan improvisasi *scope*.
+3. **Kamu spesialis, bukan generalis.** Tandai masalah lintas-batas di *handoff* — jangan perbaiki sendiri.
+4. ***Handoff* tidak opsional.** Jika *track* berakhir tanpa *handoff note*, kerja tidak lengkap.
+5. **Validasi tidak opsional.** Jika *track* berakhir tanpa bukti berfungsi, kerja tidak lengkap.
+6. ***Scope* adalah musuh kualitas.** Tandai *scope* terlalu besar ke *orchestrator* segera.
+7. **Baca dokumen sebelum kode.** Jika dokumen kontradiksi kode, tandai kontradiksinya.
+8. ***Critic* adalah temanmu.** Sambut *review*. Libatkan alternatif.
+9. **Satu PR = satu urusan.** Jangan gabung *refactor* dengan fitur.
+10. ***Git history* adalah catatan permanen.** Tulis *commit message* jelas. Jangan *force-push branch* bersama.
+
+---
+
+## *Scope Guardrails*
+
+**Pekerjaan V1 yang diizinkan:**
 - Data Quality Dashboard
 - Provider Health
-- Ticker lifecycle and coverage
-- Fundamental Snapshot with completeness/confidence
-- Screener with transparent no-signal language
-- Local alert rules/events with false-positive feedback
-- Weekly Journal Review
-- Simple Strategy Rules
-- Earnings Summary manual-first
+- *Ticker lifecycle* dan *coverage*
+- *Fundamental Snapshot* dengan kelengkapan/kepercayaan diri
+- *Screener* dengan bahasa tanpa sinyal transparan
+- Aturan/kejadian *alert* lokal dengan *feedback false-positive*
+- *Weekly Journal Review*
+- *Simple Strategy Rules*
+- *Earnings Summary manual-first*
 
-**Out of scope for V1:**
-- Broker login, cookies, sessions, account sync, or order placement
-- Realtime or tick-data promise
-- Predictive AI, AI buy/sell alerts, or forecasting alerts
-- Public recommendations, signal selling, SaaS, auth, billing, or multi-user scope
-- Automated IDX crawling
-- Full news article storage or republication
-- Strategy DSL
+**Di luar *scope* V1:**
+- Login broker, *cookies, sessions, account sync*, atau *order placement*
+- Janji *realtime* atau *tick-data*
+- AI prediktif, *alert* AI beli/jual, atau *forecasting alerts*
+- Rekomendasi publik, penjualan sinyal, SaaS, *auth*, *billing*, atau *multi-user*
+- *Automated IDX crawling*
+- Penyimpanan/republikasi berita lengkap
+- DSL Strategi
 
 ---
 
-## Repo Mental Model
+## *Repo Mental Model*
 
 ```
 apps/web/          Next.js dashboard
 packages/core/     Python data core
-  data_sources     providers and source metadata
+  data_sources     provider dan metadata sumber
   data_quality     provider health, freshness, coverage
-  fundamentals     snapshots, completeness, confidence
-  screener         transparent rules and results
-  alerts           local rules, events, feedback
-  earnings         manual-first earnings metadata
-  journal          entries and weekly review
-  strategy         simple rules, no DSL
+  fundamentals     snapshot, completeness, confidence
+  screener         aturan dan hasil transparan
+  alerts           aturan lokal, event, feedback
+  earnings         metadata earnings manual-first
+  journal          entri dan weekly review
+  strategy         aturan sederhana, tanpa DSL
   runtime          readiness, schema status, bootstrap contract
-  ai               LLM wrapper and validation
-  schemas          Pydantic models and migrations
-scripts/           CLI orchestration
-data/sample/       fake committed data
-data/private/      ignored real local data
-prompts/system/    versioned prompt templates
-config/            example config committed, local config ignored
-.docs/             canonical documentation
+  ai               LLM wrapper dan validasi
+  agent            tool contracts, safe context, intent (pure, reuse ai)
+  schemas          Model Pydantic dan migrasi
+services/          runtime long-running (import core, bukan sebaliknya)
+  hermes           listener long-polling, routing, policy gate, write confirm
+scripts/           CLI orchestration (one-shot)
+data/sample/       data palsu yang di-commit
+data/private/      data lokal asli yang diabaikan
+prompts/system/    template prompt berversi
+config/            contoh config di-commit, lokal diabaikan
+.docs/             dokumentasi kanonis
 ```
 
 ---
 
-*This AGENTS.md follows the global WORKFLOW.md template at `@C:\Users\transcend\.claude\WORKFLOW.md`. Changes to the template structure should be made there and propagated here.*
+*CLAUDE.md mengikuti template WORKFLOW.md global di `@C:\Users\transcend\.claude\WORKFLOW.md` dan terhubung dengan [`AGENTS.md`](AGENTS.md) sebagai dokumen induk.*
