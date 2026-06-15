@@ -18,7 +18,7 @@ from collections.abc import Sequence
 
 from packages.core.agent.brief_delivery import format_brief_message
 from packages.core.ai.generate_brief import generate_stock_brief
-from packages.core.ai.provider import AnthropicProvider
+from packages.core.ai.provider import resolve_provider
 from packages.core.ai.router import CircuitBreaker, ModelRouter, load_budget
 from packages.core.alerts.telegram import get_telegram_status, send_text_to_telegram
 from packages.core.schemas.repository import open_connection
@@ -29,7 +29,7 @@ EXIT_DELIVERY_FAILED = 4
 
 
 def cmd_brief(args: argparse.Namespace) -> int:
-    provider = AnthropicProvider()
+    provider = resolve_provider()
     router = ModelRouter()
     breaker = CircuitBreaker(load_budget())
     with open_connection(args.db) as conn:

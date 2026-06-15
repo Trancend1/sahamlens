@@ -4,7 +4,13 @@ from packages.core.ai.context_builder import StockContext, build_stock_context
 from packages.core.ai.generate_brief import generate_stock_brief
 from packages.core.ai.models import ChatResponse, EvidenceItem, StockBrief
 from packages.core.ai.prompts import PromptTemplate, load_template
-from packages.core.ai.provider import AnthropicProvider, LLMProvider
+from packages.core.ai.provider import (
+    AnthropicProvider,
+    LLMProvider,
+    LLMTextProvider,
+    OpenAICompatibleProvider,
+    resolve_provider,
+)
 from packages.core.ai.router import (
     BudgetExceeded,
     CircuitBreaker,
@@ -37,7 +43,9 @@ __all__ = [
     "CostBudget",
     "EvidenceItem",
     "LLMProvider",
+    "LLMTextProvider",
     "ModelRouter",
+    "OpenAICompatibleProvider",
     "PromptTemplate",
     "StockBrief",
     "StockContext",
@@ -50,6 +58,7 @@ __all__ = [
     "generate_stock_brief",
     "load_budget",
     "load_template",
+    "resolve_provider",
     "scan_banned",
     "summarize_news",
     "validate_chat_response",

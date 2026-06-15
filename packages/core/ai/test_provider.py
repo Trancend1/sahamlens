@@ -87,6 +87,20 @@ def test_complete_json_returns_none_on_permanent_4xx() -> None:
     assert out is None
 
 
+def test_complete_returns_text_from_content_blocks() -> None:
+    def fake_post(url: str, body: bytes, headers: dict[str, str], timeout: float) -> bytes:
+        return json.dumps({"content": [{"type": "text", "text": "hello world"}]}).encode("utf-8")
+
+    provider = AnthropicProvider(api_key="sk-test", post=fake_post)
+    out = provider.complete(system="s", user="u", model="m")
+    assert out == "hello world"
+
+
+def test_complete_returns_none_without_api_key() -> None:
+    provider = AnthropicProvider(api_key="")
+    assert provider.complete(system="s", user="u", model="m") is None
+
+
 def test_extract_tool_use_returns_none_on_missing_name() -> None:
     response = {"content": [{"type": "tool_use", "name": "other", "input": {}}]}
     assert _extract_tool_use(response, "news_summary") is None

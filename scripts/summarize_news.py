@@ -18,7 +18,7 @@ from collections.abc import Callable, Sequence
 from typing import TypedDict
 
 import duckdb
-from packages.core.ai.provider import AnthropicProvider
+from packages.core.ai.provider import resolve_provider
 from packages.core.ai.router import CircuitBreaker, ModelRouter, load_budget
 from packages.core.ai.summarize_news import summarize_news
 from packages.core.news.models import NewsArticle, NewsSummary
@@ -59,7 +59,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     budget = load_budget()
-    provider = AnthropicProvider()
+    provider = resolve_provider()
     router = ModelRouter()
     breaker = CircuitBreaker(budget)
 
