@@ -2,8 +2,8 @@
 
 SahamLens adalah *personal trading companion* untuk satu *retail* trader IDX. *Local-first*, publik-*repo-safe*, dan AI-*assisted*. AI menjelaskan; *user* memutuskan. **Bukan** broker, *signal service*, *portfolio manager*, atau SaaS.
 
-> **Phase aktif:** V2 — *Agentic Research Layer / Hermes Runtime*
-> **Status:** Implementation complete, verification passed, Critic review done. Awaiting PR merge to main.
+> **Phase aktif:** CLI-WebUI Integration
+> **Status:** Sprint 1 (Inline Data Refresh) ✅ — Sprint 2 (Realtime & Continuous) next
 
 Dokumen ini adalah *sibling* dari [`AGENTS.md`](AGENTS.md). Isi dan struktur mengikuti *template* yang sama. Detail agen, *track*, dan mekanisme *orchestration* ada di AGENTS.md — file ini ringkas untuk akses cepat.
 
@@ -65,13 +65,18 @@ Phase 0: Docs Readiness + Foundation
 
 ### 2.3 *Active Phase*
 
-**Phase aktif:** V2 — *Agentic Research Layer / Hermes Runtime*
+**Phase aktif:** CLI-WebUI Integration — Sprint 4: Hermes Integration | Selesai: Sprint 3 ✅
 
-**Status:** Implementation complete, verification passed, Critic review done. Awaiting PR merge to main.
+**Previous sprint:** Sprint 3: Manageable Operations Dashboard ✅
+- Operations tab layout (Providers, Health, Config)
+- Health API (`/api/health`) sebagai single source of truth
+- Config API (`/api/config?section=llm|app`) read/write `.env.local`
+- Unified run endpoint (`POST /api/operations/{type}/run`)
+- Components: OperationsTable, HealthOverview, LlmConfigForm, AppConfigForm
+- Dashboard card added
 
-**Selesai (committed di branch `docs/agentic-research-layer-boundary`):**
-- ADR-0018 (boundary), ADR-0019 (runtime/audit), ADR-0020 (platform horizon), ADR-0021 (configurable LLM provider)
-- M0 — `scripts/agent_brief.py` (pull-only outbound brief, reuse `generate_stock_brief`)
+**Previous sprint (S2):** Sprint 2: Realtime & Continuous ✅
+- Freshness tracker, stale data banner, API endpoint, auto-refresh hook, freshness CLI
 - M1 — migrasi `0008_agent_runtime.sql` (`agent_log`, `agent_write_action`, `research_queue`)
 - M2 — `packages/core/agent/` `exposure_summary()` (aggregate-only) + `journal_digest()` (redacted)
 - M3 — `packages/core/agent/` tool contracts (`tools.py`) + audit repo (`audit.py`)
@@ -89,19 +94,7 @@ Phase 0: Docs Readiness + Foundation
 
 **Next:** V2 PR merge to main. M5 (Discord) tetap *deferred*.
 
-### 2.4 *Exit Criteria* (V2)
-
-- [x] M4 sub-task M4.1–M4.8 (§2.6) selesai + tervalidasi
-- [x] *Full Python verification suite pass* (pytest, mypy strict, ruff, ruff-format)
-- [x] Tidak ada bahasa sinyal/*profit*/prediksi di *output* agentic — `validator.scan_banned` di setiap respons *outbound*
-- [x] *Secrets* (Telegram + LLM API key) hanya dari *environment*, tidak pernah di-*render*/di-*commit*
-- [x] *Write action* butuh konfirmasi manual + idempoten (`agent_write_action`); acknowledge/false-positive reuse *lifecycle* V1-S6 (bukan paralel)
-- [x] Hermes reuse `packages/core/ai` + `packages/core/agent` (tanpa rebuild *engine*); tanpa *inbound port*
-- [x] `agent_log` tertulis per interaksi; *ai_log linkage* dipasang
-- [x] *Critic / Devil's Advocate review* selesai
-- [x] Siap *merge* — PR terbuka atau *branch* siap *review owner*
-
-### 2.5 *Phase Log*
+### 2.4 *Phase Log*
 
 | Phase | Status | Lesson | Carry-forward |
 |---|---|---|---|
@@ -120,37 +113,10 @@ Phase 0: Docs Readiness + Foundation
 | V2-M0 Outbound Brief | Selesai | `validator.scan_banned` = sumber kebenaran anti-signal untuk *outbound copy*. Telegram tak terkonfigurasi = print-only, bukan failure. | Script tak punya unit-test langsung (butuh network) — logika murni sudah ter-test. |
 | V2 Provider Config (ADR-0021) | Selesai | OpenAI-compat = 1 kelas untuk banyak provider; *structured output* beda per API (tool_use vs function-calling). `detect-secrets` false-positive untuk nama env `*_API_KEY` → pakai pragma allowlist. | M4 construct provider via `resolve_provider()`. Per-provider cost/budget ditunda. |
 | V2-M4 Hermes Runtime | Complete (PR pending) | `MAX(id)` ai_log_id linkage fragile for multi-process; `symbol='DRAFT'` journal bypass is acceptable for single-user | None. M5 Discord deferred. |
-
----
-
-### 2.6 *Remaining Task Breakdown — M4, M5, dst*
-
-> Untuk agent lanjutan (*cold start*). Baca ADR-0018/0019/0020/0021 + AGENTS.md dulu. Semua di branch `docs/agentic-research-layer-boundary`. Pola test: invokasi root `uv run pytest -k ...` (direct-path sub-package gagal). Setiap sub-task = *Definition of Done*: implemented + validated (pytest+mypy strict+ruff) + handoff.
-
-**Aturan M4 yang tidak boleh dilanggar (dari ADR):**
-- Reuse `packages/core/ai` (via `resolve_provider()`) + `packages/core/agent` — **jangan** rebuild RAG/response-contract/engine (ADR-0019 D3).
-- `services/hermes` boleh import `core`; `core` **tidak** boleh import `services`/`scripts`/`web`.
-- Non-advisory: tanpa buy/sell/target/auto-exec; *default read-only*; setiap respons *outbound* lulus `validator.scan_banned`.
-- *Secret* (Telegram + LLM) hanya dari `environment`; tidak pernah di-render/commit.
-- *Outbound long-polling* saja — **tanpa** inbound port/webhook (ADR-0019 D1).
-
-#### M4 — Hermes Runtime (`services/hermes/`) — ✅ COMPLETE
-
-M4.1–M4.8 selesai, tervalidasi, dan telah melalui Critic review. Detail implementasi ada di commit branch `docs/agentic-research-layer-boundary`.
-
-#### M5 — Discord (DEFERRED)
-
-Prasyarat: nilai Telegram terbukti **dan** kriteria *readiness* Discord (ADR-0018 Q8) didefinisikan dulu. Tasks saat di-*unlock*:
-- **M5.1** — ADR kriteria *readiness* Discord + boundary (jawab Q8). Default *private-only*.
-- **M5.2** — Discord *gateway* adapter (websocket) reuse intent router/policy/tools M4 (jangan duplikasi).
-- **M5.3** — Channel privat threaded (`#research-queue`, `#ticker-*`, dst), weekly digest.
-- **Non-goal:** channel publik, sinyal, copy/social trading, advice untuk audience.
-
-#### Sesudah M4 — Sisa V2 & tertunda
-
-- **V2 Release Readiness:** PR/merge ke `main`, *dogfood* (owner opt-in). Migrasi DB lokal tetap owner opt-in (`uv run python -m scripts.migrate`).
-- **Tertunda teknis (ADR-0019/0021):** per-provider *cost/budget* config, `response_format: json_schema`, *ticker-level journal opt-in*, *portfolio lot detail* (butuh approval owner), *retention policy* draft chat (`data/private/`).
-- **V3 horizon (ADR-0020):** platform multi-agent/container — **hanya** via ADR teknis V3 masa depan; jaga identitas local-first/single-user/non-advisory.
+| Sprint 0 Auto-First-Run (CLI-WebUI) | Selesai | `pre-start.mjs` butuh `shell: true` untuk `execSync` di Windows agar `uv run python` berfungsi. | Next: Sprint 1 — Inline Data Refresh (tombol WebUI untuk setiap operasi CLI). |
+| Sprint 1 Inline Data Refresh (CLI-WebUI) | Selesai | Sonner toast + OperationButton reusable. API routes POST untuk setiap operasi. | Next: Sprint 2 — Realtime & Continuous (freshness + staleness). |
+| Sprint 2 Realtime & Continuous (CLI-WebUI) | Selesai | Freshness tracker reusable across CLI/API/WebUI. ADR larang background scheduler \u2192 one-shot freshness CLI. | Next: Sprint 3 \u2014 Manageable Operations Dashboard \u2705 |
+| Sprint 3 Manageable Operations (CLI-WebUI) | Selesai | Operations tab layout (Providers/Health/Config), API health SoT, config read/write .env.local, unified run endpoint. | Next: Sprint 4 \u2014 Hermes Integration. |
 
 ---
 
