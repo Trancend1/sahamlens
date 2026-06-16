@@ -231,7 +231,6 @@ function RulesSection({
           title="No alert rules yet"
           description="Create a local rule to check conditions such as price or volume thresholds. Rules are evaluated manually and should be reviewed with freshness and confidence context."
           actionLabel="Create alert rule"
-          command={`uv run python -m scripts.alerts --json rules create --name "BBCA above threshold" --rule-type price_above --ticker BBCA --params '{"threshold":9000}'`}
         />
       ) : (
         <DataTableWrapper>
@@ -386,7 +385,6 @@ function ErrorPanel({ error }: { error: RuntimeErrorInfo }): React.ReactElement 
       title={isSchemaError ? "Migration required" : "Alerts could not be loaded"}
       message={error.message}
       details={error.details}
-      recommendedCommand={error.recommended_command ?? "uv run python -m scripts.runtime status --json"}
     />
   );
 }

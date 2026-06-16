@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState as SharedEmptyState } from "@/components/ui/EmptyState";
 import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
+import { WeeklyReviewGenerator } from "@/components/WeeklyReviewGenerator";
 import type { WeeklyFindingSeverity, WeeklyReviewRun } from "@/lib/journalReview";
 import type { RuntimeErrorInfo } from "@/lib/pythonRunner";
 
@@ -32,6 +33,8 @@ export function WeeklyReviewDashboard({ reviews, error }: Props): React.ReactEle
           This is reflection support, not an instruction.
         </p>
       </header>
+
+      <WeeklyReviewGenerator />
 
       {error ? <ErrorPanel error={error} /> : null}
       {!error && latest ? <ReviewContent review={latest} /> : null}
@@ -129,7 +132,6 @@ function EmptyState(): React.ReactElement {
       title="No weekly review generated yet"
       description="Generate a review after adding journal entries for the selected period. The output focuses on plan adherence, repeated mistakes, and unresolved follow-ups."
       actionLabel="Generate weekly review"
-      command="uv run python -m scripts.journal_review --json review generate --start 2026-05-25 --end 2026-06-01"
     />
   );
 }
@@ -141,7 +143,6 @@ function ErrorPanel({ error }: { error: RuntimeErrorInfo }): React.ReactElement 
       title={isSchemaError ? "Migration required" : "Weekly review could not be loaded"}
       message={error.message}
       details={error.details}
-      recommendedCommand={error.recommended_command ?? "uv run python -m scripts.runtime status --json"}
     />
   );
 }

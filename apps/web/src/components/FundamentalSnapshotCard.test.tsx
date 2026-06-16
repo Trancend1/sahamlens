@@ -61,7 +61,7 @@ describe("FundamentalSnapshotCard", () => {
     expect(html).toContain("Missing: pe_ratio, pbv");
   });
 
-  it("renders missing state without hiding command path", () => {
+  it("renders missing state with webui action hint", () => {
     const html = renderToStaticMarkup(
       <FundamentalSnapshotCard
         overview={{
@@ -75,6 +75,6 @@ describe("FundamentalSnapshotCard", () => {
 
     expect(html).toContain("Coverage unknown");
     expect(html).toContain("Fundamental missing");
-    expect(html).toContain("scripts.fundamentals ingest");
+    expect(html).toContain("Refresh fundamentals from the stock detail page");
   });
 });

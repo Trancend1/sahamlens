@@ -69,7 +69,6 @@ describe("StrategyRulesDashboard", () => {
 
     expect(html).toContain("No strategy rules yet");
     expect(html).toContain("Create your first rule");
-    expect(html).toContain("scripts.journal_review");
   });
 
   it("renders named rules even when no evaluations exist yet", () => {
@@ -99,7 +98,7 @@ describe("StrategyRulesDashboard", () => {
 
     expect(html).toContain("Migration required");
     expect(html).toContain("strategy_rule_evaluations");
-    expect(html).toContain("scripts.migrate");
+    expect(html).toContain("Check runtime status");
     expect(html).not.toContain("Traceback");
     expect(html).not.toContain("no such table");
     expect(html).not.toContain("D:/DevSpace");

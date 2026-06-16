@@ -15,7 +15,6 @@ export function NewsSection({ items, symbol }: NewsSectionProps): React.ReactEle
           title={`No summarized news yet for ${symbol}`}
           description="Ingest and summarize validated RSS metadata before using news context for this ticker."
           actionLabel="Refresh news metadata"
-          command="uv run python -m scripts.ingest_news"
         />
       </div>
     );

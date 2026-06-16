@@ -114,7 +114,6 @@ describe("DataQualityDashboard", () => {
     expect(html).toContain("Not Ready");
     expect(html).toContain("Check runtime status");
     expect(html).toContain("weekly_review_runs");
-    expect(html).toContain("scripts.migrate");
     expect(html).not.toContain("Traceback");
     expect(html).not.toContain("no such table");
   });

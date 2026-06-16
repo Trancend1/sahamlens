@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CommandBlock } from "./CommandBlock";
 
 interface RuntimeErrorStateProps {
   title: string;
@@ -14,7 +13,6 @@ export function RuntimeErrorState({
   title,
   message,
   details,
-  recommendedCommand,
   actionLabel = "Check runtime status",
   actionHref = "/data-quality",
 }: RuntimeErrorStateProps): React.ReactElement {
@@ -32,7 +30,6 @@ export function RuntimeErrorState({
           {actionLabel}
         </Link>
       </div>
-      {recommendedCommand ? <CommandBlock command={recommendedCommand} /> : null}
     </section>
   );
 }

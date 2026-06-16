@@ -1,4 +1,4 @@
-import { execFile, type ExecFileOptions } from "node:child_process";
+import { execFile, execSync, type ExecFileOptions } from "node:child_process";
 import path from "node:path";
 
 const DEFAULT_TIMEOUT_MS = 15_000;
@@ -61,6 +61,49 @@ export class RuntimeFetchError extends Error {
   }
 }
 
+let _pythonBin: string | null = null;
+
+function resolvePythonBin(): string {
+  if (_pythonBin) return _pythonBin;
+
+  if (process.env.PYTHON_BIN) {
+    _pythonBin = process.env.PYTHON_BIN;
+    return _pythonBin;
+  }
+
+  try {
+    execSync("uv --version", { stdio: "pipe", windowsHide: true });
+    const out = execSync('uv run python -c "import sys; print(sys.executable)"', {
+      stdio: "pipe", encoding: "utf8", timeout: 15000, windowsHide: true,
+    });
+    _pythonBin = out.toString().trim();
+    return _pythonBin;
+  } catch {
+    // uv not available, fall through
+  }
+
+  try {
+    execSync("python --version", { stdio: "pipe", windowsHide: true });
+    _pythonBin = "python";
+    return _pythonBin;
+  } catch {
+    // python not found
+  }
+
+  if (process.platform !== "win32") {
+    try {
+      execSync("python3 --version", { stdio: "pipe", windowsHide: true });
+      _pythonBin = "python3";
+      return _pythonBin;
+    } catch {
+      // python3 not found
+    }
+  }
+
+  _pythonBin = process.platform === "win32" ? "python" : "python3";
+  return _pythonBin;
+}
+
 function repoRoot(): string {
   return path.resolve(process.cwd(), "..", "..");
 }
@@ -88,7 +131,7 @@ export async function runPython<T = unknown>(
 ): Promise<RunResult<T>> {
   const exec = deps.exec ?? defaultExec;
   const cwd = options.cwd ?? repoRoot();
-  const python = options.python ?? defaultPython();
+  const python = options.python ?? resolvePythonBin();
   const args = ["-m", module, ...(options.args ?? [])];
   const timeout = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
@@ -257,9 +300,4 @@ function sanitizeDetails(raw: string): string {
     .filter((line) => !line.startsWith("File "))
     .filter((line) => !line.startsWith("LINE "));
   return lines.slice(0, 4).join(" ") || "No additional details.";
-}
-
-function defaultPython(): string {
-  if (process.env.PYTHON_BIN) return process.env.PYTHON_BIN;
-  return process.platform === "win32" ? "python" : "python3";
 }

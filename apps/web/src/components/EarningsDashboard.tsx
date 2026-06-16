@@ -349,9 +349,6 @@ function ErrorPanel({ error }: { error: RuntimeErrorInfo }): React.ReactElement 
       title={isSchemaError ? "Migration required" : "Earnings could not be loaded"}
       message={error.message}
       details={error.details}
-      recommendedCommand={
-        error.recommended_command ?? "uv run python -m scripts.runtime status --json"
-      }
     />
   );
 }

@@ -48,7 +48,6 @@ export default async function JournalPage() {
           title="Journal could not be loaded"
           message="The local journal command could not complete."
           details={error}
-          recommendedCommand="uv run python -m scripts.runtime status --json"
         />
       ) : plans.length === 0 ? (
         <EmptyState

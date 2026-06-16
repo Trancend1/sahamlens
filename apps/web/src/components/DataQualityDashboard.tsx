@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { CommandBlock } from "@/components/ui/CommandBlock";
 import { EmptyState as SharedEmptyState } from "@/components/ui/EmptyState";
 import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
+import { ProviderHealthRefresh } from "@/components/ProviderHealthRefresh";
 import type { DataQualityOverview, FreshnessState, ProviderHealthSnapshot } from "@/lib/dataQuality";
 import type { RuntimeErrorInfo } from "@/lib/pythonRunner";
 import type { RuntimeStatus } from "@/lib/runtime";
@@ -68,6 +68,8 @@ export function DataQualityDashboard({
         </p>
       </header>
 
+      <ProviderHealthRefresh />
+
       {error ? <ErrorPanel error={error} /> : null}
       <RuntimeReadiness status={runtimeStatus} error={runtimeError} />
 
@@ -108,7 +110,7 @@ function EmptyState(): React.ReactElement {
       title="Provider health has not been checked yet"
       description="Refresh provider health after migrations and watchlist setup so dependent pages can show freshness and coverage caveats."
       actionLabel="Refresh provider health"
-      command="uv run python -m scripts.provider_health refresh-yfinance --from-watchlist"
+      actionHref="/data-quality"
     />
   );
 }
@@ -126,7 +128,6 @@ function RuntimeReadiness({
         title="Runtime not ready"
         message={error.message}
         details={error.details}
-        recommendedCommand={error.recommended_command}
       />
     );
   }
@@ -137,7 +138,7 @@ function RuntimeReadiness({
         title="Runtime Readiness"
         description="Runtime status is not available yet. Check the local runtime before debugging page-level data."
         actionLabel="Check runtime status"
-        command="uv run python -m scripts.runtime status --json"
+        actionHref="/data-quality"
       />
     );
   }
@@ -172,10 +173,12 @@ function RuntimeReadiness({
         </p>
       ) : null}
       {status.recommended_commands.length > 0 ? (
-        <>
-          <p className="mt-3 font-medium text-accent">Check runtime status</p>
-          <CommandBlock command={status.recommended_commands[0]!} />
-        </>
+        <Link
+          href="/data-quality"
+          className="mt-3 inline-flex rounded-md bg-accent px-4 py-2 text-xs font-medium text-white hover:opacity-90"
+        >
+          Check runtime status
+        </Link>
       ) : null}
       {status.warnings.length > 0 ? (
         <ul className="mt-3 list-inside list-disc text-sm text-muted">
@@ -195,7 +198,6 @@ function ErrorPanel({ error }: { error: RuntimeErrorInfo }): React.ReactElement 
       title={isSchemaError ? "Migration required" : "Data quality could not be loaded"}
       message={error.message}
       details={error.details}
-      recommendedCommand={error.recommended_command ?? "uv run python -m scripts.runtime status --json"}
     />
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState as SharedEmptyState } from "@/components/ui/EmptyState";
 import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
+import { ScreenerRunner } from "@/components/ScreenerRunner";
 import type {
   CompletenessState,
   ConfidenceLevel,
@@ -68,6 +69,8 @@ export function ScreenerDashboard({ run, error }: Props): React.ReactElement {
           and confidence caveats. Review the context before making decisions.
         </p>
       </header>
+
+      <ScreenerRunner />
 
       {error ? <ErrorPanel error={error} /> : null}
       {run ? (
@@ -180,7 +183,6 @@ function EmptyState({ run }: { run: ScreenerRun }): React.ReactElement {
       title="No screener results yet"
       description="Run the screener after V1-S1 Data Quality and V1-S2 coverage/fundamental snapshots are populated."
       actionLabel="Run screener"
-      command="uv run python -m scripts.screener --json run --builtin fundamentals-basic --from-watchlist"
     />
   );
 }
@@ -191,7 +193,6 @@ function ErrorPanel({ error }: { error: string }): React.ReactElement {
       title="Screener data is not ready"
       message="The local screener command could not complete."
       details={error}
-      recommendedCommand="uv run python -m scripts.runtime status --json"
     />
   );
 }

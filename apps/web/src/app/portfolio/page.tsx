@@ -46,7 +46,6 @@ export default async function PortfolioPage() {
           title="Portfolio could not be loaded"
           message="The local portfolio command could not complete."
           details={error}
-          recommendedCommand="uv run python -m scripts.runtime status --json"
         />
       ) : positions.length === 0 ? (
         <EmptyState
