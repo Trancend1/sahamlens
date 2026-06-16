@@ -23,20 +23,21 @@ export async function POST(
   { params }: { params: Promise<{ type: string }> }
 ): Promise<NextResponse> {
   const { type } = await params;
+  const op = getOperation(type);
 
-  if (!getOperation(type)) {
-    return NextResponse.json({ ok: false, error: `Unknown operation: ${type}` }, { status: 400 });
+  if (!op) {
+    return NextResponse.json({ ok: false, error: `Unknown operation: ${type}`, type }, { status: 400 });
   }
 
   const mapping = SCRIPT_MAP[type];
   if (!mapping) {
-    return NextResponse.json({ ok: false, error: `No script mapping for: ${type}` }, { status: 500 });
+    return NextResponse.json({ ok: false, error: `No script mapping for: ${type}`, type }, { status: 500 });
   }
 
   try {
     const { data } = await runPython<{ ok: boolean }>(mapping.module, {
       args: mapping.args,
-      timeoutMs: getOperation(type)?.timeoutMs ?? 120_000,
+      timeoutMs: op.timeoutMs,
     });
     return NextResponse.json({ ok: data.ok ?? true, type });
   } catch (err) {
