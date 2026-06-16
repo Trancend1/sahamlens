@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useMemo } from "react";
 import { CoolingOffBanner } from "./CoolingOffBanner";
 import CritiquePanel from "./CritiquePanel";
+import { LlmErrorBanner } from "@/components/LlmErrorBanner";
 import { calcPositionSize } from "@/lib/journal-client";
 import type { TradePlan, JournalCritique, SetupType, EmotionLevel } from "@/lib/journal-client";
 
@@ -186,12 +187,15 @@ export default function TradePlanForm() {
         </div>
 
         {critiqueState === "idle" && (
-          <button
-            onClick={handleCritique}
-            className="rounded border border-accent/40 px-4 py-2 text-sm text-accent hover:bg-accent/10"
-          >
-            Minta Kritik AI
-          </button>
+          <>
+            <LlmErrorBanner featureLabel="AI Critique" />
+            <button
+              onClick={handleCritique}
+              className="rounded border border-accent/40 px-4 py-2 text-sm text-accent hover:bg-accent/10"
+            >
+              Minta Kritik AI
+            </button>
+          </>
         )}
         {critiqueState === "loading" && (
           <p className="text-sm text-muted">Memproses kritik... (30–60 detik)</p>

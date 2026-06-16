@@ -22,13 +22,15 @@ from typing import Any, Protocol, runtime_checkable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from dotenv import load_dotenv
+
 logger = logging.getLogger(__name__)
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
 OPENAI_COMPAT_COMPLETIONS_PATH = "/chat/completions"
 DEFAULT_BACKOFF_S: tuple[float, ...] = (1.0, 2.0, 4.0)
-DEFAULT_TIMEOUT_S = 30.0
+DEFAULT_TIMEOUT_S = 60.0
 RETRYABLE_STATUS = (429, 500, 502, 503, 504)
 
 # Environment keys for provider selection. Secrets come only from these.
@@ -39,7 +41,7 @@ MODEL_ENV = "SAHAMLENS_LLM_MODEL"
 ANTHROPIC_KEY_ENV = "ANTHROPIC_API_KEY"  # pragma: allowlist secret
 
 _OPENAI_COMPAT_KINDS = frozenset(
-    {"openai_compatible", "openai", "deepseek", "openrouter", "custom"}
+    {"openai_compatible", "openai", "deepseek", "openrouter", "tokenrouter", "custom"}
 )
 
 
@@ -348,8 +350,12 @@ def resolve_provider(
 ) -> LLMProvider:
     """Build the configured provider from the environment (BYO-key, secret-from-env).
 
-    Defaults to Anthropic so existing behavior is unchanged when nothing is set.
+    Loads ``.env.local`` automatically so CLI scripts don't need to call
+    ``load_dotenv`` separately. ``env`` dict takes precedence when passed
+    (used by tests and Hermes runtime). Defaults to Anthropic when nothing is set.
     """
+    if env is None:
+        load_dotenv(".env.local")
     values = env if env is not None else os.environ
     kind = values.get(PROVIDER_ENV, "anthropic").strip().lower() or "anthropic"
     if kind == "anthropic":
