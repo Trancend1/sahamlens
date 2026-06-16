@@ -84,4 +84,16 @@ describe("POST /api/config", () => {
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
+
+  it("should return 400 for app section (read-only)", async () => {
+    const req = new NextRequest("http://localhost/api/config?section=app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dataDir: "/new/path" }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("read-only");
+  });
 });

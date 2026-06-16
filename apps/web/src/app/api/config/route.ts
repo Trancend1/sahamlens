@@ -76,11 +76,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const env = readEnvFile();
 
+  if (section === "app") {
+    return NextResponse.json({ error: "App section is read-only" }, { status: 400 });
+  }
+
   if (section === "llm") {
-    if (body.provider !== undefined) env.SAHAMLENS_LLM_PROVIDER = String(body.provider);
-    if (body.baseUrl !== undefined) env.SAHAMLENS_LLM_BASE_URL = String(body.baseUrl);
-    if (body.model !== undefined) env.SAHAMLENS_LLM_MODEL = String(body.model);
-    if (body.apiKey !== undefined) env.SAHAMLENS_LLM_API_KEY = String(body.apiKey);
+    if (typeof body.provider === "string") env.SAHAMLENS_LLM_PROVIDER = body.provider;
+    if (typeof body.baseUrl === "string") env.SAHAMLENS_LLM_BASE_URL = body.baseUrl;
+    if (typeof body.model === "string") env.SAHAMLENS_LLM_MODEL = body.model;
+    if (typeof body.apiKey === "string") env.SAHAMLENS_LLM_API_KEY = body.apiKey; // pragma: allowlist secret
   }
 
   writeEnvFile(env);
