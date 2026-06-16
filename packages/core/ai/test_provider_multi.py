@@ -148,6 +148,19 @@ def test_resolve_builds_openai_compatible_from_env() -> None:
     assert provider.name == "deepseek"
 
 
+def test_resolve_tokenrouter() -> None:
+    provider = resolve_provider(
+        env={
+            "SAHAMLENS_LLM_PROVIDER": "tokenrouter",
+            "SAHAMLENS_LLM_BASE_URL": "https://api.tokenrouter.io/v1",
+            "SAHAMLENS_LLM_API_KEY": FAKE_API_KEY,
+            "SAHAMLENS_LLM_MODEL": "MiniMax-M3",
+        }
+    )
+    assert isinstance(provider, OpenAICompatibleProvider)
+    assert provider.name == "tokenrouter"
+
+
 def test_resolve_unknown_provider_raises() -> None:
     with pytest.raises(ValueError, match="SAHAMLENS_LLM_PROVIDER"):
         resolve_provider(env={"SAHAMLENS_LLM_PROVIDER": "made-up"})

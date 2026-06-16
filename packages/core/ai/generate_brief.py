@@ -69,7 +69,7 @@ def generate_stock_brief(
             schema=schema,
             schema_name="stock_brief",
             model=model,
-            max_tokens=1500,
+            max_tokens=4000,
         )
 
         if raw_output is None:

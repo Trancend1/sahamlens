@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { ChatResponse } from "@/lib/stockBrief";
+import { LlmErrorBanner } from "@/components/LlmErrorBanner";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -75,6 +76,8 @@ export function ChatPanel({ symbol }: Props) {
           decisions.
         </p>
       ) : null}
+
+      <LlmErrorBanner featureLabel="AI Chat" />
 
       <div className="flex flex-col gap-3">
         {messages.map((message, index) => (

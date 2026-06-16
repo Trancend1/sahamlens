@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LlmStatusBadge } from "@/components/LlmStatusBadge";
 
 const NAV = [
   { href: "/data-quality", label: "Data Quality", desc: "Check data readiness and provider health." },
@@ -22,6 +23,9 @@ export default function HomePage() {
           Check data readiness, review your watchlist, and use local decision-support tools
           without treating the app as a trading signal.
         </p>
+        <div className="mt-3">
+          <LlmStatusBadge compact />
+        </div>
       </header>
 
       <nav className="grid gap-3 sm:grid-cols-2">

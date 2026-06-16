@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChatPanel } from "@/components/ChatPanel";
 import { FundamentalSnapshotCard } from "@/components/FundamentalSnapshotCard";
 import { IndicatorCard } from "@/components/IndicatorCard";
+import { LlmStatusBadge } from "@/components/LlmStatusBadge";
 import { NewsSection } from "@/components/NewsSection";
 import { StockBriefPanel } from "@/components/StockBriefPanel";
 import { StockChart } from "@/components/StockChart";
@@ -116,6 +117,13 @@ export default async function StockDetailPage({ params }: PageProps) {
       </section>
 
       <hr className="border-muted/20" />
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">
+          AI Analysis
+        </h2>
+        <LlmStatusBadge compact />
+      </div>
 
       <StockBriefPanel symbol={detail.symbol} />
 

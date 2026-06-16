@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { EvidenceItem, StockBrief } from "@/lib/stockBrief";
+import { LlmErrorBanner } from "@/components/LlmErrorBanner";
 
 interface Props {
   symbol: string;
@@ -32,7 +33,7 @@ export function StockBriefPanel({ symbol }: Props) {
       }
       setBrief((await res.json()) as StockBrief);
     } catch {
-      setError("The AI brief could not be generated. Check local runtime readiness and try again.");
+      setError("The AI brief could not be generated.");
     } finally {
       setLoading(false);
     }
@@ -72,6 +73,8 @@ export function StockBriefPanel({ symbol }: Props) {
           {error}
         </p>
       ) : null}
+
+      <LlmErrorBanner featureLabel="AI Brief" />
 
       {!brief && !loading && !error ? (
         <p className="text-xs text-muted">
