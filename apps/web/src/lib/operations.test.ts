@@ -3,6 +3,7 @@ import { OPERATIONS, getOperation, getOperationsByCategory } from "./operations"
 
 describe("operations registry", () => {
   it("should have all expected operations", () => {
+    expect(OPERATIONS).toHaveLength(8);
     const ids = OPERATIONS.map((o) => o.id);
     expect(ids).toContain("provider_health");
     expect(ids).toContain("prices");
@@ -18,6 +19,7 @@ describe("operations registry", () => {
     for (const op of OPERATIONS) {
       expect(op.id).toBeTruthy();
       expect(op.name).toBeTruthy();
+      expect(op.description).toBeTruthy();
       expect(op.category).toBeTruthy();
       expect(op.route).toMatch(/^\/api\//);
       expect(op.freshnessKey).toBeTruthy();
@@ -37,7 +39,8 @@ describe("operations registry", () => {
 
   it("should group operations by category", () => {
     const byCat = getOperationsByCategory();
-    expect(byCat.provider).toBeDefined();
-    expect(byCat.provider.length).toBeGreaterThan(0);
+    expect(byCat.provider).toHaveLength(4);
+    expect(byCat.analysis).toHaveLength(2);
+    expect(byCat.review).toHaveLength(2);
   });
 });
