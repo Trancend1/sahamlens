@@ -42,7 +42,7 @@ async function checkLlm(): Promise<ComponentCheck> {
     }
     return makeCheck("degraded", "LLM Provider", data.error ?? "Not configured");
   } catch {
-    return makeCheck("degraded", "LLM Provider", "Could not verify LLM status");
+    return makeCheck("fail", "LLM Provider", "Could not verify LLM status");
   }
 }
 
