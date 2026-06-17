@@ -106,7 +106,7 @@ def _emit(report_or_dict: object, *, as_json: bool) -> None:
         print(report_or_dict)
 
 
-def _report_to_dict(report: FreshnessReport) -> dict:
+def _report_to_dict(report: FreshnessReport) -> dict[str, object]:
     return {
         "fresh_count": report.fresh_count,
         "stale_count": report.stale_count,
@@ -165,7 +165,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    return args.func(args)
+    return args.func(args)  # type: ignore[no-any-return]
 
 
 if __name__ == "__main__":
