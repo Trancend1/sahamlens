@@ -1,62 +1,56 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { NextRequest } from "next/server";
 import { POST } from "./route";
 
-vi.mock("@/lib/pythonRunner", () => ({
-  runPython: vi.fn(),
-  PythonRunnerError: class extends Error {
-    constructor(m: string, public stdout = "", public stderr = "", public exitCode: number | null = null) {
-      super(m);
-      this.name = "PythonRunnerError";
-    }
-  },
-}));
+vi.mock("@/lib/cliCommands", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/cliCommands")>();
+  return { ...actual, runCli: vi.fn() };
+});
 
-import { runPython } from "@/lib/pythonRunner";
+import { runCli } from "@/lib/cliCommands";
+
+function makeReq(type: string): NextRequest {
+  return new Request(`http://localhost/api/operations/${type}/run`, {
+    method: "POST",
+  }) as unknown as NextRequest;
+}
 
 describe("POST /api/operations/[type]/run", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should run provider_health operation", async () => {
-    vi.mocked(runPython).mockResolvedValue({
-      data: { ok: true },
-      rawStdout: "",
-      rawStderr: "",
-    });
+  it("runs provider_health via the correct CLI command key", async () => {
+    vi.mocked(runCli).mockResolvedValue({ ok: true, data: { ok: true }, stdout: "", stderr: "" });
 
-    const req = new Request("http://localhost/api/operations/provider_health/run", { method: "POST" });
-    const res = await POST(req, { params: Promise.resolve({ type: "provider_health" }) });
+    const res = await POST(makeReq("provider_health"), {
+      params: Promise.resolve({ type: "provider_health" }),
+    });
     const body = await res.json();
     expect(body.ok).toBe(true);
-    expect(runPython).toHaveBeenCalledWith("scripts.provider_health", expect.any(Object));
+    expect(runCli).toHaveBeenCalledWith("provider_health.refresh", expect.any(Object));
   });
 
-  it("should run prices operation with correct module", async () => {
-    vi.mocked(runPython).mockResolvedValue({
-      data: { ok: true },
-      rawStdout: "",
-      rawStderr: "",
-    });
+  it("runs prices via the correct CLI command key", async () => {
+    vi.mocked(runCli).mockResolvedValue({ ok: true, data: { ok: true }, stdout: "", stderr: "" });
 
-    const req = new Request("http://localhost/api/operations/prices/run", { method: "POST" });
-    const res = await POST(req, { params: Promise.resolve({ type: "prices" }) });
+    const res = await POST(makeReq("prices"), { params: Promise.resolve({ type: "prices" }) });
     const body = await res.json();
     expect(body.ok).toBe(true);
-    expect(runPython).toHaveBeenCalledWith("scripts.ingest_prices", expect.any(Object));
+    expect(runCli).toHaveBeenCalledWith("prices.refresh", expect.objectContaining({ fromWatchlist: true }));
   });
 
-  it("should return 400 for unknown operation type", async () => {
-    const req = new Request("http://localhost/api/operations/unknown/run", { method: "POST" });
-    const res = await POST(req, { params: Promise.resolve({ type: "unknown" }) });
+  it("returns 400 for unknown operation type", async () => {
+    const res = await POST(makeReq("unknown"), { params: Promise.resolve({ type: "unknown" }) });
     expect(res.status).toBe(400);
   });
 
-  it("should return 500 on Python error", async () => {
-    vi.mocked(runPython).mockRejectedValue(new Error("yfinance timeout"));
+  it("returns 500 when the CLI fails", async () => {
+    vi.mocked(runCli).mockRejectedValue(new Error("yfinance timeout"));
 
-    const req = new Request("http://localhost/api/operations/provider_health/run", { method: "POST" });
-    const res = await POST(req, { params: Promise.resolve({ type: "provider_health" }) });
+    const res = await POST(makeReq("provider_health"), {
+      params: Promise.resolve({ type: "provider_health" }),
+    });
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.ok).toBe(false);

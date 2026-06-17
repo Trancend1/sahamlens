@@ -17,7 +17,12 @@ function computeOverall(checks: HealthReport["checks"]): { overall: OverallStatu
 }
 
 export default async function HealthPage() {
-  let runtime = { status: "fail" as const, python: "fail" as const, database: "fail" as const };
+  type CheckStatus = "ok" | "degraded" | "fail";
+  let runtime: { status: CheckStatus; python: CheckStatus; database: CheckStatus } = {
+    status: "fail",
+    python: "fail",
+    database: "fail",
+  };
   let llmStatus: "ok" | "degraded" = "degraded";
   let llmDetail = "Could not check";
 

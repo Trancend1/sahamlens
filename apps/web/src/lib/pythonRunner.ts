@@ -145,6 +145,30 @@ export async function runPython<T = unknown>(
   return { data, rawStdout: stdout, rawStderr: stderr };
 }
 
+/**
+ * Run a Python module and return raw stdout/stderr without JSON parsing.
+ * Success is determined by exit code (non-zero rejects via PythonRunnerError),
+ * NOT by output shape. Use this for CLIs that may emit plain text or no JSON.
+ */
+export async function runPythonRaw(
+  module: string,
+  options: RunOptions = {},
+  deps: RunDeps = {},
+): Promise<ExecResult> {
+  const exec = deps.exec ?? defaultExec;
+  const cwd = options.cwd ?? repoRoot();
+  const python = options.python ?? resolvePythonBin();
+  const args = ["-m", module, ...(options.args ?? [])];
+  const timeout = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
+  return exec(python, args, {
+    cwd,
+    timeout,
+    maxBuffer: 4 * 1024 * 1024,
+    windowsHide: true,
+  });
+}
+
 function parseJson<T>(stdout: string, stderr: string): T {
   const trimmed = stdout.trim();
   if (!trimmed) {

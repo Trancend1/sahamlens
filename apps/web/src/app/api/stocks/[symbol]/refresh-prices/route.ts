@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PythonRunnerError, runPython } from "@/lib/pythonRunner";
+import { PythonRunnerError } from "@/lib/pythonRunner";
+import { runCli } from "@/lib/cliCommands";
 
 interface RouteParams {
   params: Promise<{ symbol: string }>;
@@ -8,15 +9,9 @@ interface RouteParams {
 export async function POST(_req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   const { symbol } = await params;
   try {
-    await runPython("scripts.ingest_prices", {
-      args: ["--symbols", symbol, "--days", "365"],
-      timeoutMs: 120_000,
-    });
+    await runCli("prices.refresh", { symbol, days: 365 });
     try {
-      await runPython("scripts.calculate_indicators", {
-        args: ["--symbols", symbol],
-        timeoutMs: 60_000,
-      });
+      await runCli("indicators.calculate", { symbol });
     } catch {
       // indicators are best-effort
     }

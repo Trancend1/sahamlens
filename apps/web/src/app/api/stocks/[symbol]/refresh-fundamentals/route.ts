@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PythonRunnerError, runPython } from "@/lib/pythonRunner";
+import { PythonRunnerError } from "@/lib/pythonRunner";
+import { runCli } from "@/lib/cliCommands";
 
 interface RouteParams {
   params: Promise<{ symbol: string }>;
@@ -8,10 +9,7 @@ interface RouteParams {
 export async function POST(_req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   const { symbol } = await params;
   try {
-    await runPython("scripts.fundamentals", {
-      args: ["coverage", "refresh", "--symbols", symbol],
-      timeoutMs: 60_000,
-    });
+    await runCli("fundamentals.refresh", { symbol });
     return NextResponse.json({ ok: true, message: `Fundamentals refreshed for ${symbol}` });
   } catch (err) {
     const msg = err instanceof PythonRunnerError ? err.stderr || err.message : String(err);

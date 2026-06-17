@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { PythonRunnerError, runPython } from "@/lib/pythonRunner";
+import { PythonRunnerError } from "@/lib/pythonRunner";
+import { runCli } from "@/lib/cliCommands";
 
 export async function POST(): Promise<NextResponse> {
   try {
-    await runPython("scripts.journal_review", {
-      args: ["rules", "evaluate", "--json"],
-      timeoutMs: 120_000,
-    });
+    await runCli("strategy_rules.evaluate");
     return NextResponse.json({ ok: true, message: "Strategy rules evaluated" });
   } catch (err) {
     const msg = err instanceof PythonRunnerError ? err.stderr || err.message : String(err);

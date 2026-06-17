@@ -66,7 +66,7 @@ async function stopHermes(): Promise<ControlResult> {
 
   try {
     if (process.platform === "win32") {
-      execSync(`taskkill /PID ${pid} /F`, { stdio: "pipe", windowsHide: true });
+      execSync(`taskkill /PID ${pid} /F /T`, { stdio: "pipe", windowsHide: true });
     } else {
       process.kill(pid, "SIGTERM");
     }

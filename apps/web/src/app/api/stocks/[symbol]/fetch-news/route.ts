@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PythonRunnerError, runPython } from "@/lib/pythonRunner";
+import { PythonRunnerError } from "@/lib/pythonRunner";
+import { runCli } from "@/lib/cliCommands";
 
 interface RouteParams {
   params: Promise<{ symbol: string }>;
@@ -8,15 +9,10 @@ interface RouteParams {
 export async function POST(_req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   const { symbol } = await params;
   try {
-    await runPython("scripts.ingest_news", {
-      args: ["--symbols", symbol],
-      timeoutMs: 120_000,
-    });
+    // ingest_news pulls all configured RSS feeds (no per-symbol filter upstream).
+    await runCli("news.ingest");
     try {
-      await runPython("scripts.summarize_news", {
-        args: ["--symbol", symbol],
-        timeoutMs: 60_000,
-      });
+      await runCli("news.summarize");
     } catch {
       // summarization is best-effort
     }

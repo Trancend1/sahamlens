@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { OperationsTable } from "./OperationsTable";
+import type { FreshnessReport } from "@/lib/runtime";
 
-const MOCK_REPORT = {
+const MOCK_REPORT: FreshnessReport = {
   has_stale: true,
   stale_count: 1,
   fresh_count: 1,

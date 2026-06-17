@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { PythonRunnerError, runPython } from "@/lib/pythonRunner";
+import { PythonRunnerError } from "@/lib/pythonRunner";
+import { runCli } from "@/lib/cliCommands";
 
 export interface FreshnessRecord {
   data_type: string;
@@ -20,11 +21,8 @@ export interface FreshnessReport {
 
 export async function GET(): Promise<NextResponse> {
   try {
-    const { data } = await runPython<FreshnessReport>("scripts.freshness", {
-      args: ["check", "--json"],
-      timeoutMs: 15_000,
-    });
-    return NextResponse.json(data);
+    const { data } = await runCli("freshness.check");
+    return NextResponse.json(data as FreshnessReport);
   } catch (err) {
     const msg = err instanceof PythonRunnerError ? err.stderr || err.message : String(err);
     return NextResponse.json(
@@ -45,11 +43,18 @@ export async function GET(): Promise<NextResponse> {
 
 export async function POST(): Promise<NextResponse> {
   try {
-    const { data } = await runPython<{ ok: boolean; refreshed: string[]; errors: string[] }>(
-      "scripts.freshness",
-      { args: ["refresh", "--json"], timeoutMs: 300_000 },
-    );
-    return NextResponse.json({ ok: data.ok, message: `Refreshed: ${data.refreshed.join(", ") || "none"}`, refreshed: data.refreshed, errors: data.errors });
+    const { data } = await runCli("freshness.refresh");
+    const result = (data ?? { ok: true, refreshed: [], errors: [] }) as {
+      ok: boolean;
+      refreshed: string[];
+      errors: string[];
+    };
+    return NextResponse.json({
+      ok: result.ok,
+      message: `Refreshed: ${result.refreshed.join(", ") || "none"}`,
+      refreshed: result.refreshed,
+      errors: result.errors,
+    });
   } catch (err) {
     const msg = err instanceof PythonRunnerError ? err.stderr || err.message : String(err);
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });

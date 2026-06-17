@@ -1,4 +1,5 @@
 import { runPython, toRuntimeFetchError } from "./pythonRunner";
+import { runCli } from "./cliCommands";
 
 export type SchemaStatus = "ready" | "stale" | "missing" | "unknown";
 
@@ -53,11 +54,11 @@ export async function fetchRuntimeStatus(): Promise<RuntimeStatus> {
 
 export async function checkFreshness(): Promise<FreshnessReport> {
   try {
-    const { data } = await runPython<FreshnessReport>("scripts.freshness", {
-      args: ["check", "--json"],
-      timeoutMs: 15_000,
-    });
-    return data;
+    const { data } = await runCli("freshness.check");
+    if (!data) {
+      throw new Error("freshness check returned no JSON payload");
+    }
+    return data as FreshnessReport;
   } catch (err) {
     throw toRuntimeFetchError(err);
   }

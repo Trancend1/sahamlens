@@ -1,5 +1,13 @@
 """Local runtime readiness checks for SahamLens."""
 
+from packages.core.runtime.freshness import (
+    DEFAULT_THRESHOLDS,
+    FRESHNESS_QUERIES,
+    DataFreshnessStatus,
+    FreshnessRecord,
+    FreshnessReport,
+    check_freshness,
+)
 from packages.core.runtime.status import (
     REQUIRED_TABLES,
     BootstrapResult,
@@ -15,9 +23,15 @@ __all__ = [
     "REQUIRED_TABLES",
     "BootstrapResult",
     "BootstrapStep",
+    "DataFreshnessStatus",
+    "DEFAULT_THRESHOLDS",
+    "FRESHNESS_QUERIES",
+    "FreshnessRecord",
+    "FreshnessReport",
     "RuntimeErrorDetail",
     "RuntimeStatus",
     "RuntimeWarning",
+    "check_freshness",
     "get_runtime_status",
     "run_runtime_bootstrap",
 ]

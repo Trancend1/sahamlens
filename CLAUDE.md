@@ -3,7 +3,7 @@
 SahamLens adalah *personal trading companion* untuk satu *retail* trader IDX. *Local-first*, publik-*repo-safe*, dan AI-*assisted*. AI menjelaskan; *user* memutuskan. **Bukan** broker, *signal service*, *portfolio manager*, atau SaaS.
 
 > **Phase aktif:** CLI-WebUI Integration (COMPLETE ✅)
-> **Status:** All 6 sprints selesai. Siap untuk merge/PR.
+> **Status:** All 6 sprints selesai + final audit issues resolved. Siap merge/PR.
 
 Dokumen ini adalah *sibling* dari [`AGENTS.md`](AGENTS.md). Isi dan struktur mengikuti *template* yang sama. Detail agen, *track*, dan mekanisme *orchestration* ada di AGENTS.md — file ini ringkas untuk akses cepat.
 
@@ -127,7 +127,7 @@ flowchart TD
 - [x] **Task 5.5** — Integration tests (operations-flow + config-flow)
 - [x] **Task 5.6** — Documentation update (README updated for auto-first-run workflow)
 
-### 2.4 *Phase Log*
+### 2.5 *Phase Log*
 
 | Phase | Status | Lesson | Carry-forward |
 |---|---|---|---|
@@ -146,12 +146,13 @@ flowchart TD
 | V2-M0 Outbound Brief | Selesai | `validator.scan_banned` = sumber kebenaran anti-signal untuk *outbound copy*. Telegram tak terkonfigurasi = print-only, bukan failure. | Script tak punya unit-test langsung (butuh network) — logika murni sudah ter-test. |
 | V2 Provider Config (ADR-0021) | Selesai | OpenAI-compat = 1 kelas untuk banyak provider; *structured output* beda per API (tool_use vs function-calling). `detect-secrets` false-positive untuk nama env `*_API_KEY` → pakai pragma allowlist. | M4 construct provider via `resolve_provider()`. Per-provider cost/budget ditunda. |
 | V2-M4 Hermes Runtime | Complete (PR pending) | `MAX(id)` ai_log_id linkage fragile for multi-process; `symbol='DRAFT'` journal bypass is acceptable for single-user | None. M5 Discord deferred. |
-| Sprint 0 Auto-First-Run (CLI-WebUI) | Selesai | `pre-start.mjs` butuh `shell: true` untuk `execSync` di Windows agar `uv run python` berfungsi. | Next: Sprint 1 — Inline Data Refresh (tombol WebUI untuk setiap operasi CLI). |
-| Sprint 1 Inline Data Refresh (CLI-WebUI) | Selesai | Sonner toast + OperationButton reusable. API routes POST untuk setiap operasi. | Next: Sprint 2 — Realtime & Continuous (freshness + staleness). |
-| Sprint 2 Realtime & Continuous (CLI-WebUI) | Selesai | Freshness tracker reusable across CLI/API/WebUI. ADR larang background scheduler → one-shot freshness CLI. | Next: Sprint 3 — Manageable Operations Dashboard. |
+| Sprint 0 Auto-First-Run (CLI-WebUI) | Selesai | `pre-start.mjs` butuh `shell: true` untuk `execSync` di Windows agar `uv run python` berfungsi. Python auto-detect harus cached per-session. | Next: Sprint 1 — Inline Data Refresh (tombol WebUI untuk setiap operasi CLI). |
+| Sprint 1 Inline Data Refresh (CLI-WebUI) | Selesai | Sonner toast + OperationButton reusable. API routes POST untuk setiap operasi; page reload via `window.location.reload()`. | Next: Sprint 2 — Realtime & Continuous (scheduler + freshness). |
+| Sprint 2 Realtime & Continuous (CLI-WebUI) | Selesai | Freshness tracker reusable across CLI/API/WebUI. StaleDataBanner global polling + dismiss. Scheduler diganti freshness CLI (one-shot) karena ADR larang background scheduler generik. | Next: Sprint 3 — Manageable Operations Dashboard. |
 | Sprint 3 Manageable Operations (CLI-WebUI) | Selesai | Operations tab layout (Providers/Health/Config), API health SoT, config read/write .env.local, unified run endpoint. | Next: Sprint 4 — Hermes Integration. |
 | Sprint 4 Hermes Integration (CLI-WebUI) | Selesai | Hermes status API (env + PID check), control API (spawn/taskkill), HermesStatus component with polling + Start/Stop. | Next: Sprint 5 — Polish & Stability. |
 | Sprint 5 Polish & Stability (CLI-WebUI) | Selesai | CLI commands replaced in 13 components, 18 loading.tsx + 18 error.tsx, integration tests, README updated. | Phase complete. Ready for merge/PR. |
+| Final Audit Fix (CLI-WebUI) | Selesai | Audit found systemic CLI contract mismatch (--json posisi, subcommand names, missing args). Fixed via adapter cliCommands.ts + runPythonRaw. Hermes orphan process risk (taskkill tanpa /T) fixed. | Typecheck cleaned, lint 0 err, 173 tests pass termasuk real CLI subprocess test. Siap merge/PR. |
 
 ---
 
