@@ -1,6 +1,22 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { CLI_COMMANDS, OPERATION_CLI_MAP, runCli, type CliCommandKey } from "@/lib/cliCommands";
 import { OPERATIONS } from "@/lib/operations";
+
+const execFileAsync = promisify(execFile);
+
+/** True if Python + duckdb are available (CI web job skips Python setup). */
+let pythonReady = false;
+
+beforeAll(async () => {
+  try {
+    await execFileAsync("python", ["-c", "import duckdb"], { timeout: 10_000 });
+    pythonReady = true;
+  } catch {
+    pythonReady = false;
+  }
+});
 
 /**
  * Contract tests for the CLI adapter.
@@ -53,6 +69,7 @@ describe("CLI execution (real subprocess, read-only)", () => {
   it(
     "freshness.check exits 0 and returns a structured report",
     async () => {
+      if (!pythonReady) return;
       const result = await runCli("freshness.check");
       expect(result.ok).toBe(true);
       expect(result.data).not.toBeNull();
@@ -68,6 +85,7 @@ describe("operations run route (real route → real CLI, no mocks)", () => {
   it(
     "POST /api/operations/alerts/run returns HTTP 200 (not 500)",
     async () => {
+      if (!pythonReady) return;
       const { POST } = await import("@/app/api/operations/[type]/run/route");
       const req = new Request("http://localhost/api/operations/alerts/run", {
         method: "POST",
@@ -85,6 +103,7 @@ describe("operations run route (real route → real CLI, no mocks)", () => {
   it(
     "GET /api/data/freshness returns HTTP 200 with a report (StaleDataBanner source)",
     async () => {
+      if (!pythonReady) return;
       const { GET } = await import("@/app/api/data/freshness/route");
       const res = await GET();
       expect(res.status).toBe(200);

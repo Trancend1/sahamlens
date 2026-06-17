@@ -20,12 +20,12 @@ from packages.core.runtime.status import (
 )
 
 __all__ = [
+    "DEFAULT_THRESHOLDS",
+    "FRESHNESS_QUERIES",
     "REQUIRED_TABLES",
     "BootstrapResult",
     "BootstrapStep",
     "DataFreshnessStatus",
-    "DEFAULT_THRESHOLDS",
-    "FRESHNESS_QUERIES",
     "FreshnessRecord",
     "FreshnessReport",
     "RuntimeErrorDetail",
