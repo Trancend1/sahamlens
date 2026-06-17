@@ -12,7 +12,9 @@ export default function OperationsLayout({ children }: { children: ReactNode }) 
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-6 py-10">
       <header>
-        <p className="text-sm uppercase tracking-widest text-muted">SahamLens / Operations</p>
+        <p className="text-sm uppercase tracking-widest text-muted">
+          <Link href="/" className="hover:text-accent transition-colors">SahamLens</Link> / Operations
+        </p>
         <h1 className="mt-1 text-3xl font-semibold">Operations</h1>
       </header>
 
