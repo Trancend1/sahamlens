@@ -4,7 +4,7 @@ Personal trading companion untuk satu trader retail IDX. Local-first, public-rep
 
 SahamLens is not SaaS, not a signal seller, not an autonomous trader, and not broker integration.
 
-Status: Phase V1 planning is frozen. V1-S6 Alerts + Telegram Optional + Earnings Summary is implemented on the current feature branch.
+Status: Sprint 5 — Documentation & Verification. All core V1 data operations available from WebUI.
 
 Personal learning and analysis tool only. Not financial advice. Read [DISCLAIMER.md](DISCLAIMER.md) before use.
 
@@ -23,7 +23,7 @@ Personal learning and analysis tool only. Not financial advice. Read [DISCLAIMER
 
 Use `corepack enable` if pnpm is not available.
 
-### Setup
+### Quick Start
 
 ```bash
 git clone <repo-url> sahamlens
@@ -34,29 +34,35 @@ cp .env.example .env.local
 uv sync
 pnpm install
 
-uv run python -m scripts.migrate
-uv run python -m scripts.runtime status --json
-pre-commit install
-
 pnpm dev
 ```
 
 The web app runs at `http://localhost:3000`.
 
-If runtime status reports stale schema, run `uv run python -m scripts.migrate`.
-For safe local setup after clone or migration changes, run
-`uv run python -m scripts.runtime bootstrap --json`. `status` is read-only; real
-local DB mutation only happens when `migrate` or `bootstrap` is explicitly run.
+On first run, the application automatically runs migration + bootstrap.
+No manual CLI steps needed to get started.
 
-On Windows, if the web app cannot find the project Python, start dev with:
+### Post-Setup
+
+1. Add watchlist symbols or import portfolio from the WebUI
+2. Go to the **Operations** dashboard at `/operations`
+3. Click **Refresh All** to populate initial data
+4. Refresh individual sections (Prices, Fundamentals, News, Screener) on demand
+
+### Windows Notes
+
+If the web app cannot find the project Python, start dev with:
 
 ```powershell
 $env:PYTHON_BIN=(Resolve-Path ".venv/Scripts/python.exe").Path
 pnpm.cmd --filter @sahamlens/web dev
 ```
 
-V1 intentionally stays CLI-backed and local-first. FastAPI/local sidecar,
-background jobs, and service lifecycle management are deferred to V1.5/V2.
+### CLI Reference
+
+Most operations are available from the WebUI Operations dashboard. CLI commands
+(`uv run python -m scripts.*`) remain available for advanced/programmatic use,
+schedule integration, and troubleshooting.
 
 ### Verification
 

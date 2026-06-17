@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Toaster } from "sonner";
+import { StaleDataBanner } from "@/components/StaleDataBanner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,6 +13,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="id">
       <body className="flex min-h-screen flex-col font-sans antialiased">
+        <StaleDataBanner />
         <main className="flex-1">{children}</main>
         <footer className="border-t border-muted/20 px-4 py-3 text-center text-xs text-muted">
           Personal learning &amp; analysis tool &middot; Bukan investment advice &middot; AI
@@ -19,6 +22,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             Keputusan investasi sepenuhnya tanggung jawab investor
           </span>
         </footer>
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            style: { background: "#1a1f2e", color: "#e5ecf3", border: "1px solid #2a3040" },
+          }}
+        />
       </body>
     </html>
   );

@@ -20,8 +20,8 @@ describe("WatchlistPage", () => {
     const html = renderToStaticMarkup(await WatchlistPage());
 
     expect(html).toContain("No tickers in your watchlist yet");
-    expect(html).toContain("Add your first ticker");
-    expect(html).toContain("scripts.watchlist");
+    expect(html).toContain("Import Portfolio");
+    expect(html).not.toContain("scripts.watchlist");
     expect(html).not.toContain("Traceback");
   });
 

@@ -6,6 +6,7 @@ import { LlmStatusBadge } from "@/components/LlmStatusBadge";
 import { NewsSection } from "@/components/NewsSection";
 import { StockBriefPanel } from "@/components/StockBriefPanel";
 import { StockChart } from "@/components/StockChart";
+import { StockDetailActions } from "@/components/StockDetailActions";
 import { StockFreshnessBar } from "@/components/StockFreshnessBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
@@ -48,7 +49,6 @@ export default async function StockDetailPage({ params }: PageProps) {
           title={`Stock data could not be loaded for ${symbol.toUpperCase()}`}
           message="The local stock-detail command could not complete."
           details={error}
-          recommendedCommand={`uv run python -m scripts.ingest_prices --symbols ${symbol.toUpperCase()} --days 365`}
         />
       </main>
     );
@@ -62,7 +62,6 @@ export default async function StockDetailPage({ params }: PageProps) {
           title={`No local price data for ${symbol.toUpperCase()}`}
           description="Ingest price history before using charts, indicators, or freshness review for this ticker."
           actionLabel="Refresh price data"
-          command={`uv run python -m scripts.ingest_prices --symbols ${symbol.toUpperCase()} --days 365`}
         />
         <FundamentalSnapshotCard overview={fundamental} error={fundamentalError} />
       </main>
@@ -86,6 +85,8 @@ export default async function StockDetailPage({ params }: PageProps) {
         firstDate={detail.first_date}
         lastDate={detail.last_date}
       />
+
+      <StockDetailActions symbol={detail.symbol} />
 
       <StockFreshnessBar lastDate={detail.last_date} />
 

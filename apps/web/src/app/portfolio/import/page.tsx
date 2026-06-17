@@ -212,8 +212,6 @@ export default function PortfolioImportPage() {
         <RuntimeErrorState
           title="Portfolio import could not be completed"
           message={errorMsg}
-          recommendedCommand="uv run python -m scripts.runtime status --json"
-          actionLabel="Check runtime status"
         />
       ) : null}
     </main>

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CommandBlock } from "./CommandBlock";
 
 type EmptyTone = "neutral" | "healthy" | "warning";
 
@@ -23,7 +22,6 @@ export function EmptyState({
   description,
   actionLabel,
   actionHref,
-  command,
   tone = "neutral",
 }: EmptyStateProps): React.ReactElement {
   return (
@@ -42,7 +40,6 @@ export function EmptyState({
           <p className="mt-4 text-sm font-medium text-accent">{actionLabel}</p>
         )
       ) : null}
-      {command ? <CommandBlock command={command} /> : null}
     </section>
   );
 }

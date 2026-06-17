@@ -33,14 +33,13 @@ export default async function WatchlistPage() {
           title="Watchlist could not be loaded"
           message="The local watchlist command could not complete."
           details={error}
-          recommendedCommand="uv run python -m scripts.runtime status --json"
         />
       ) : entries.length === 0 ? (
         <EmptyState
           title="No tickers in your watchlist yet"
           description="Add your first ticker before refreshing provider health, coverage, fundamentals, or screener runs."
-          actionLabel="Add your first ticker"
-          command="uv run python -m scripts.watchlist seed"
+          actionLabel="Import Portfolio"
+          actionHref="/portfolio/import"
         />
       ) : (
         <ul className="divide-y divide-muted/20 rounded-md border border-muted/30 bg-white/[0.02]">

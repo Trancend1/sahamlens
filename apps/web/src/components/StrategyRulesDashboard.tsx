@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState as SharedEmptyState } from "@/components/ui/EmptyState";
 import { RuntimeErrorState } from "@/components/ui/RuntimeErrorState";
+import { StrategyRulesEvaluator } from "@/components/StrategyRulesEvaluator";
 import type { StrategyEvaluationStatus } from "@/lib/journalReview";
 import type { RuntimeErrorInfo } from "@/lib/pythonRunner";
 import type { StrategyRule, StrategyRuleEvaluation } from "@/lib/strategyRules";
@@ -38,6 +39,8 @@ export function StrategyRulesDashboard({
           trade signals.
         </p>
       </header>
+
+      <StrategyRulesEvaluator />
 
       {error ? <ErrorPanel error={error} /> : null}
       {!error && rules.length === 0 && evaluations.length === 0 ? <EmptyState /> : null}
@@ -111,7 +114,6 @@ function EvaluationList({
           title="No rule evaluations yet"
           description="Evaluate strategy rules after journal entries exist for the selected period."
           actionLabel="Evaluate strategy rules"
-          command="uv run python -m scripts.journal_review --json rules evaluate --start 2026-05-25 --end 2026-06-01"
         />
       ) : (
         <>
@@ -172,7 +174,6 @@ function EmptyState(): React.ReactElement {
       title="No strategy rules yet"
       description="Create your first named rule before evaluating journal discipline. V1 rules stay explicit and do not use a custom DSL."
       actionLabel="Create your first rule"
-      command="uv run python -m scripts.journal_review --json rules evaluate --start 2026-05-25 --end 2026-06-01"
     />
   );
 }
@@ -184,7 +185,6 @@ function ErrorPanel({ error }: { error: RuntimeErrorInfo }): React.ReactElement 
       title={isSchemaError ? "Migration required" : "Strategy rules could not be loaded"}
       message={error.message}
       details={error.details}
-      recommendedCommand={error.recommended_command ?? "uv run python -m scripts.runtime status --json"}
     />
   );
 }

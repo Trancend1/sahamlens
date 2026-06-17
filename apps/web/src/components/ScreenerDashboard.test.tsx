@@ -70,7 +70,7 @@ describe("ScreenerDashboard", () => {
     expect(html).toContain("Confidence Medium");
   });
 
-  it("renders empty state without hiding the local CLI path", () => {
+  it("renders empty state with webui run action", () => {
     const html = renderToStaticMarkup(
       <ScreenerDashboard
         run={{ ...run, universe_count: 0, included_count: 0, excluded_count: 0, results: [] }}
@@ -80,7 +80,6 @@ describe("ScreenerDashboard", () => {
 
     expect(html).toContain("No screener results yet");
     expect(html).toContain("Run screener");
-    expect(html).toContain("scripts.screener");
   });
 
   it("renders error state when the CLI cannot read local data", () => {

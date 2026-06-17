@@ -72,7 +72,6 @@ export function FundamentalSnapshotCard({ overview, error = null }: Props): Reac
             title="Fundamental snapshot could not be loaded"
             message="The local fundamental snapshot command could not complete."
             details={error}
-            recommendedCommand="uv run python -m scripts.runtime status --json"
           />
         </div>
       ) : null}
@@ -128,8 +127,7 @@ export function FundamentalSnapshotCard({ overview, error = null }: Props): Reac
         </div>
       ) : (
         <p className="mt-4 text-sm text-muted">
-          No local fundamental snapshot. Ingest one with{" "}
-          <code className="font-mono">uv run python -m scripts.fundamentals ingest</code>.
+          No local fundamental snapshot. Refresh fundamentals from the stock detail page.
         </p>
       )}
     </section>

@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { LlmStatusBadge } from "@/components/LlmStatusBadge";
+import { WelcomeBanner } from "@/components/WelcomeBanner";
 
 const NAV = [
   { href: "/data-quality", label: "Data Quality", desc: "Check data readiness and provider health." },
   { href: "/screener", label: "Screener", desc: "Run transparent filters with confidence caveats." },
-  { href: "/journal/weekly-review", label: "Weekly Review", desc: "Review journal consistency and follow-ups." },
+  { href: "/journal/weekly-review", label: "Weekly Review", desc: "Review journal consistency and follow-ups. DSL" },
   { href: "/strategy-rules", label: "Strategy Rules", desc: "Evaluate named rule discipline checks." },
   { href: "/alerts", label: "Alerts", desc: "Review local rule conditions and false-positive feedback." },
   { href: "/earnings", label: "Earnings", desc: "Track manual events and caveated post-event summaries." },
   { href: "/watchlist", label: "Watchlist", desc: "Track the tickers you review regularly." },
   { href: "/journal", label: "Trade Journal", desc: "Record plans, risk, thesis, and emotions." },
   { href: "/portfolio", label: "Portfolio", desc: "Review local positions with available prices." },
+  { href: "/operations", label: "Operations", desc: "Manage data operations, system health, and configuration." },
 ];
 
 export default function HomePage() {
@@ -27,6 +29,8 @@ export default function HomePage() {
           <LlmStatusBadge compact />
         </div>
       </header>
+
+      <WelcomeBanner />
 
       <nav className="grid gap-3 sm:grid-cols-2">
         {NAV.map((n) => (

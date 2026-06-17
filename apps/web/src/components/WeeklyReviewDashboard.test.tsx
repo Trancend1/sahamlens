@@ -45,12 +45,11 @@ describe("WeeklyReviewDashboard", () => {
     expect(html).toContain("behavior reflection only");
   });
 
-  it("renders empty state with local CLI path", () => {
+  it("renders empty state with webui generate action", () => {
     const html = renderToStaticMarkup(<WeeklyReviewDashboard reviews={[]} error={null} />);
 
     expect(html).toContain("No weekly review generated yet");
     expect(html).toContain("Generate weekly review");
-    expect(html).toContain("scripts.journal_review");
   });
 
   it("renders error state", () => {
@@ -68,7 +67,7 @@ describe("WeeklyReviewDashboard", () => {
 
     expect(html).toContain("Migration required");
     expect(html).toContain("weekly_review_runs");
-    expect(html).toContain("scripts.migrate");
+    expect(html).toContain("Check runtime status");
     expect(html).not.toContain("Traceback");
     expect(html).not.toContain("no such table");
     expect(html).not.toContain("D:/DevSpace");

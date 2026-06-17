@@ -91,7 +91,7 @@ describe("AlertsDashboard", () => {
     );
 
     expect(html).toContain("Migration required");
-    expect(html).toContain("scripts.migrate");
+    expect(html).toContain("Check runtime status");
     expect(html).not.toContain("Traceback");
     expect(html).not.toContain("no such table");
     expect(html).not.toContain("D:/DevSpace");
